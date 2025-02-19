@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { Link } from "wouter";
 import { TrainingLog, insertTrainingLogSchema } from "@shared/schema";
-import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
@@ -66,7 +66,7 @@ export default function HomePage() {
     resolver: zodResolver(insertTrainingLogSchema),
     defaultValues: {
       type: "",
-      duration: 0,
+      duration: 60, // Set a reasonable default
       notes: "",
       techniques: []
     }
@@ -83,6 +83,7 @@ export default function HomePage() {
   // Mutations remain unchanged
   const createLogMutation = useMutation({
     mutationFn: async (data: any) => {
+      console.log("Submitting data:", data); // Add logging
       const payload = {
         ...data,
         duration: parseInt(data.duration),
@@ -95,6 +96,10 @@ export default function HomePage() {
       queryClient.invalidateQueries({ queryKey: ["/api/training-logs"] });
       form.reset();
       setShowTrainingForm(false);
+    },
+    onError: (error: Error) => {
+      console.error("Form submission error:", error);
+      // You might want to show a toast notification here
     }
   });
 
@@ -344,8 +349,9 @@ export default function HomePage() {
                       <FormItem>
                         <FormLabel>Training Type</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="e.g., Gi, No-Gi" />
+                          <Input {...field} placeholder="e.g., Gi, No-Gi, Open Mat" required />
                         </FormControl>
+                        <FormMessage />
                       </FormItem>
                     )}
                   />
@@ -356,8 +362,16 @@ export default function HomePage() {
                       <FormItem>
                         <FormLabel>Duration (minutes)</FormLabel>
                         <FormControl>
-                          <Input type="number" {...field} />
+                          <Input 
+                            type="number" 
+                            {...field} 
+                            min="1"
+                            max="480"
+                            onChange={(e) => field.onChange(parseInt(e.target.value))}
+                            required 
+                          />
                         </FormControl>
+                        <FormMessage />
                       </FormItem>
                     )}
                   />
@@ -370,11 +384,12 @@ export default function HomePage() {
                         <FormControl>
                           <Textarea {...field} />
                         </FormControl>
+                        <FormMessage />
                       </FormItem>
                     )}
                   />
                   <Button type="submit" disabled={createLogMutation.isPending}>
-                    Log Session
+                    {createLogMutation.isPending ? "Saving..." : "Log Session"}
                   </Button>
                 </form>
               </Form>
