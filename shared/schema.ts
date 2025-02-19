@@ -30,6 +30,22 @@ export const techniques = pgTable("techniques", {
   difficulty: text("difficulty").notNull()
 });
 
+// New tables for community features
+export const followers = pgTable("followers", {
+  id: serial("id").primaryKey(),
+  followerId: integer("follower_id").notNull(),
+  followingId: integer("following_id").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow()
+});
+
+export const comments = pgTable("comments", {
+  id: serial("id").primaryKey(),
+  trainingLogId: integer("training_log_id").notNull(),
+  userId: integer("user_id").notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow()
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -47,7 +63,13 @@ export const insertTrainingLogSchema = createInsertSchema(trainingLogs).pick({
 
 export const insertTechniqueSchema = createInsertSchema(techniques);
 
+export const insertCommentSchema = createInsertSchema(comments).pick({
+  content: true
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type TrainingLog = typeof trainingLogs.$inferSelect;
 export type Technique = typeof techniques.$inferSelect;
+export type Comment = typeof comments.$inferSelect;
+export type Follower = typeof followers.$inferSelect;

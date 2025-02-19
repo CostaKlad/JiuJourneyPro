@@ -36,6 +36,16 @@ export default function HomePage() {
     }
   });
 
+  const createCommentMutation = useMutation({
+    mutationFn: async ({ logId, content }: { logId: number, content: string }) => {
+      const res = await apiRequest("POST", `/api/training-logs/${logId}/comments`, { content });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/training-logs"] });
+    }
+  });
+
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-7xl mx-auto">
@@ -116,7 +126,7 @@ export default function HomePage() {
                   <div>
                     <h3 className="font-semibold mb-2">Focus Areas</h3>
                     <ul className="list-disc pl-4">
-                      {suggestions.focusAreas.map((area: string, i: number) => (
+                      {suggestions.focusAreas?.map((area: string, i: number) => (
                         <li key={i}>{area}</li>
                       ))}
                     </ul>
@@ -124,7 +134,7 @@ export default function HomePage() {
                   <div>
                     <h3 className="font-semibold mb-2">Suggested Techniques</h3>
                     <ul className="list-disc pl-4">
-                      {suggestions.suggestedTechniques.map((tech: string, i: number) => (
+                      {suggestions.suggestedTechniques?.map((tech: string, i: number) => (
                         <li key={i}>{tech}</li>
                       ))}
                     </ul>
@@ -141,17 +151,66 @@ export default function HomePage() {
             <CardContent>
               <div className="space-y-4">
                 {trainingLogs?.map((log) => (
-                  <div key={log.id} className="border p-4 rounded-lg">
-                    <div className="flex justify-between">
-                      <h3 className="font-semibold">{log.type}</h3>
-                      <span className="text-muted-foreground">
-                        {new Date(log.date).toLocaleDateString()}
-                      </span>
+                  <div key={log.id} className="border p-4 rounded-lg space-y-4">
+                    <div>
+                      <div className="flex justify-between">
+                        <h3 className="font-semibold">{log.type}</h3>
+                        <span className="text-muted-foreground">
+                          {new Date(log.date).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <p className="text-sm mt-2">{log.notes}</p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Duration: {log.duration} minutes
+                      </p>
                     </div>
-                    <p className="text-sm mt-2">{log.notes}</p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Duration: {log.duration} minutes
-                    </p>
+
+                    {/* Comments Section */}
+                    <div className="pt-4 border-t">
+                      <h4 className="font-semibold mb-2">Comments</h4>
+                      <div className="space-y-2">
+                        <div className="flex gap-2">
+                          <Input 
+                            placeholder="Add a comment..."
+                            onKeyPress={(e) => {
+                              if (e.key === 'Enter') {
+                                const content = e.currentTarget.value;
+                                if (content.trim()) {
+                                  createCommentMutation.mutate({ 
+                                    logId: log.id, 
+                                    content 
+                                  });
+                                  e.currentTarget.value = '';
+                                }
+                              }
+                            }}
+                          />
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              const input = e.currentTarget.previousElementSibling as HTMLInputElement;
+                              const content = input.value;
+                              if (content.trim()) {
+                                createCommentMutation.mutate({ 
+                                  logId: log.id, 
+                                  content 
+                                });
+                                input.value = '';
+                              }
+                            }}
+                          >
+                            Comment
+                          </Button>
+                        </div>
+                        {log.comments?.map((comment: any) => (
+                          <div key={comment.id} className="flex items-start gap-2 text-sm">
+                            <span className="font-medium">{comment.user.username}:</span>
+                            <p>{comment.content}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
