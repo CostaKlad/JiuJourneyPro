@@ -11,6 +11,21 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
+// Update the type for training logs query
+type TrainingLogWithComments = TrainingLog & {
+  comments: (Comment & { user: User })[];
+};
+
+type Comment = {
+  id: number;
+  content: string;
+};
+
+type User = {
+  username: string;
+};
+
+
 export default function HomePage() {
   const { user, logoutMutation } = useAuth();
   const form = useForm({
@@ -19,11 +34,11 @@ export default function HomePage() {
       type: "",
       duration: 0,
       notes: "",
-      techniques: [] // Default empty array for techniques
+      techniques: []
     }
   });
 
-  const { data: trainingLogs } = useQuery<TrainingLog[]>({
+  const { data: trainingLogs } = useQuery<TrainingLogWithComments[]>({
     queryKey: ["/api/training-logs"]
   });
 
@@ -57,6 +72,18 @@ export default function HomePage() {
       queryClient.invalidateQueries({ queryKey: ["/api/training-logs"] });
     }
   });
+
+  // Fix the comment button click handler
+  const handleCommentSubmit = (logId: number, input: HTMLInputElement) => {
+    const content = input.value;
+    if (content.trim()) {
+      createCommentMutation.mutate({
+        logId,
+        content
+      });
+      input.value = '';
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background p-6">
@@ -186,36 +213,22 @@ export default function HomePage() {
                             placeholder="Add a comment..."
                             onKeyPress={(e) => {
                               if (e.key === 'Enter') {
-                                const content = e.currentTarget.value;
-                                if (content.trim()) {
-                                  createCommentMutation.mutate({
-                                    logId: log.id,
-                                    content
-                                  });
-                                  e.currentTarget.value = '';
-                                }
+                                handleCommentSubmit(log.id, e.currentTarget);
                               }
                             }}
                           />
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => {
+                            onClick={(e) => {
                               const input = e.currentTarget.previousElementSibling as HTMLInputElement;
-                              const content = input.value;
-                              if (content.trim()) {
-                                createCommentMutation.mutate({
-                                  logId: log.id,
-                                  content
-                                });
-                                input.value = '';
-                              }
+                              handleCommentSubmit(log.id, input);
                             }}
                           >
                             Comment
                           </Button>
                         </div>
-                        {log.comments?.map((comment: any) => (
+                        {log.comments?.map((comment) => (
                           <div key={comment.id} className="flex items-start gap-2 text-sm">
                             <span className="font-medium">{comment.user.username}:</span>
                             <p>{comment.content}</p>

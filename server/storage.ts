@@ -14,7 +14,7 @@ export interface IStorage {
 
   // Training logs
   createTrainingLog(log: Omit<TrainingLog, "id">): Promise<TrainingLog>;
-  getTrainingLogs(userId: number): Promise<TrainingLog[]>;
+  getTrainingLogs(userId: number): Promise<(TrainingLog & { comments: (Comment & { user: User })[] })[]>;
 
   // Techniques
   getTechniques(): Promise<Technique[]>;
@@ -72,8 +72,21 @@ export class DatabaseStorage implements IStorage {
     return trainingLog;
   }
 
-  async getTrainingLogs(userId: number): Promise<TrainingLog[]> {
-    return await db.select().from(trainingLogs).where(eq(trainingLogs.userId, userId));
+  async getTrainingLogs(userId: number): Promise<(TrainingLog & { comments: (Comment & { user: User })[] })[]> {
+    const logs = await db.select().from(trainingLogs).where(eq(trainingLogs.userId, userId));
+
+    // Fetch comments for each log
+    const logsWithComments = await Promise.all(
+      logs.map(async (log) => {
+        const comments = await this.getComments(log.id);
+        return {
+          ...log,
+          comments
+        };
+      })
+    );
+
+    return logsWithComments;
   }
 
   async getTechniques(): Promise<Technique[]> {
