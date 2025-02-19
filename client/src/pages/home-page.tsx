@@ -14,7 +14,13 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 export default function HomePage() {
   const { user, logoutMutation } = useAuth();
   const form = useForm({
-    resolver: zodResolver(insertTrainingLogSchema)
+    resolver: zodResolver(insertTrainingLogSchema),
+    defaultValues: {
+      type: "",
+      duration: 0,
+      notes: "",
+      techniques: [] // Default empty array for techniques
+    }
   });
 
   const { data: trainingLogs } = useQuery<TrainingLog[]>({
@@ -27,7 +33,13 @@ export default function HomePage() {
 
   const createLogMutation = useMutation({
     mutationFn: async (data: any) => {
-      const res = await apiRequest("POST", "/api/training-logs", data);
+      // Ensure duration is a number
+      const payload = {
+        ...data,
+        duration: parseInt(data.duration),
+        techniques: data.techniques || [] // Ensure techniques is always an array
+      };
+      const res = await apiRequest("POST", "/api/training-logs", payload);
       return res.json();
     },
     onSuccess: () => {
@@ -170,31 +182,31 @@ export default function HomePage() {
                       <h4 className="font-semibold mb-2">Comments</h4>
                       <div className="space-y-2">
                         <div className="flex gap-2">
-                          <Input 
+                          <Input
                             placeholder="Add a comment..."
                             onKeyPress={(e) => {
                               if (e.key === 'Enter') {
                                 const content = e.currentTarget.value;
                                 if (content.trim()) {
-                                  createCommentMutation.mutate({ 
-                                    logId: log.id, 
-                                    content 
+                                  createCommentMutation.mutate({
+                                    logId: log.id,
+                                    content
                                   });
                                   e.currentTarget.value = '';
                                 }
                               }
                             }}
                           />
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="outline"
                             size="sm"
                             onClick={() => {
                               const input = e.currentTarget.previousElementSibling as HTMLInputElement;
                               const content = input.value;
                               if (content.trim()) {
-                                createCommentMutation.mutate({ 
-                                  logId: log.id, 
-                                  content 
+                                createCommentMutation.mutate({
+                                  logId: log.id,
+                                  content
                                 });
                                 input.value = '';
                               }

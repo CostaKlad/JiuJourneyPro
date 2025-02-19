@@ -54,12 +54,19 @@ export const insertUserSchema = createInsertSchema(users).pick({
   goals: true
 });
 
-export const insertTrainingLogSchema = createInsertSchema(trainingLogs).pick({
-  type: true,
-  techniques: true,
-  notes: true,
-  duration: true
-});
+export const insertTrainingLogSchema = createInsertSchema(trainingLogs)
+  .pick({
+    type: true,
+    techniques: true,
+    notes: true,
+    duration: true
+  })
+  .extend({
+    duration: z.coerce
+      .number()
+      .min(1, "Duration must be at least 1 minute")
+      .max(480, "Duration cannot exceed 8 hours")
+  });
 
 export const insertTechniqueSchema = createInsertSchema(techniques);
 
