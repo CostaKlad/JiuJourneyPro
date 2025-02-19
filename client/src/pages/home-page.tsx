@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { Link } from "wouter";
@@ -11,7 +11,27 @@ import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { PlusIcon, TimerIcon, BookOpenIcon, MessageSquareIcon } from "lucide-react";
+import { 
+  PlusIcon, 
+  TimerIcon, 
+  BookOpenIcon, 
+  MessageSquareIcon,
+  FlameIcon,
+  TrendingUpIcon,
+  BarChart3Icon,
+  BrainIcon
+} from "lucide-react";
+import { 
+  LineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  Tooltip, 
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell
+} from "recharts";
 
 // Types remain unchanged
 type TrainingLogWithComments = TrainingLog & {
@@ -25,8 +45,19 @@ type Comment = {
 
 type User = {
   username: string;
-  beltRank?: string; // Added beltRank to handle potential undefined
+  beltRank?: string;
 };
+
+// Belt ranks and their corresponding colors
+const BELT_COLORS = {
+  white: "#FFFFFF",
+  blue: "#0066CC",
+  purple: "#660099",
+  brown: "#8B4513",
+  black: "#000000"
+};
+
+const CHART_COLORS = ["#0066CC", "#660099", "#8B4513", "#FF4444", "#00CC99"];
 
 export default function HomePage() {
   const { user, logoutMutation } = useAuth();
@@ -93,6 +124,47 @@ export default function HomePage() {
   const totalSessions = trainingLogs?.length || 0;
   const avgSessionTime = totalSessions > 0 ? Math.round(totalTime / totalSessions) : 0;
 
+  // Prepare chart data
+  const last7DaysData = trainingLogs
+    ?.slice(0, 7)
+    .map(log => ({
+      date: new Date(log.date).toLocaleDateString(),
+      duration: log.duration
+    }))
+    .reverse();
+
+  // Calculate training type distribution
+  const trainingTypeData = trainingLogs?.reduce((acc: { name: string, value: number }[], log) => {
+    const existingType = acc.find(item => item.name === log.type);
+    if (existingType) {
+      existingType.value += 1;
+    } else {
+      acc.push({ name: log.type, value: 1 });
+    }
+    return acc;
+  }, []) || [];
+
+  // Calculate current streak
+  const calculateStreak = () => {
+    if (!trainingLogs?.length) return 0;
+    let streak = 0;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    for (let i = 0; i < trainingLogs.length; i++) {
+      const logDate = new Date(trainingLogs[i].date);
+      logDate.setHours(0, 0, 0, 0);
+      const dayDiff = Math.floor((today.getTime() - logDate.getTime()) / (1000 * 60 * 60 * 24));
+
+      if (dayDiff === streak) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+    return streak;
+  };
+
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-7xl mx-auto">
@@ -119,7 +191,19 @@ export default function HomePage() {
 
         {/* Dashboard Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {/* Stats Cards */}
+          {/* Training Streak Card */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Current Streak</CardTitle>
+              <FlameIcon className="h-4 w-4 text-orange-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{calculateStreak()} days</div>
+              <p className="text-xs text-muted-foreground">Keep training consistently!</p>
+            </CardContent>
+          </Card>
+
+          {/* Total Training Time */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Training Time</CardTitle>
@@ -133,10 +217,11 @@ export default function HomePage() {
             </CardContent>
           </Card>
 
+          {/* Average Session Card */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Average Session</CardTitle>
-              <TimerIcon className="h-4 w-4 text-muted-foreground" />
+              <BarChart3Icon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{avgSessionTime} minutes</div>
@@ -146,15 +231,89 @@ export default function HomePage() {
             </CardContent>
           </Card>
 
-          <Card className="lg:col-span-1">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">AI Suggestions</CardTitle>
+          {/* Training Progress Chart */}
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <CardTitle className="text-sm font-medium">Training Progress</CardTitle>
+              <CardDescription>Your training duration over the last 7 days</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
-                {suggestions?.focusAreas?.slice(0, 2).map((area: string, i: number) => (
-                  <div key={i} className="text-sm">{area}</div>
-                ))}
+              <div className="h-[200px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={last7DaysData}>
+                    <XAxis dataKey="date" />
+                    <YAxis />
+                    <Tooltip />
+                    <Line
+                      type="monotone"
+                      dataKey="duration"
+                      stroke="#8884d8"
+                      strokeWidth={2}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Training Distribution */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm font-medium">Training Types</CardTitle>
+              <CardDescription>Distribution of your training sessions</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[200px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={trainingTypeData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={80}
+                    >
+                      {trainingTypeData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* AI Suggestions Card */}
+          <Card className="lg:col-span-3">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0">
+              <div>
+                <CardTitle>AI Training Insights</CardTitle>
+                <CardDescription>Personalized suggestions based on your progress</CardDescription>
+              </div>
+              <BrainIcon className="h-5 w-5 text-purple-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <h3 className="font-semibold text-sm">Focus Areas</h3>
+                  {suggestions?.focusAreas?.map((area: string, i: number) => (
+                    <div key={i} className="text-sm p-2 bg-primary/5 rounded-md">{area}</div>
+                  ))}
+                </div>
+                <div className="space-y-2">
+                  <h3 className="font-semibold text-sm">Suggested Techniques</h3>
+                  {suggestions?.suggestedTechniques?.map((tech: string, i: number) => (
+                    <div key={i} className="text-sm p-2 bg-primary/5 rounded-md">{tech}</div>
+                  ))}
+                </div>
+                <div className="space-y-2">
+                  <h3 className="font-semibold text-sm">Training Tips</h3>
+                  {suggestions?.trainingTips?.map((tip: string, i: number) => (
+                    <div key={i} className="text-sm p-2 bg-primary/5 rounded-md">{tip}</div>
+                  ))}
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -226,7 +385,10 @@ export default function HomePage() {
         {/* Recent Training Sessions */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Recent Training Sessions</CardTitle>
+            <div>
+              <CardTitle>Recent Training Sessions</CardTitle>
+              <CardDescription>Your latest training activity</CardDescription>
+            </div>
             <MessageSquareIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
