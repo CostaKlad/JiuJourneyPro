@@ -1,112 +1,77 @@
+import { users, trainingLogs, techniques, type User, type TrainingLog, type Technique, type InsertUser } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 import session from "express-session";
-import createMemoryStore from "memorystore";
-import { User, TrainingLog, Technique, InsertUser } from "@shared/schema";
+import connectPg from "connect-pg-simple";
+import { pool } from "./db";
 
-const MemoryStore = createMemoryStore(session);
+const PostgresSessionStore = connectPg(session);
 
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
-  
+
   // Training logs
   createTrainingLog(log: Omit<TrainingLog, "id">): Promise<TrainingLog>;
   getTrainingLogs(userId: number): Promise<TrainingLog[]>;
-  
+
   // Techniques
   getTechniques(): Promise<Technique[]>;
   getTechniquesByCategory(category: string): Promise<Technique[]>;
-  
+
   sessionStore: session.Store;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private trainingLogs: Map<number, TrainingLog>;
-  private techniques: Map<number, Technique>;
+export class DatabaseStorage implements IStorage {
   sessionStore: session.Store;
-  private currentUserId: number;
-  private currentLogId: number;
-  private currentTechniqueId: number;
 
   constructor() {
-    this.users = new Map();
-    this.trainingLogs = new Map();
-    this.techniques = new Map();
-    this.currentUserId = 1;
-    this.currentLogId = 1;
-    this.currentTechniqueId = 1;
-    this.sessionStore = new MemoryStore({
-      checkPeriod: 86400000
+    this.sessionStore = new PostgresSessionStore({
+      pool,
+      createTableIfMissing: true
     });
-    
-    // Seed some techniques
-    this.seedTechniques();
   }
 
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username
-    );
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.currentUserId++;
-    const user = { ...insertUser, id };
-    this.users.set(id, user);
+    const [user] = await db.insert(users).values({
+      ...insertUser,
+      beltRank: insertUser.beltRank || 'white',
+      gym: insertUser.gym || null,
+      goals: insertUser.goals || null
+    }).returning();
     return user;
   }
 
   async createTrainingLog(log: Omit<TrainingLog, "id">): Promise<TrainingLog> {
-    const id = this.currentLogId++;
-    const trainingLog = { ...log, id };
-    this.trainingLogs.set(id, trainingLog);
+    const [trainingLog] = await db.insert(trainingLogs).values({
+      ...log,
+      notes: log.notes || null
+    }).returning();
     return trainingLog;
   }
 
   async getTrainingLogs(userId: number): Promise<TrainingLog[]> {
-    return Array.from(this.trainingLogs.values()).filter(
-      (log) => log.userId === userId
-    );
+    return await db.select().from(trainingLogs).where(eq(trainingLogs.userId, userId));
   }
 
   async getTechniques(): Promise<Technique[]> {
-    return Array.from(this.techniques.values());
+    return await db.select().from(techniques);
   }
 
   async getTechniquesByCategory(category: string): Promise<Technique[]> {
-    return Array.from(this.techniques.values()).filter(
-      (technique) => technique.category === category
-    );
-  }
-
-  private seedTechniques() {
-    const basicTechniques: Omit<Technique, "id">[] = [
-      {
-        name: "Armbar from Guard",
-        category: "submissions",
-        description: "Basic armbar submission from closed guard position",
-        videoUrl: "https://www.youtube.com/embed/example1",
-        difficulty: "beginner"
-      },
-      {
-        name: "Triangle Choke",
-        category: "submissions",
-        description: "Triangle choke submission from guard",
-        videoUrl: "https://www.youtube.com/embed/example2",
-        difficulty: "beginner"
-      }
-    ];
-
-    basicTechniques.forEach((technique) => {
-      const id = this.currentTechniqueId++;
-      this.techniques.set(id, { ...technique, id });
-    });
+    return await db.select().from(techniques).where(eq(techniques.category, category));
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
