@@ -20,7 +20,12 @@ import {
   TrendingUpIcon,
   BarChart3Icon,
   BrainIcon,
-  Users
+  Users,
+  Trophy,
+  Crown,
+  Star,
+  Award,
+  Medal
 } from "lucide-react";
 import {
   LineChart,
@@ -52,6 +57,32 @@ type User = {
   beltRank: string;
 };
 
+type PointsSummary = {
+  totalPoints: number;
+  level: number;
+  nextLevelPoints: number;
+  recentTransactions: PointTransaction[];
+  achievements: UserAchievement[];
+};
+
+type PointTransaction = {
+  id: number;
+  amount: number;
+  type: string;
+  description: string;
+  createdAt: string;
+};
+
+type UserAchievement = {
+  achievement: {
+    name: string;
+    description: string;
+    icon: string;
+  };
+  earnedAt: string;
+};
+
+
 // Belt ranks and their corresponding colors
 const BELT_COLORS = {
   white: "#FFFFFF",
@@ -82,6 +113,10 @@ export default function HomePage() {
 
   const { data: suggestions } = useQuery({
     queryKey: ["/api/suggestions"]
+  });
+
+  const { data: pointsSummary } = useQuery<PointsSummary>({
+    queryKey: ["/api/points/summary"]
   });
 
   // Mutations remain unchanged
@@ -246,6 +281,30 @@ export default function HomePage() {
             </CardContent>
           </Card>
 
+          {/* Points and Level Card */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Level {pointsSummary?.level}</CardTitle>
+              <Trophy className="h-4 w-4 text-yellow-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{pointsSummary?.totalPoints.toLocaleString()} points</div>
+              <div className="mt-4 space-y-2">
+                <div className="text-xs text-muted-foreground">
+                  Next level at {pointsSummary?.nextLevelPoints.toLocaleString()} points
+                </div>
+                <div className="h-2 rounded-full bg-secondary">
+                  <div
+                    className="h-full rounded-full bg-primary"
+                    style={{
+                      width: `${((pointsSummary?.totalPoints || 0) / (pointsSummary?.nextLevelPoints || 1)) * 100}%`
+                    }}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Training Progress Chart */}
           <Card className="lg:col-span-2">
             <CardHeader>
@@ -299,89 +358,157 @@ export default function HomePage() {
               </div>
             </CardContent>
           </Card>
+        </div>
 
-          {/* AI Suggestions Card */}
-          <Card className="lg:col-span-3">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0">
-              <div>
-                <CardTitle>AI Training Insights</CardTitle>
-                <CardDescription>Personalized suggestions based on your progress</CardDescription>
-              </div>
-              <BrainIcon className="h-5 w-5 text-purple-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <h3 className="font-semibold text-sm">Focus Areas</h3>
-                  {suggestions?.focusAreas?.map((area: string, i: number) => (
-                    <div key={i} className="text-sm p-2 bg-primary/5 rounded-md">{area}</div>
-                  ))}
-                </div>
-                <div className="space-y-2">
-                  <h3 className="font-semibold text-sm">Suggested Techniques</h3>
-                  {suggestions?.suggestedTechniques?.map((tech: string, i: number) => (
-                    <div key={i} className="text-sm p-2 bg-primary/5 rounded-md">{tech}</div>
-                  ))}
-                </div>
-                <div className="space-y-2">
-                  <h3 className="font-semibold text-sm">Training Tips</h3>
-                  {suggestions?.trainingTips?.map((tip: string, i: number) => (
-                    <div key={i} className="text-sm p-2 bg-primary/5 rounded-md">{tip}</div>
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Following Activity */}
-          <Card className="lg:col-span-3">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>Following Activity</CardTitle>
-                <CardDescription>Recent training logs from practitioners you follow</CardDescription>
-              </div>
-              <Users className="h-5 w-5 text-primary" />
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {trainingLogs?.filter(log => log.userId !== user?.id).map((log) => (
-                  <div key={log.id} className="flex items-start gap-4 p-4 rounded-lg border">
-                    <Avatar>
-                      <AvatarFallback>
-                        {log.user?.username.slice(0, 2).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-medium">{log.user?.username}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {log.user?.beltRank} Belt
-                          </p>
-                        </div>
-                        <span className="text-sm text-muted-foreground">
-                          {new Date(log.date).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <p className="mt-2">{log.type} - {log.duration} minutes</p>
-                      {log.notes && (
-                        <p className="mt-1 text-sm text-muted-foreground">{log.notes}</p>
-                      )}
-                      <div className="mt-4">
-                        <Button variant="ghost" size="sm" className="h-8">
-                          <MessageSquareIcon className="mr-2 h-4 w-4" />
-                          Comment
-                        </Button>
-                      </div>
-                    </div>
+        {/* Recent Point Transactions */}
+        <Card className="col-span-2">
+          <CardHeader>
+            <CardTitle>Recent Activity</CardTitle>
+            <CardDescription>Your latest point earnings</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {pointsSummary?.recentTransactions.map((transaction) => (
+                <div
+                  key={transaction.id}
+                  className="flex items-center justify-between p-2 rounded-lg bg-secondary/10"
+                >
+                  <div className="flex items-center gap-2">
+                    {transaction.type === 'training' && <Medal className="h-4 w-4 text-blue-500" />}
+                    {transaction.type === 'streak' && <Star className="h-4 w-4 text-yellow-500" />}
+                    {transaction.type === 'achievement' && <Award className="h-4 w-4 text-purple-500" />}
+                    {transaction.type === 'social' && <Users className="h-4 w-4 text-green-500" />}
+                    <span className="text-sm">{transaction.description}</span>
                   </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold text-primary">
+                      +{transaction.amount}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* AI Suggestions Card */}
+        <Card className="lg:col-span-3">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <div>
+              <CardTitle>AI Training Insights</CardTitle>
+              <CardDescription>Personalized suggestions based on your progress</CardDescription>
+            </div>
+            <BrainIcon className="h-5 w-5 text-purple-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <h3 className="font-semibold text-sm">Focus Areas</h3>
+                {suggestions?.focusAreas?.map((area: string, i: number) => (
+                  <div key={i} className="text-sm p-2 bg-primary/5 rounded-md">{area}</div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
+              <div className="space-y-2">
+                <h3 className="font-semibold text-sm">Suggested Techniques</h3>
+                {suggestions?.suggestedTechniques?.map((tech: string, i: number) => (
+                  <div key={i} className="text-sm p-2 bg-primary/5 rounded-md">{tech}</div>
+                ))}
+              </div>
+              <div className="space-y-2">
+                <h3 className="font-semibold text-sm">Training Tips</h3>
+                {suggestions?.trainingTips?.map((tip: string, i: number) => (
+                  <div key={i} className="text-sm p-2 bg-primary/5 rounded-md">{tip}</div>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Following Activity */}
+        <Card className="lg:col-span-3">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>Following Activity</CardTitle>
+              <CardDescription>Recent training logs from practitioners you follow</CardDescription>
+            </div>
+            <Users className="h-5 w-5 text-primary" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {trainingLogs?.filter(log => log.userId !== user?.id).map((log) => (
+                <div key={log.id} className="flex items-start gap-4 p-4 rounded-lg border">
+                  <Avatar>
+                    <AvatarFallback>
+                      {log.user?.username.slice(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-medium">{log.user?.username}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {log.user?.beltRank} Belt
+                        </p>
+                      </div>
+                      <span className="text-sm text-muted-foreground">
+                        {new Date(log.date).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <p className="mt-2">{log.type} - {log.duration} minutes</p>
+                    {log.notes && (
+                      <p className="mt-1 text-sm text-muted-foreground">{log.notes}</p>
+                    )}
+                    <div className="mt-4">
+                      <Button variant="ghost" size="sm" className="h-8">
+                        <MessageSquareIcon className="mr-2 h-4 w-4" />
+                        Comment
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
 
 
-        </div>
+        {/* Achievements Showcase */}
+        <Card className="lg:col-span-3">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Achievements</CardTitle>
+                <CardDescription>Your earned badges and accomplishments</CardDescription>
+              </div>
+              <Crown className="h-5 w-5 text-yellow-500" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {pointsSummary?.achievements.map((achievement) => (
+                <div
+                  key={achievement.achievement.name}
+                  className="p-4 rounded-lg border bg-card text-card-foreground"
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="p-2 rounded-full bg-primary/10">
+                      <Award className="h-6 w-6 text-primary" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold">{achievement.achievement.name}</h4>
+                      <p className="text-sm text-muted-foreground">
+                        {achievement.achievement.description}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Earned {new Date(achievement.earnedAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Action Button */}
         <Button

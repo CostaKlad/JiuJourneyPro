@@ -4,6 +4,7 @@ import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { getTrainingSuggestions } from "./openai";
 import { insertTrainingLogSchema, insertCommentSchema } from "@shared/schema";
+import { pointsService } from "./points-service";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
@@ -19,6 +20,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId: req.user.id,
         date: new Date()
       });
+
+      // Award points for training session
+      await pointsService.awardTrainingPoints(
+        req.user.id,
+        validatedData.duration,
+        (validatedData.techniques as any[]).length
+      );
+
       res.json(log);
     } catch (error) {
       res.status(400).json({ error: "Invalid training log data" });
@@ -67,6 +76,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       await storage.followUser(req.user.id, followingId);
+      // Award points for gaining a follower
+      await pointsService.addPoints(
+        followingId,
+        pointsService.POINT_VALUES.FOLLOWER_GAINED,
+        'social',
+        'Gained a new follower'
+      );
       res.sendStatus(200);
     } catch (error) {
       res.status(400).json({ error: "Failed to follow user" });
@@ -111,17 +127,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { content } = insertCommentSchema.parse(req.body);
       const comment = await storage.createComment(req.user.id, logId, content);
+
+      // Award points for making a comment
+      await pointsService.addPoints(
+        req.user.id,
+        pointsService.POINT_VALUES.COMMENT_MADE,
+        'social',
+        'Made a comment on a training log'
+      );
+
+      // Award points to the training log owner for receiving a comment
+      const log = await storage.getTrainingLog(logId);
+      if (log && log.userId !== req.user.id) {
+        await pointsService.addPoints(
+          log.userId,
+          pointsService.POINT_VALUES.RECEIVED_COMMENT,
+          'social',
+          'Received a comment on training log'
+        );
+      }
+
       res.status(201).json(comment);
     } catch (error) {
       res.status(400).json({ error: "Invalid comment data" });
     }
   });
 
-  app.get("/api/training-logs/:logId/comments", async (req, res) => {
+  // New points system routes
+  app.get("/api/points/summary", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    const logId = parseInt(req.params.logId);
-    const comments = await storage.getComments(logId);
-    res.json(comments);
+
+    try {
+      const summary = await pointsService.getPointsSummary(req.user.id);
+      res.json(summary);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get points summary" });
+    }
   });
 
   const httpServer = createServer(app);
