@@ -15,6 +15,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       const validatedData = insertTrainingLogSchema.parse(req.body);
+      console.log("Creating training log with data:", validatedData);
+
       const log = await storage.createTrainingLog({
         ...validatedData,
         userId: req.user.id,
@@ -22,15 +24,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Award points for training session
+      const techniquesCount = Array.isArray(validatedData.techniques) 
+        ? validatedData.techniques.length 
+        : 0;
+
+      console.log(`Awarding points for training session - userId: ${req.user.id}, duration: ${validatedData.duration}, techniques: ${techniquesCount}`);
+
       await pointsService.awardTrainingPoints(
         req.user.id,
         validatedData.duration,
-        (validatedData.techniques as any[]).length
+        techniquesCount
       );
 
       res.json(log);
     } catch (error) {
-      res.status(400).json({ error: "Invalid training log data" });
+      console.error("Error creating training log:", error);
+      res.status(400).json({ error: "Invalid training log data", details: error.message });
     }
   });
 

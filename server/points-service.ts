@@ -34,14 +34,58 @@ export class PointsService {
 
   // Award points for a training session
   async awardTrainingPoints(userId: number, duration: number, techniquesCount: number): Promise<void> {
-    const basePoints = PointsService.POINT_VALUES.TRAINING_SESSION;
-    const durationBonus = Math.floor(duration / 30) * 25; // Extra points for longer sessions
-    const techniqueBonus = techniquesCount * PointsService.POINT_VALUES.TECHNIQUE_LOGGED;
+    try {
+      console.log(`Awarding points for userId: ${userId}, duration: ${duration}, techniques: ${techniquesCount}`);
 
-    const totalPoints = basePoints + durationBonus + techniqueBonus;
+      const basePoints = PointsService.POINT_VALUES.TRAINING_SESSION;
+      const durationBonus = Math.floor(duration / 30) * 25; // Extra points for longer sessions
+      const techniqueBonus = techniquesCount * PointsService.POINT_VALUES.TECHNIQUE_LOGGED;
 
-    await this.addPoints(userId, totalPoints, 'training', 
-      `Training session completed: ${duration} minutes, ${techniquesCount} techniques`);
+      const totalPoints = basePoints + durationBonus + techniqueBonus;
+      console.log(`Calculated points - base: ${basePoints}, duration bonus: ${durationBonus}, technique bonus: ${techniqueBonus}, total: ${totalPoints}`);
+
+      await db.transaction(async (tx) => {
+        // Create point transaction
+        await tx.insert(pointTransactions).values({
+          userId,
+          amount: totalPoints,
+          type: 'training',
+          description: `Training session completed: ${duration} minutes, ${techniquesCount} techniques`
+        });
+
+        // Get current user points
+        const [user] = await tx
+          .select()
+          .from(users)
+          .where(eq(users.id, userId));
+
+        if (!user) {
+          throw new Error(`User not found: ${userId}`);
+        }
+
+        const newTotal = (user.totalPoints || 0) + totalPoints;
+        const newLevel = this.calculateLevel(newTotal);
+
+        console.log(`Updating user points - current: ${user.totalPoints}, new total: ${newTotal}, new level: ${newLevel}`);
+
+        // Update user's total points and level
+        await tx
+          .update(users)
+          .set({ 
+            totalPoints: newTotal,
+            level: newLevel 
+          })
+          .where(eq(users.id, userId));
+
+        // Check for achievements after points update
+        await this.checkAchievements(userId, tx);
+      });
+
+      console.log(`Successfully awarded ${totalPoints} points to user ${userId}`);
+    } catch (error) {
+      console.error('Error awarding training points:', error);
+      throw error;
+    }
   }
 
   // Award points for maintaining a streak
