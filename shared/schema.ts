@@ -51,7 +51,7 @@ export const pointTransactions = pgTable("point_transactions", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull(),
   amount: integer("amount").notNull(),
-  type: text("type").notNull(), 
+  type: text("type").notNull(),
   description: text("description").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow()
 });
@@ -60,9 +60,12 @@ export const achievements = pgTable("achievements", {
   id: serial("id").primaryKey(),
   name: text("name").notNull().unique(),
   description: text("description").notNull(),
-  icon: text("icon").notNull(), 
+  category: text("category").notNull(), 
+  tier: text("tier").notNull(), 
+  icon: text("icon").notNull(),
   pointValue: integer("point_value").notNull(),
-  requirement: json("requirement").notNull() 
+  requirement: json("requirement").notNull(),
+  progressMax: integer("progress_max").notNull()
 });
 
 export const userAchievements = pgTable("user_achievements", {
@@ -70,6 +73,14 @@ export const userAchievements = pgTable("user_achievements", {
   userId: integer("user_id").notNull(),
   achievementId: integer("achievement_id").notNull(),
   earnedAt: timestamp("earned_at").notNull().defaultNow()
+});
+
+export const userAchievementProgress = pgTable("user_achievement_progress", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  achievementId: integer("achievement_id").notNull(),
+  currentProgress: integer("current_progress").notNull().default(0),
+  updatedAt: timestamp("updated_at").notNull().defaultNow()
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -115,6 +126,12 @@ export const insertUserAchievementSchema = createInsertSchema(userAchievements).
   achievementId: true
 });
 
+export const insertAchievementProgressSchema = createInsertSchema(userAchievementProgress).pick({
+  userId: true,
+  achievementId: true,
+  currentProgress: true
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type TrainingLog = typeof trainingLogs.$inferSelect;
@@ -124,3 +141,4 @@ export type Follower = typeof followers.$inferSelect;
 export type PointTransaction = typeof pointTransactions.$inferSelect;
 export type Achievement = typeof achievements.$inferSelect;
 export type UserAchievement = typeof userAchievements.$inferSelect;
+export type UserAchievementProgress = typeof userAchievementProgress.$inferSelect;

@@ -5,6 +5,8 @@ import { storage } from "./storage";
 import { getTrainingSuggestions } from "./openai";
 import { insertTrainingLogSchema, insertCommentSchema } from "@shared/schema";
 import { pointsService, PointsService } from "./points-service";
+import { achievementService } from "./achievement-service"; // Assuming this import is needed
+
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
@@ -192,6 +194,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
         error: "Failed to get recommendations",
         details: error.message 
       });
+    }
+  });
+
+  // Achievement routes
+  app.get("/api/achievements/progress", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const progress = await achievementService.getAchievementProgress(req.user.id);
+      res.json(progress);
+    } catch (error) {
+      console.error("Error getting achievement progress:", error);
+      res.status(500).json({ error: "Failed to get achievement progress" });
+    }
+  });
+
+  // Initialize achievements (admin only route - you might want to secure this further)
+  app.post("/api/achievements/initialize", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      await achievementService.initializeAchievements();
+      res.sendStatus(200);
+    } catch (error) {
+      console.error("Error initializing achievements:", error);
+      res.status(500).json({ error: "Failed to initialize achievements" });
+    }
+  });
+
+  // Update achievement progress manually (if needed)
+  app.post("/api/achievements/:id/progress", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const achievementId = parseInt(req.params.id);
+      const { progress } = req.body;
+
+      await achievementService.updateProgress(
+        req.user.id,
+        achievementId,
+        progress
+      );
+
+      res.sendStatus(200);
+    } catch (error) {
+      console.error("Error updating achievement progress:", error);
+      res.status(500).json({ error: "Failed to update achievement progress" });
     }
   });
 

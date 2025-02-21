@@ -39,6 +39,9 @@ import {
   Cell
 } from "recharts";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { formatDistanceToNow } from 'date-fns'; // Import date-fns function
+import {cn} from "@/lib/utils"; //Assuming cn is imported from a utility file
+
 
 // Update the types section
 type TrainingLogWithComments = TrainingLog & {
@@ -78,8 +81,14 @@ type UserAchievement = {
     name: string;
     description: string;
     icon: string;
+    tier: string;
+    progressMax: number;
   };
-  earnedAt: string;
+  unlockedAt: string;
+  unlocked: boolean;
+  progressPercentage: number;
+  currentProgress: number;
+  category: string;
 };
 
 
@@ -208,6 +217,29 @@ export default function HomePage() {
     }
     return streak;
   };
+
+  function getTierColor(tier: string) {
+    switch (tier.toLowerCase()) {
+      case 'bronze':
+        return 'bg-orange-100 text-orange-800';
+      case 'silver':
+        return 'bg-gray-100 text-gray-800';
+      case 'gold':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'diamond':
+        return 'bg-blue-100 text-blue-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  }
+
+  function groupBy<T>(arr: T[], fn: (item: T) => string) {
+    return arr.reduce((prev, curr) => {
+      const groupKey = fn(curr);
+      const group = prev[groupKey] || [];
+      return { ...prev, [groupKey]: [...group, curr] };
+    }, {} as Record<string, T[]>);
+  }
 
   return (
     <div className="min-h-screen bg-background p-6">
@@ -490,25 +522,69 @@ export default function HomePage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {pointsSummary?.achievements.map((achievement) => (
-                <div
-                  key={achievement.achievement.name}
-                  className="p-4 rounded-lg border bg-card text-card-foreground"
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="p-2 rounded-full bg-primary/10">
-                      <Award className="h-6 w-6 text-primary" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold">{achievement.achievement.name}</h4>
-                      <p className="text-sm text-muted-foreground">
-                        {achievement.achievement.description}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        Earned {new Date(achievement.earnedAt).toLocaleDateString()}
-                      </p>
-                    </div>
+            <div className="space-y-6">
+              {/* Achievement Categories */}
+              {Object.entries(groupBy(pointsSummary?.achievements || [], a => a.category)).map(([category, achievements]) => (
+                <div key={category} className="space-y-4">
+                  <h3 className="font-semibold capitalize">{category}</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {achievements.map((achievement) => (
+                      <div
+                        key={achievement.achievement.name}
+                        className={cn(
+                          "p-4 rounded-lg border bg-card text-card-foreground",
+                          achievement.unlocked && "border-primary"
+                        )}
+                      >
+                        <div className="flex items-start gap-4">
+                          <div className={cn(
+                            "p-2 rounded-full",
+                            achievement.unlocked ? "bg-primary/10" : "bg-muted"
+                          )}>
+                            <Award className={cn(
+                              "h-6 w-6",
+                              achievement.unlocked ? "text-primary" : "text-muted-foreground"
+                            )} />
+                          </div>
+                          <div className="space-y-2 flex-1">
+                            <div className="flex items-center justify-between">
+                              <h4 className="font-semibold">
+                                {achievement.achievement.name}
+                              </h4>
+                              <span className={cn(
+                                "text-xs px-2 py-1 rounded-full",
+                                getTierColor(achievement.achievement.tier)
+                              )}>
+                                {achievement.achievement.tier}
+                              </span>
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              {achievement.achievement.description}
+                            </p>
+                            {/* Progress bar */}
+                            <div className="space-y-1">
+                              <div className="h-2 rounded-full bg-secondary">
+                                <div
+                                  className="h-full rounded-full bg-primary transition-all duration-300"
+                                  style={{ width: `${achievement.progressPercentage}%` }}
+                                />
+                              </div>
+                              <div className="flex justify-between text-xs text-muted-foreground">
+                                <span>
+                                  {achievement.currentProgress} / {achievement.achievement.progressMax}
+                                </span>
+                                <span>{achievement.progressPercentage}%</span>
+                              </div>
+                            </div>
+                            {achievement.unlocked && (
+                              <p className="text-xs text-muted-foreground mt-2">
+                                Earned {formatDistanceToNow(new Date(achievement.unlockedAt), { addSuffix: true })}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               ))}
