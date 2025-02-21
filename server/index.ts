@@ -6,10 +6,25 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Add CORS headers for development
+// Update CORS settings for development
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  // Allow credentials
+  res.header('Access-Control-Allow-Credentials', 'true');
+  // Allow specific headers
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  // Allow all methods
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+
+  const origin = req.headers.origin;
+  if (origin) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
+
+  // Handle preflight
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   next();
 });
 
@@ -52,6 +67,7 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   try {
     const server = await registerRoutes(app);
 
+    // Setup Vite middleware first in development
     if (app.get("env") === "development") {
       await setupVite(app, server);
     } else {
