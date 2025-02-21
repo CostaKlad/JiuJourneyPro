@@ -48,14 +48,12 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
 
 (async () => {
   try {
-    // Setup Vite middleware first in development
-    if (process.env.NODE_ENV !== "production") {
-      await setupVite(app);
-    }
-
     const server = await registerRoutes(app);
 
-    if (process.env.NODE_ENV === "production") {
+    // Setup Vite middleware in development
+    if (process.env.NODE_ENV !== "production") {
+      await setupVite(app, server);
+    } else {
       serveStatic(app);
     }
 
