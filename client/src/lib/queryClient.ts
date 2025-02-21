@@ -17,7 +17,7 @@ export async function apiRequest(
     method,
     headers: data ? { "Content-Type": "application/json" } : {},
     body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
+    credentials: "include",  // Important for session cookies
   });
 
   await throwIfResNotOk(res);
@@ -32,7 +32,7 @@ export const getQueryFn: <T>(options: {
   async ({ queryKey }) => {
     console.log(`Fetching data for queryKey:`, queryKey);
     const res = await fetch(queryKey[0] as string, {
-      credentials: "include",
+      credentials: "include",  // Important for session cookies
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {
