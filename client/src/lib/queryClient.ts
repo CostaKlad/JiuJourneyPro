@@ -12,6 +12,7 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
+  console.log(`Making ${method} request to ${url}`, data);
   const res = await fetch(url, {
     method,
     headers: data ? { "Content-Type": "application/json" } : {},
@@ -29,11 +30,13 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
+    console.log(`Fetching data for queryKey:`, queryKey);
     const res = await fetch(queryKey[0] as string, {
       credentials: "include",
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {
+      console.log("Unauthorized request, returning null as configured");
       return null;
     }
 
@@ -46,12 +49,18 @@ export const queryClient = new QueryClient({
     queries: {
       queryFn: getQueryFn({ on401: "throw" }),
       refetchInterval: false,
-      refetchOnWindowFocus: false,
-      staleTime: Infinity,
+      refetchOnWindowFocus: import.meta.env.DEV ? false : true,
+      staleTime: 0,
       retry: false,
+      onError: (error) => {
+        console.error("Query error:", error);
+      }
     },
     mutations: {
       retry: false,
+      onError: (error) => {
+        console.error("Mutation error:", error);
+      }
     },
   },
 });

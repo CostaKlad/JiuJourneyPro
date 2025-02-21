@@ -8,6 +8,20 @@ import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
 import TechniqueLibrary from "@/pages/technique-library";
 import NotFound from "@/pages/not-found";
+import { ErrorBoundary } from "react-error-boundary";
+
+function ErrorFallback({ error }: { error: Error }) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <div className="max-w-md w-full space-y-4">
+        <h2 className="text-2xl font-bold text-red-600">Something went wrong</h2>
+        <pre className="text-sm bg-red-50 p-4 rounded overflow-auto">
+          {error.message}
+        </pre>
+      </div>
+    </div>
+  );
+}
 
 function Router() {
   return (
@@ -22,12 +36,14 @@ function Router() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <Router />
-        <Toaster />
-      </AuthProvider>
-    </QueryClientProvider>
+    <ErrorBoundary FallbackComponent={ErrorFallback}>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <Router />
+          <Toaster />
+        </AuthProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 
