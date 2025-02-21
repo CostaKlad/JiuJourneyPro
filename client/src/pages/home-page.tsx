@@ -11,22 +11,23 @@ import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { 
-  PlusIcon, 
-  TimerIcon, 
-  BookOpenIcon, 
+import {
+  PlusIcon,
+  TimerIcon,
+  BookOpenIcon,
   MessageSquareIcon,
   FlameIcon,
   TrendingUpIcon,
   BarChart3Icon,
-  BrainIcon
+  BrainIcon,
+  Users
 } from "lucide-react";
-import { 
-  LineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  Tooltip, 
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
   ResponsiveContainer,
   PieChart,
   Pie,
@@ -188,6 +189,12 @@ export default function HomePage() {
                 Technique Library
               </Button>
             </Link>
+            <Link href="/community">
+              <Button variant="outline">
+                <Users className="mr-2 h-4 w-4" />
+                Community
+              </Button>
+            </Link>
             <Button variant="destructive" onClick={() => logoutMutation.mutate()}>
               Logout
             </Button>
@@ -322,6 +329,55 @@ export default function HomePage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Following Activity */}
+          <Card className="lg:col-span-3">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Following Activity</CardTitle>
+                <CardDescription>Recent training logs from practitioners you follow</CardDescription>
+              </div>
+              <Users className="h-5 w-5 text-primary" />
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {trainingLogs?.filter(log => log.userId !== user?.id).map((log) => (
+                  <div key={log.id} className="flex items-start gap-4 p-4 rounded-lg border">
+                    <Avatar>
+                      <AvatarFallback>
+                        {log.user?.username.slice(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-medium">{log.user?.username}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {log.user?.beltRank} Belt
+                          </p>
+                        </div>
+                        <span className="text-sm text-muted-foreground">
+                          {new Date(log.date).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <p className="mt-2">{log.type} - {log.duration} minutes</p>
+                      {log.notes && (
+                        <p className="mt-1 text-sm text-muted-foreground">{log.notes}</p>
+                      )}
+                      <div className="mt-4">
+                        <Button variant="ghost" size="sm" className="h-8">
+                          <MessageSquareIcon className="mr-2 h-4 w-4" />
+                          Comment
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+
         </div>
 
         {/* Action Button */}
@@ -362,13 +418,13 @@ export default function HomePage() {
                       <FormItem>
                         <FormLabel>Duration (minutes)</FormLabel>
                         <FormControl>
-                          <Input 
-                            type="number" 
-                            {...field} 
+                          <Input
+                            type="number"
+                            {...field}
                             min="1"
                             max="480"
                             onChange={(e) => field.onChange(parseInt(e.target.value))}
-                            required 
+                            required
                           />
                         </FormControl>
                         <FormMessage />
