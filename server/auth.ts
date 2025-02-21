@@ -72,13 +72,13 @@ export function setupAuth(app: Express) {
         const user = await storage.getUserByUsername(username);
         if (!user) {
           console.log('User not found:', username);
-          return done(null, false);
+          return done(null, false, { message: "Invalid username or password" });
         }
 
         const isValid = await comparePasswords(password, user.password);
         if (!isValid) {
           console.log('Invalid password for user:', username);
-          return done(null, false);
+          return done(null, false, { message: "Invalid username or password" });
         }
 
         return done(null, user);
@@ -107,12 +107,12 @@ export function setupAuth(app: Express) {
       const { username, password } = req.body;
 
       if (!username || !password) {
-        return res.status(400).send("Username and password are required");
+        return res.status(400).json({ message: "Username and password are required" });
       }
 
       const existingUser = await storage.getUserByUsername(username);
       if (existingUser) {
-        return res.status(400).send("Username already exists");
+        return res.status(400).json({ message: "Username already exists" });
       }
 
       const hashedPassword = await hashPassword(password);
@@ -138,7 +138,7 @@ export function setupAuth(app: Express) {
         return next(err);
       }
       if (!user) {
-        return res.status(401).json({ message: "Invalid username or password" });
+        return res.status(401).json({ message: info?.message || "Invalid username or password" });
       }
       req.login(user, (err) => {
         if (err) {
