@@ -233,6 +233,12 @@ export default function HomePage() {
                 Community
               </Button>
             </Link>
+            <Link href="/training-wizard">
+              <Button variant="outline">
+                <BrainIcon className="mr-2 h-4 w-4" />
+                Training Wizard
+              </Button>
+            </Link>
             <Button variant="destructive" onClick={() => logoutMutation.mutate()}>
               Logout
             </Button>

@@ -8,6 +8,7 @@ import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
 import TechniqueLibrary from "@/pages/technique-library";
 import CommunityPage from "@/pages/community-page";
+import TrainingWizard from "@/pages/training-wizard";
 import NotFound from "@/pages/not-found";
 import { ErrorBoundary } from "react-error-boundary";
 
@@ -30,6 +31,7 @@ function Router() {
       <ProtectedRoute path="/" component={HomePage} />
       <ProtectedRoute path="/techniques" component={TechniqueLibrary} />
       <ProtectedRoute path="/community" component={CommunityPage} />
+      <ProtectedRoute path="/training-wizard" component={TrainingWizard} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>

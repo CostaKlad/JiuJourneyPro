@@ -164,6 +164,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Training Wizard Routes
+  app.post("/api/wizard/recommendations", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const { trainingFrequency, focusAreas, goals } = req.body;
+
+      // Get recent training logs
+      const recentLogs = await storage.getTrainingLogs(req.user.id);
+
+      // Get personalized recommendations
+      const recommendations = await getTrainingSuggestions(
+        recentLogs,
+        req.user.beltRank,
+        {
+          trainingFrequency,
+          focusAreas,
+          goals
+        }
+      );
+
+      res.json(recommendations);
+    } catch (error) {
+      console.error("Error getting recommendations:", error);
+      res.status(500).json({ 
+        error: "Failed to get recommendations",
+        details: error.message 
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
