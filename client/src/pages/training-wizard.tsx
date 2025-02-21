@@ -37,6 +37,7 @@ import {
   ScrollText,
   Trophy,
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const wizardSchema = z.object({
   trainingFrequency: z.number().min(1).max(7),
@@ -66,6 +67,7 @@ const GOALS = [
 
 export default function TrainingWizard() {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [step, setStep] = useState(1);
   const [recommendations, setRecommendations] = useState<any>(null);
 
@@ -81,11 +83,55 @@ export default function TrainingWizard() {
   const recommendationsMutation = useMutation({
     mutationFn: async (data: WizardFormData) => {
       const res = await apiRequest("POST", "/api/wizard/recommendations", data);
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.details || "Failed to get recommendations");
+      }
       return res.json();
     },
     onSuccess: (data) => {
       setRecommendations(data);
       setStep(4); // Move to results step
+      toast({
+        title: "Success!",
+        description: "Your personalized training plan is ready.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Could not generate recommendations",
+        description: error.message,
+        variant: "destructive",
+      });
+      // Still show the results with default recommendations
+      setRecommendations({
+        focusAreas: ["Fundamentals", "Position Control", "Submissions"],
+        suggestedTechniques: ["Guard Passes", "Mount Control", "Basic Submissions"],
+        trainingTips: ["Focus on consistency", "Practice with partners of varying skill levels"],
+        weeklyPlan: [
+          {
+            day: "Monday",
+            focus: "Guard Work",
+            duration: 60,
+            techniques: ["Guard Retention", "Sweeps"]
+          },
+          {
+            day: "Wednesday",
+            focus: "Passing & Control",
+            duration: 60,
+            techniques: ["Guard Passing", "Side Control"]
+          },
+          {
+            day: "Friday",
+            focus: "Submissions",
+            duration: 60,
+            techniques: ["Armbars", "Chokes"]
+          }
+        ],
+        strengthAreas: ["Consistent Training", "Basic Techniques"],
+        improvementAreas: ["Advanced Submissions", "Competition Preparation"]
+      });
+      setStep(4);
     },
   });
 
