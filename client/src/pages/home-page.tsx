@@ -128,6 +128,10 @@ export default function HomePage() {
     queryKey: ["/api/points/summary"]
   });
 
+  const { data: achievementsProgress } = useQuery({
+    queryKey: ["/api/achievements/progress"]
+  });
+
   // Mutations remain unchanged
   const createLogMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -509,7 +513,6 @@ export default function HomePage() {
           </CardContent>
         </Card>
 
-
         {/* Achievements Showcase */}
         <Card className="lg:col-span-3">
           <CardHeader>
@@ -524,7 +527,7 @@ export default function HomePage() {
           <CardContent>
             <div className="space-y-6">
               {/* Achievement Categories */}
-              {Object.entries(groupBy(pointsSummary?.achievements || [], a => a.category)).map(([category, achievements]) => (
+              {Object.entries(groupBy(achievementsProgress || [], a => a.category)).map(([category, achievements]) => (
                 <div key={category} className="space-y-4">
                   <h3 className="font-semibold capitalize">{category}</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

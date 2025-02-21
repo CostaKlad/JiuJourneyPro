@@ -1,6 +1,7 @@
 import { db } from "./db";
 import { achievements, userAchievements, userAchievementProgress } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
+import { pointsService } from "./points-service"; // Add this import
 
 export class AchievementService {
   // Achievement categories
@@ -66,47 +67,58 @@ export class AchievementService {
 
   // Initialize achievements in database
   async initializeAchievements() {
-    for (const achievement of AchievementService.ACHIEVEMENTS) {
-      const existing = await db.select()
-        .from(achievements)
-        .where(eq(achievements.name, achievement.name));
+    try {
+      for (const achievement of AchievementService.ACHIEVEMENTS) {
+        const existing = await db.select()
+          .from(achievements)
+          .where(eq(achievements.name, achievement.name));
 
-      if (existing.length === 0) {
-        await db.insert(achievements).values(achievement);
+        if (existing.length === 0) {
+          await db.insert(achievements).values(achievement);
+        }
       }
+      return true;
+    } catch (error) {
+      console.error("Error initializing achievements:", error);
+      throw error;
     }
   }
 
   // Update achievement progress
   async updateProgress(userId: number, achievementId: number, progress: number) {
-    const [existingProgress] = await db.select()
-      .from(userAchievementProgress)
-      .where(
-        and(
-          eq(userAchievementProgress.userId, userId),
-          eq(userAchievementProgress.achievementId, achievementId)
-        )
-      );
+    try {
+      const [existingProgress] = await db.select()
+        .from(userAchievementProgress)
+        .where(
+          and(
+            eq(userAchievementProgress.userId, userId),
+            eq(userAchievementProgress.achievementId, achievementId)
+          )
+        );
 
-    if (existingProgress) {
-      await db.update(userAchievementProgress)
-        .set({ currentProgress: progress, updatedAt: new Date() })
-        .where(eq(userAchievementProgress.id, existingProgress.id));
-    } else {
-      await db.insert(userAchievementProgress).values({
-        userId,
-        achievementId,
-        currentProgress: progress
-      });
-    }
+      if (existingProgress) {
+        await db.update(userAchievementProgress)
+          .set({ currentProgress: progress, updatedAt: new Date() })
+          .where(eq(userAchievementProgress.id, existingProgress.id));
+      } else {
+        await db.insert(userAchievementProgress).values({
+          userId,
+          achievementId,
+          currentProgress: progress
+        });
+      }
 
-    // Check if achievement should be unlocked
-    const [achievement] = await db.select()
-      .from(achievements)
-      .where(eq(achievements.id, achievementId));
+      // Check if achievement should be unlocked
+      const [achievement] = await db.select()
+        .from(achievements)
+        .where(eq(achievements.id, achievementId));
 
-    if (achievement && this.shouldUnlockAchievement(achievement, progress)) {
-      await this.unlockAchievement(userId, achievementId);
+      if (achievement && this.shouldUnlockAchievement(achievement, progress)) {
+        await this.unlockAchievement(userId, achievementId);
+      }
+    } catch (error) {
+      console.error("Error updating achievement progress:", error);
+      throw error;
     }
   }
 
@@ -128,65 +140,74 @@ export class AchievementService {
 
   // Unlock achievement
   private async unlockAchievement(userId: number, achievementId: number) {
-    const existingUnlock = await db.select()
-      .from(userAchievements)
-      .where(
-        and(
-          eq(userAchievements.userId, userId),
-          eq(userAchievements.achievementId, achievementId)
-        )
-      );
-
-    if (existingUnlock.length === 0) {
-      await db.insert(userAchievements).values({
-        userId,
-        achievementId,
-        earnedAt: new Date()
-      });
-
-      // Award points for the achievement
-      const [achievement] = await db.select()
-        .from(achievements)
-        .where(eq(achievements.id, achievementId));
-
-      if (achievement) {
-        // Assuming we have access to pointsService
-        await pointsService.addPoints(
-          userId,
-          achievement.pointValue,
-          'achievement',
-          `Earned achievement: ${achievement.name}`
+    try {
+      const existingUnlock = await db.select()
+        .from(userAchievements)
+        .where(
+          and(
+            eq(userAchievements.userId, userId),
+            eq(userAchievements.achievementId, achievementId)
+          )
         );
+
+      if (existingUnlock.length === 0) {
+        await db.insert(userAchievements).values({
+          userId,
+          achievementId,
+          earnedAt: new Date()
+        });
+
+        // Award points for the achievement
+        const [achievement] = await db.select()
+          .from(achievements)
+          .where(eq(achievements.id, achievementId));
+
+        if (achievement) {
+          await pointsService.addPoints(
+            userId,
+            achievement.pointValue,
+            'achievement',
+            `Earned achievement: ${achievement.name}`
+          );
+        }
       }
+    } catch (error) {
+      console.error("Error unlocking achievement:", error);
+      throw error;
     }
   }
 
   // Get achievement progress for a user
   async getAchievementProgress(userId: number) {
-    const allAchievements = await db.select().from(achievements);
-    const userProgress = await db.select()
-      .from(userAchievementProgress)
-      .where(eq(userAchievementProgress.userId, userId));
-    
-    const unlockedAchievements = await db.select()
-      .from(userAchievements)
-      .where(eq(userAchievements.userId, userId));
+    try {
+      const allAchievements = await db.select().from(achievements);
+      const userProgress = await db.select()
+        .from(userAchievementProgress)
+        .where(eq(userAchievementProgress.userId, userId));
 
-    return allAchievements.map(achievement => {
-      const progress = userProgress.find(p => p.achievementId === achievement.id);
-      const unlocked = unlockedAchievements.some(ua => ua.achievementId === achievement.id);
+      const unlockedAchievements = await db.select()
+        .from(userAchievements)
+        .where(eq(userAchievements.userId, userId));
 
-      return {
-        ...achievement,
-        currentProgress: progress?.currentProgress || 0,
-        progressPercentage: progress ? 
-          Math.min(100, (progress.currentProgress / achievement.progressMax) * 100) : 0,
-        unlocked,
-        unlockedAt: unlocked ? 
-          unlockedAchievements.find(ua => ua.achievementId === achievement.id)?.earnedAt : 
-          null
-      };
-    });
+      return allAchievements.map(achievement => {
+        const progress = userProgress.find(p => p.achievementId === achievement.id);
+        const unlocked = unlockedAchievements.some(ua => ua.achievementId === achievement.id);
+
+        return {
+          ...achievement,
+          currentProgress: progress?.currentProgress || 0,
+          progressPercentage: progress ? 
+            Math.min(100, (progress.currentProgress / achievement.progressMax) * 100) : 0,
+          unlocked,
+          unlockedAt: unlocked ? 
+            unlockedAchievements.find(ua => ua.achievementId === achievement.id)?.earnedAt : 
+            null
+        };
+      });
+    } catch (error) {
+      console.error("Error getting achievement progress:", error);
+      throw error;
+    }
   }
 }
 
