@@ -33,10 +33,12 @@ import {
   Pie,
   Cell
 } from "recharts";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
-// Types remain unchanged
+// Update the types section
 type TrainingLogWithComments = TrainingLog & {
   comments: (Comment & { user: User })[];
+  user: User;
 };
 
 type Comment = {
@@ -45,8 +47,9 @@ type Comment = {
 };
 
 type User = {
+  id: number;
   username: string;
-  beltRank?: string;
+  beltRank: string;
 };
 
 // Belt ranks and their corresponding colors
