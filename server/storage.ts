@@ -97,7 +97,6 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(techniques).where(eq(techniques.category, category));
   }
 
-  // New community methods
   async followUser(followerId: number, followingId: number): Promise<void> {
     await db.insert(followers).values({
       followerId,

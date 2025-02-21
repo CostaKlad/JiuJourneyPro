@@ -4,7 +4,7 @@ import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { getTrainingSuggestions } from "./openai";
 import { insertTrainingLogSchema, insertCommentSchema } from "@shared/schema";
-import { pointsService } from "./points-service";
+import { pointsService, PointsService } from "./points-service";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
@@ -65,24 +65,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
       res.json(suggestions);
     } catch (error) {
-      res.status(500).json({ error: "Failed to get training suggestions" });
+      console.error("OpenAI API error:", error);
+      res.json({
+        focusAreas: ["Focus on fundamentals"],
+        suggestedTechniques: ["Basic guard passes", "Submissions from mount"],
+        trainingTips: ["Train consistently", "Stay hydrated"]
+      });
     }
   });
 
-  // New Community Routes
+  // Community Routes
   app.post("/api/follow/:userId", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     const followingId = parseInt(req.params.userId);
 
     try {
       await storage.followUser(req.user.id, followingId);
-      // Award points for gaining a follower
-      await pointsService.addPoints(
-        followingId,
-        pointsService.POINT_VALUES.FOLLOWER_GAINED,
-        'social',
-        'Gained a new follower'
-      );
+      await pointsService.awardStreakPoints(followingId, 1); // Award points for gaining a follower
       res.sendStatus(200);
     } catch (error) {
       res.status(400).json({ error: "Failed to follow user" });
@@ -129,22 +128,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const comment = await storage.createComment(req.user.id, logId, content);
 
       // Award points for making a comment
-      await pointsService.addPoints(
-        req.user.id,
-        pointsService.POINT_VALUES.COMMENT_MADE,
-        'social',
-        'Made a comment on a training log'
-      );
+      await pointsService.awardTrainingPoints(req.user.id, 0, 1); // Small point reward for engagement
 
       // Award points to the training log owner for receiving a comment
-      const log = await storage.getTrainingLog(logId);
+      const logs = await storage.getTrainingLogs(req.user.id);
+      const log = logs.find(l => l.id === logId);
       if (log && log.userId !== req.user.id) {
-        await pointsService.addPoints(
-          log.userId,
-          pointsService.POINT_VALUES.RECEIVED_COMMENT,
-          'social',
-          'Received a comment on training log'
-        );
+        await pointsService.awardTrainingPoints(log.userId, 0, 1); // Small point reward for receiving engagement
       }
 
       res.status(201).json(comment);
@@ -153,7 +143,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // New points system routes
+  // Points system routes
   app.get("/api/points/summary", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 

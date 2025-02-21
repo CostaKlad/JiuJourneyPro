@@ -4,7 +4,7 @@ import { eq, and, gte, lte } from "drizzle-orm";
 
 export class PointsService {
   // Point values for different actions
-  private static readonly POINT_VALUES = {
+  static readonly POINT_VALUES = {
     TRAINING_SESSION: 100,
     STREAK_DAY: 50,
     TECHNIQUE_LOGGED: 25,
@@ -34,10 +34,10 @@ export class PointsService {
 
   // Award points for a training session
   async awardTrainingPoints(userId: number, duration: number, techniquesCount: number): Promise<void> {
-    const basePoints = this.POINT_VALUES.TRAINING_SESSION;
+    const basePoints = PointsService.POINT_VALUES.TRAINING_SESSION;
     const durationBonus = Math.floor(duration / 30) * 25; // Extra points for longer sessions
-    const techniqueBonus = techniquesCount * this.POINT_VALUES.TECHNIQUE_LOGGED;
-    
+    const techniqueBonus = techniquesCount * PointsService.POINT_VALUES.TECHNIQUE_LOGGED;
+
     const totalPoints = basePoints + durationBonus + techniqueBonus;
 
     await this.addPoints(userId, totalPoints, 'training', 
@@ -52,7 +52,7 @@ export class PointsService {
   }
 
   // Add points and update user's total
-  private async addPoints(
+  async addPoints(
     userId: number, 
     amount: number, 
     type: string, 
@@ -102,6 +102,45 @@ export class PointsService {
     return level;
   }
 
+  // Get user's points summary
+  async getPointsSummary(userId: number): Promise<{
+    totalPoints: number;
+    level: number;
+    nextLevelPoints: number;
+    recentTransactions: any[];
+    achievements: any[];
+  }> {
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, userId));
+
+    const recentTransactions = await db
+      .select()
+      .from(pointTransactions)
+      .where(eq(pointTransactions.userId, userId))
+      .orderBy(pointTransactions.createdAt);
+
+    const userAchievementsList = await db
+      .select({
+        achievement: achievements,
+        earnedAt: userAchievements.earnedAt
+      })
+      .from(userAchievements)
+      .where(eq(userAchievements.userId, userId))
+      .innerJoin(achievements, eq(achievements.id, userAchievements.achievementId));
+
+    const nextLevelThreshold = PointsService.LEVEL_THRESHOLDS[user.level] || Infinity;
+
+    return {
+      totalPoints: user.totalPoints,
+      level: user.level,
+      nextLevelPoints: nextLevelThreshold,
+      recentTransactions: recentTransactions.slice(-10),
+      achievements: userAchievementsList
+    };
+  }
+
   // Check and award achievements
   private async checkAchievements(userId: number, tx: any): Promise<void> {
     const [user] = await tx
@@ -117,7 +156,7 @@ export class PointsService {
       .select()
       .from(userAchievements)
       .where(eq(userAchievements.userId, userId)))
-      .map(ua => ua.achievementId);
+      .map((ua: any) => ua.achievementId);
 
     for (const achievement of allAchievements) {
       if (!userAchievementIds.includes(achievement.id)) {
@@ -202,45 +241,6 @@ export class PointsService {
     }
 
     return streak;
-  }
-
-  // Get user's points summary
-  async getPointsSummary(userId: number): Promise<{
-    totalPoints: number;
-    level: number;
-    nextLevelPoints: number;
-    recentTransactions: any[];
-    achievements: any[];
-  }> {
-    const [user] = await db
-      .select()
-      .from(users)
-      .where(eq(users.id, userId));
-
-    const recentTransactions = await db
-      .select()
-      .from(pointTransactions)
-      .where(eq(pointTransactions.userId, userId))
-      .orderBy(pointTransactions.createdAt);
-
-    const userAchievementsList = await db
-      .select({
-        achievement: achievements,
-        earnedAt: userAchievements.earnedAt
-      })
-      .from(userAchievements)
-      .where(eq(userAchievements.userId, userId))
-      .innerJoin(achievements, eq(achievements.id, userAchievements.achievementId));
-
-    const nextLevelThreshold = PointsService.LEVEL_THRESHOLDS[user.level] || Infinity;
-
-    return {
-      totalPoints: user.totalPoints,
-      level: user.level,
-      nextLevelPoints: nextLevelThreshold,
-      recentTransactions: recentTransactions.slice(-10),
-      achievements: userAchievementsList
-    };
   }
 }
 
