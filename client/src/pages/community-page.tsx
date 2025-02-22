@@ -10,7 +10,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Users, UserPlus, UserMinus, MessageSquare, ThumbsUp,
   Medal, Trophy, Star, Target, Award, Plus, MapPin,
-  Flame, BookOpen, Calendar, Clock, Dumbbell, Shield
+  Flame, BookOpen, Calendar, Clock, Dumbbell, Shield, BookMarked
 } from "lucide-react";
 import { formatDistanceToNow } from 'date-fns';
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -90,9 +90,9 @@ function BeltProgressIndicator({ belt, stripes }: { belt: string; stripes: numbe
   );
 }
 
-function QuickStats({ stats }: { stats: UserStats }) {
+function QuickStats({ stats, id }: { stats: UserStats; id?: string }) {
   return (
-    <div className="grid grid-cols-3 gap-2 p-2">
+    <div className="grid grid-cols-3 gap-2 p-2" id={id}>
       {[
         { icon: Calendar, label: "Sessions", value: stats.totalSessions },
         { icon: Clock, label: "Hours", value: Math.round(stats.totalHours) },
@@ -317,7 +317,7 @@ function CommunityPage() {
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent" id="community-welcome">
               Community
             </h1>
             <p className="text-muted-foreground">Connect and level up with fellow BJJ practitioners</p>
@@ -331,7 +331,7 @@ function CommunityPage() {
               <Users className="h-4 w-4" />
               Find Partners
             </Button>
-            <Button className="gap-2">
+            <Button className="gap-2" id="training-log-button">
               <Plus className="h-4 w-4" />
               Log Training
             </Button>
@@ -378,7 +378,7 @@ function CommunityPage() {
                   <BeltProgressIndicator belt={user?.beltRank || 'white'} stripes={2} />
                 </div>
 
-                <QuickStats stats={userStats || defaultStats} />
+                <QuickStats stats={userStats || defaultStats} id="achievements-section" />
 
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
@@ -407,7 +407,7 @@ function CommunityPage() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card id="training-partners-section">
               <CardHeader>
                 <CardTitle>Discover Training Partners</CardTitle>
                 <CardDescription>Find the perfect training match</CardDescription>
@@ -486,7 +486,7 @@ function CommunityPage() {
           <div className="lg:col-span-2">
             <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
               <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="feed" className="flex items-center gap-2">
+                <TabsTrigger value="feed" className="flex items-center gap-2" id="activity-feed-tab">
                   <MessageSquare className="h-4 w-4" />
                   Activity Feed
                 </TabsTrigger>
