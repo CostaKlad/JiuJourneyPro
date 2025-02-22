@@ -92,6 +92,13 @@ type PointTransaction = {
 };
 
 
+// Add these type definitions after the existing types
+type TrainingSuggestions = {
+  focusAreas: string[];
+  suggestedTechniques: string[];
+  trainingTips: string[];
+};
+
 // Belt ranks and their corresponding colors
 const BELT_COLORS = {
   white: "#FFFFFF",
@@ -120,16 +127,19 @@ export default function HomePage() {
     queryKey: ["/api/training-logs"]
   });
 
-  const { data: suggestions } = useQuery({
+  // Update the suggestions query
+  const { data: suggestions } = useQuery<TrainingSuggestions>({
     queryKey: ["/api/suggestions"]
   });
 
-  const { data: pointsSummary } = useQuery<PointsSummary>({
-    queryKey: ["/api/points/summary"]
+  // Update the achievements query and groupBy function
+  const { data: achievementsProgress } = useQuery<UserAchievement[]>({
+    queryKey: ["/api/achievements/progress"]
   });
 
-  const { data: achievementsProgress } = useQuery({
-    queryKey: ["/api/achievements/progress"]
+  // Add this query after the achievements query
+  const { data: pointsSummary } = useQuery<PointsSummary>({
+    queryKey: ["/api/points/summary"]
   });
 
   // Mutations remain unchanged
@@ -237,12 +247,12 @@ export default function HomePage() {
     }
   }
 
-  function groupBy<T>(arr: T[], fn: (item: T) => string) {
-    return arr.reduce((prev, curr) => {
+  function groupBy<T>(arr: T[], fn: (item: T) => any) {
+    return arr?.reduce<Record<string, T[]>>((prev, curr) => {
       const groupKey = fn(curr);
       const group = prev[groupKey] || [];
       return { ...prev, [groupKey]: [...group, curr] };
-    }, {} as Record<string, T[]>);
+    }, {}) || {};
   }
 
   return (
@@ -446,19 +456,19 @@ export default function HomePage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <h3 className="font-semibold text-sm">Focus Areas</h3>
-                {suggestions?.focusAreas?.map((area: string, i: number) => (
+                {suggestions?.focusAreas?.map((area, i) => (
                   <div key={i} className="text-sm p-2 bg-primary/5 rounded-md">{area}</div>
                 ))}
               </div>
               <div className="space-y-2">
                 <h3 className="font-semibold text-sm">Suggested Techniques</h3>
-                {suggestions?.suggestedTechniques?.map((tech: string, i: number) => (
+                {suggestions?.suggestedTechniques?.map((tech, i) => (
                   <div key={i} className="text-sm p-2 bg-primary/5 rounded-md">{tech}</div>
                 ))}
               </div>
               <div className="space-y-2">
                 <h3 className="font-semibold text-sm">Training Tips</h3>
-                {suggestions?.trainingTips?.map((tip: string, i: number) => (
+                {suggestions?.trainingTips?.map((tip, i) => (
                   <div key={i} className="text-sm p-2 bg-primary/5 rounded-md">{tip}</div>
                 ))}
               </div>
