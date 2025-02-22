@@ -2,6 +2,21 @@ import { pgTable, text, serial, integer, timestamp, json, boolean } from "drizzl
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+export const TrainingType = {
+  GI: "gi",
+  NOGI: "nogi",
+  OPEN_MAT: "open_mat"
+} as const;
+
+export const FocusArea = {
+  GUARD: "guard",
+  PASSING: "passing",
+  ESCAPES: "escapes",
+  SUBMISSIONS: "submissions",
+  TAKEDOWNS: "takedowns",
+  POSITION_CONTROL: "position_control"
+} as const;
+
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
@@ -18,8 +33,18 @@ export const trainingLogs = pgTable("training_logs", {
   userId: integer("user_id").notNull(),
   date: timestamp("date").notNull().defaultNow(),
   type: text("type").notNull(),
-  techniques: json("techniques").notNull(),
+  gym: text("gym"),
+  techniquesPracticed: json("techniques_practiced").notNull(),
+  rollingSummary: text("rolling_summary"),
+  submissionsAttempted: json("submissions_attempted"),
+  submissionsSuccessful: json("submissions_successful"),
+  escapesAttempted: json("escapes_attempted"),
+  escapesSuccessful: json("escapes_successful"),
+  performanceRating: integer("performance_rating"),
+  focusAreas: json("focus_areas").notNull(),
+  energyLevel: integer("energy_level"),
   notes: text("notes"),
+  coachFeedback: text("coach_feedback"),
   duration: integer("duration").notNull()
 });
 
@@ -60,8 +85,8 @@ export const achievements = pgTable("achievements", {
   id: serial("id").primaryKey(),
   name: text("name").notNull().unique(),
   description: text("description").notNull(),
-  category: text("category").notNull(), 
-  tier: text("tier").notNull(), 
+  category: text("category").notNull(),
+  tier: text("tier").notNull(),
   icon: text("icon").notNull(),
   pointValue: integer("point_value").notNull(),
   requirement: json("requirement").notNull(),
@@ -96,15 +121,49 @@ export const insertUserSchema = createInsertSchema(users).pick({
 export const insertTrainingLogSchema = createInsertSchema(trainingLogs)
   .pick({
     type: true,
-    techniques: true,
+    gym: true,
+    techniquesPracticed: true,
+    rollingSummary: true,
+    submissionsAttempted: true,
+    submissionsSuccessful: true,
+    escapesAttempted: true,
+    escapesSuccessful: true,
+    performanceRating: true,
+    focusAreas: true,
+    energyLevel: true,
     notes: true,
+    coachFeedback: true,
     duration: true
   })
   .extend({
+    type: z.enum([TrainingType.GI, TrainingType.NOGI, TrainingType.OPEN_MAT]),
     duration: z.coerce
       .number()
       .min(1, "Duration must be at least 1 minute")
-      .max(480, "Duration cannot exceed 8 hours")
+      .max(480, "Duration cannot exceed 8 hours"),
+    performanceRating: z.coerce
+      .number()
+      .min(1, "Rating must be between 1 and 5")
+      .max(5)
+      .optional(),
+    energyLevel: z.coerce
+      .number()
+      .min(1, "Energy level must be between 1 and 5")
+      .max(5)
+      .optional(),
+    focusAreas: z.array(z.enum([
+      FocusArea.GUARD,
+      FocusArea.PASSING,
+      FocusArea.ESCAPES,
+      FocusArea.SUBMISSIONS,
+      FocusArea.TAKEDOWNS,
+      FocusArea.POSITION_CONTROL
+    ])),
+    techniquesPracticed: z.array(z.string()),
+    submissionsAttempted: z.array(z.string()).optional(),
+    submissionsSuccessful: z.array(z.string()).optional(),
+    escapesAttempted: z.array(z.string()).optional(),
+    escapesSuccessful: z.array(z.string()).optional()
   });
 
 export const insertTechniqueSchema = createInsertSchema(techniques);

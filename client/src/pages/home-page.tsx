@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { Link } from "wouter";
-import { TrainingLog, insertTrainingLogSchema } from "@shared/schema";
+import { TrainingLog, insertTrainingLogSchema, TrainingType, FocusArea } from "@shared/schema";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,7 +25,8 @@ import {
   Crown,
   Star,
   Award,
-  Medal
+  Medal,
+  X
 } from "lucide-react";
 import {
   LineChart,
@@ -39,11 +40,35 @@ import {
   Cell
 } from "recharts";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { formatDistanceToNow } from 'date-fns'; // Import date-fns function
-import {cn} from "@/lib/utils"; //Assuming cn is imported from a utility file
+import { formatDistanceToNow } from 'date-fns';
+import {cn} from "@/lib/utils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import { Slider } from "@/components/ui/slider";
+import {
+  Command,
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+} from "@/components/ui/command";
+import { Badge } from "@/components/ui/badge";
 
 
-// Update the type definition to match the actual structure
 type UserAchievement = {
   id: number;
   name: string;
@@ -58,7 +83,6 @@ type UserAchievement = {
   unlockedAt: string | null;
 };
 
-// Update the types section
 type TrainingLogWithComments = TrainingLog & {
   comments: (Comment & { user: User })[];
   user: User;
@@ -91,15 +115,29 @@ type PointTransaction = {
   createdAt: string;
 };
 
-
-// Add these type definitions after the existing types
 type TrainingSuggestions = {
   focusAreas: string[];
   suggestedTechniques: string[];
   trainingTips: string[];
 };
 
-// Belt ranks and their corresponding colors
+type TrainingFormData = {
+  type: typeof TrainingType[keyof typeof TrainingType];
+  gym: string;
+  techniquesPracticed: string[];
+  rollingSummary: string;
+  submissionsAttempted: string[];
+  submissionsSuccessful: string[];
+  escapesAttempted: string[];
+  escapesSuccessful: string[];
+  performanceRating: number;
+  focusAreas: (typeof FocusArea)[keyof typeof FocusArea][];
+  energyLevel: number;
+  notes: string;
+  coachFeedback: string;
+  duration: number;
+};
+
 const BELT_COLORS = {
   white: "#FFFFFF",
   blue: "#0066CC",
@@ -110,46 +148,53 @@ const BELT_COLORS = {
 
 const CHART_COLORS = ["#0066CC", "#660099", "#8B4513", "#FF4444", "#00CC99"];
 
-export default function HomePage() {
+function HomePage() {
   const { user, logoutMutation } = useAuth();
   const [showTrainingForm, setShowTrainingForm] = useState(false);
-  const form = useForm({
+  const defaultValues: TrainingFormData = {
+    type: TrainingType.GI,
+    gym: "",
+    techniquesPracticed: [],
+    rollingSummary: "",
+    submissionsAttempted: [],
+    submissionsSuccessful: [],
+    escapesAttempted: [],
+    escapesSuccessful: [],
+    performanceRating: 3,
+    focusAreas: [],
+    energyLevel: 3,
+    notes: "",
+    coachFeedback: "",
+    duration: 60
+  };
+  const form = useForm<TrainingFormData>({
     resolver: zodResolver(insertTrainingLogSchema),
-    defaultValues: {
-      type: "",
-      duration: 60, // Set a reasonable default
-      notes: "",
-      techniques: []
-    }
+    defaultValues
   });
 
   const { data: trainingLogs } = useQuery<TrainingLogWithComments[]>({
     queryKey: ["/api/training-logs"]
   });
 
-  // Update the suggestions query
   const { data: suggestions } = useQuery<TrainingSuggestions>({
     queryKey: ["/api/suggestions"]
   });
 
-  // Update the achievements query and groupBy function
   const { data: achievementsProgress } = useQuery<UserAchievement[]>({
     queryKey: ["/api/achievements/progress"]
   });
 
-  // Add this query after the achievements query
   const { data: pointsSummary } = useQuery<PointsSummary>({
     queryKey: ["/api/points/summary"]
   });
 
-  // Mutations remain unchanged
   const createLogMutation = useMutation({
     mutationFn: async (data: any) => {
-      console.log("Submitting data:", data); // Add logging
+      console.log("Submitting data:", data);
       const payload = {
         ...data,
         duration: parseInt(data.duration),
-        techniques: data.techniques || []
+        techniques: data.techniquesPracticed || []
       };
       const res = await apiRequest("POST", "/api/training-logs", payload);
       return res.json();
@@ -161,7 +206,6 @@ export default function HomePage() {
     },
     onError: (error: Error) => {
       console.error("Form submission error:", error);
-      // You might want to show a toast notification here
     }
   });
 
@@ -186,12 +230,10 @@ export default function HomePage() {
     }
   };
 
-  // Calculate statistics
   const totalTime = trainingLogs?.reduce((acc, log) => acc + log.duration, 0) || 0;
   const totalSessions = trainingLogs?.length || 0;
   const avgSessionTime = totalSessions > 0 ? Math.round(totalTime / totalSessions) : 0;
 
-  // Prepare chart data
   const last7DaysData = trainingLogs
     ?.slice(0, 7)
     .map(log => ({
@@ -200,7 +242,6 @@ export default function HomePage() {
     }))
     .reverse();
 
-  // Calculate training type distribution
   const trainingTypeData = trainingLogs?.reduce((acc: { name: string, value: number }[], log) => {
     const existingType = acc.find(item => item.name === log.type);
     if (existingType) {
@@ -211,7 +252,6 @@ export default function HomePage() {
     return acc;
   }, []) || [];
 
-  // Calculate current streak
   const calculateStreak = () => {
     if (!trainingLogs?.length) return 0;
     let streak = 0;
@@ -258,7 +298,6 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-7xl mx-auto">
-        {/* Header Section */}
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
@@ -291,9 +330,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Dashboard Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {/* Training Streak Card */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Current Streak</CardTitle>
@@ -305,7 +342,6 @@ export default function HomePage() {
             </CardContent>
           </Card>
 
-          {/* Total Training Time */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Training Time</CardTitle>
@@ -319,7 +355,6 @@ export default function HomePage() {
             </CardContent>
           </Card>
 
-          {/* Average Session Card */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Average Session</CardTitle>
@@ -333,7 +368,6 @@ export default function HomePage() {
             </CardContent>
           </Card>
 
-          {/* Points and Level Card */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Level {pointsSummary?.level}</CardTitle>
@@ -357,7 +391,6 @@ export default function HomePage() {
             </CardContent>
           </Card>
 
-          {/* Training Progress Chart */}
           <Card className="lg:col-span-2">
             <CardHeader>
               <CardTitle className="text-sm font-medium">Training Progress</CardTitle>
@@ -382,7 +415,6 @@ export default function HomePage() {
             </CardContent>
           </Card>
 
-          {/* Training Distribution */}
           <Card>
             <CardHeader>
               <CardTitle className="text-sm font-medium">Training Types</CardTitle>
@@ -412,7 +444,6 @@ export default function HomePage() {
           </Card>
         </div>
 
-        {/* Recent Point Transactions */}
         <Card className="col-span-2">
           <CardHeader>
             <CardTitle>Recent Activity</CardTitle>
@@ -443,7 +474,6 @@ export default function HomePage() {
           </CardContent>
         </Card>
 
-        {/* AI Suggestions Card */}
         <Card className="lg:col-span-3">
           <CardHeader className="flex flex-row items-center justify-between space-y-0">
             <div>
@@ -476,7 +506,6 @@ export default function HomePage() {
           </CardContent>
         </Card>
 
-        {/* Following Activity */}
         <Card className="lg:col-span-3">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
@@ -523,20 +552,16 @@ export default function HomePage() {
           </CardContent>
         </Card>
 
-        {/* Achievements Showcase */}
         <Card className="lg:col-span-3">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Achievements</CardTitle>
-                <CardDescription>Your earned badges and accomplishments</CardDescription>
-              </div>
-              <Crown className="h-5 w-5 text-yellow-500" />
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>Achievements</CardTitle>
+              <CardDescription>Your earned badges and accomplishments</CardDescription>
             </div>
+            <Crown className="h-5 w-5 text-yellow-500" />
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
-              {/* Achievement Categories */}
               {Object.entries(groupBy(achievementsProgress || [], a => a.category)).map(([category, achievements]) => (
                 <div key={category} className="space-y-4">
                   <h3 className="font-semibold capitalize">{category}</h3>
@@ -571,7 +596,6 @@ export default function HomePage() {
                             <p className="text-sm text-muted-foreground">
                               {achievement.description}
                             </p>
-                            {/* Progress bar */}
                             <div className="space-y-1">
                               <div className="h-2 rounded-full bg-secondary">
                                 <div
@@ -602,7 +626,6 @@ export default function HomePage() {
           </CardContent>
         </Card>
 
-        {/* Action Button */}
         <Button
           className="mb-8 w-full"
           onClick={() => setShowTrainingForm(!showTrainingForm)}
@@ -611,61 +634,467 @@ export default function HomePage() {
           {showTrainingForm ? "Cancel" : "Log New Training Session"}
         </Button>
 
-        {/* Training Form */}
         {showTrainingForm && (
           <Card className="mb-8">
             <CardHeader>
               <CardTitle>Log Training Session</CardTitle>
+              <CardDescription>Record your training details and progress</CardDescription>
             </CardHeader>
             <CardContent>
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(data => createLogMutation.mutate(data))} className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="type"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Training Type</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="e.g., Gi, No-Gi, Open Mat" required />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="duration"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Duration (minutes)</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            {...field}
-                            min="1"
-                            max="480"
-                            onChange={(e) => field.onChange(parseInt(e.target.value))}
-                            required
+                <form onSubmit={form.handleSubmit(data => createLogMutation.mutate(data))} className="space-y-6">
+                  <Tabs defaultValue="basic" className="w-full">
+                    <TabsList className="grid w-full grid-cols-4">
+                      <TabsTrigger value="basic">Basic Info</TabsTrigger>
+                      <TabsTrigger value="details">Details</TabsTrigger>
+                      <TabsTrigger value="assessment">Assessment</TabsTrigger>
+                      <TabsTrigger value="notes">Notes</TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="basic" className="space-y-4">
+                      <FormField
+                        control={form.control}
+                        name="type"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Training Type</FormLabel>
+                            <Select
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select training type" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value={TrainingType.GI}>Gi</SelectItem>
+                                <SelectItem value={TrainingType.NOGI}>No-Gi</SelectItem>
+                                <SelectItem value={TrainingType.OPEN_MAT}>Open Mat</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="gym"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Gym/Location</FormLabel>
+                            <FormControl>
+                              <Input {...field} placeholder="Enter gym or location" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="duration"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Duration (minutes)</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                {...field}
+                                onChange={e => field.onChange(parseInt(e.target.value))}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </TabsContent>
+
+                    <TabsContent value="details" className="space-y-4">
+                      <FormField
+                        control={form.control}
+                        name="techniquesPracticed"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Techniques Practiced</FormLabel>
+                            <FormControl>
+                              <Command className="rounded-lg border shadow-md">
+                                <CommandInput placeholder="Search techniques..." />
+                                <CommandList>
+                                  <CommandEmpty>No techniques found.</CommandEmpty>
+                                  <CommandGroup heading="Add techniques">
+                                    {/* Add technique items here */}
+                                  </CommandGroup>
+                                </CommandList>
+                              </Command>
+                            </FormControl>
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              {field.value.map((technique, index) => (
+                                <Badge
+                                  key={index}
+                                  variant="secondary"
+                                  className="flex items-center gap-1"
+                                >
+                                  {technique}
+                                  <X
+                                    className="h-3 w-3 cursor-pointer"
+                                    onClick={() => {
+                                      const newTechniques = [...field.value];
+                                      newTechniques.splice(index, 1);
+                                      field.onChange(newTechniques);
+                                    }}
+                                  />
+                                </Badge>
+                              ))}
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="rollingSummary"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Rolling Summary</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                {...field}
+                                placeholder="Summarize your rolling sessions..."
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-4">
+                          <FormField
+                            control={form.control}
+                            name="submissionsAttempted"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Submissions Attempted</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    placeholder="Add submission..."
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        const value = e.currentTarget.value.trim();
+                                        if (value) {
+                                          field.onChange([...field.value || [], value]);
+                                          e.currentTarget.value = '';
+                                        }
+                                      }
+                                    }}
+                                  />
+                                </FormControl>
+                                <div className="flex flex-wrap gap-2 mt-2">
+                                  {field.value?.map((submission, index) => (
+                                    <Badge
+                                      key={index}
+                                      variant="secondary"
+                                      className="flex items-center gap-1"
+                                    >
+                                      {submission}
+                                      <X
+                                        className="h-3 w-3 cursor-pointer"
+                                        onClick={() => {
+                                          const newSubmissions = [...field.value || []];
+                                          newSubmissions.splice(index, 1);
+                                          field.onChange(newSubmissions);
+                                        }}
+                                      />
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </FormItem>
+                            )}
                           />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="notes"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Notes</FormLabel>
-                        <FormControl>
-                          <Textarea {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+
+                          <FormField
+                            control={form.control}
+                            name="submissionsSuccessful"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Successful Submissions</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    placeholder="Add successful submission..."
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        const value = e.currentTarget.value.trim();
+                                        if (value) {
+                                          field.onChange([...field.value || [], value]);
+                                          e.currentTarget.value = '';
+                                        }
+                                      }
+                                    }}
+                                  />
+                                </FormControl>
+                                <div className="flex flex-wrap gap-2 mt-2">
+                                  {field.value?.map((submission, index) => (
+                                    <Badge
+                                      key={index}
+                                      variant="secondary"
+                                      className="flex items-center gap-1"
+                                    >
+                                      {submission}
+                                      <X
+                                        className="h-3 w-3 cursor-pointer"
+                                        onClick={() => {
+                                          const newSubmissions = [...field.value || []];
+                                          newSubmissions.splice(index, 1);
+                                          field.onChange(newSubmissions);
+                                        }}
+                                      />
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        <div className="space-y-4">
+                          <FormField
+                            control={form.control}
+                            name="escapesAttempted"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Escapes Attempted</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    placeholder="Add escape..."
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        const value = e.currentTarget.value.trim();
+                                        if (value) {
+                                          field.onChange([...field.value || [], value]);
+                                          e.currentTarget.value = '';
+                                        }
+                                      }
+                                    }}
+                                  />
+                                </FormControl>
+                                <div className="flex flex-wrap gap-2 mt-2">
+                                  {field.value?.map((escape, index) => (
+                                    <Badge
+                                      key={index}
+                                      variant="secondary"
+                                      className="flex items-center gap-1"
+                                    >
+                                      {escape}
+                                      <X
+                                        className="h-3 w-3 cursor-pointer"
+                                        onClick={() => {
+                                          const newEscapes = [...field.value || []];
+                                          newEscapes.splice(index, 1);
+                                          field.onChange(newEscapes);
+                                        }}
+                                      />
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name="escapesSuccessful"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Successful Escapes</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    placeholder="Add successful escape..."
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        const value = e.currentTarget.value.trim();
+                                        if (value) {
+                                          field.onChange([...field.value || [], value]);
+                                          e.currentTarget.value = '';
+                                        }
+                                      }
+                                    }}
+                                  />
+                                </FormControl>
+                                <div className="flex flex-wrap gap-2 mt-2">
+                                  {field.value?.map((escape, index) => (
+                                    <Badge
+                                      key={index}
+                                      variant="secondary"
+                                      className="flex items-center gap-1"
+                                    >
+                                      {escape}
+                                      <X
+                                        className="h-3 w-3 cursor-pointer"
+                                        onClick={() => {
+                                          const newEscapes = [...field.value || []];
+                                          newEscapes.splice(index, 1);
+                                          field.onChange(newEscapes);
+                                        }}
+                                      />
+                                    </Badge>
+                                  ))}
+                                </div>
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      </div>
+                    </TabsContent>
+
+                    <TabsContent value="assessment" className="space-y-4">
+                      <FormField
+                        control={form.control}
+                        name="performanceRating"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Performance Rating</FormLabel>
+                            <FormControl>
+                              <Slider
+                                min={1}
+                                max={5}
+                                step={1}
+                                value={[field.value]}
+                                onValueChange={([value]) => field.onChange(value)}
+                                className="w-full"
+                              />
+                            </FormControl>
+                            <div className="flex justify-between text-xs text-muted-foreground">
+                              <span>Poor</span>
+                              <span>Average</span>
+                              <span>Excellent</span>
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="focusAreas"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Focus Areas</FormLabel>
+                            <FormControl>
+                              <Select
+                                onValueChange={(value) => {
+                                  const focusArea = FocusArea[value as keyof typeof FocusArea];
+                                  if (!field.value.includes(focusArea)) {
+                                    field.onChange([...field.value, focusArea]);
+                                  }
+                                }}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select focus areas" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {Object.entries(FocusArea).map(([key, value]) => (
+                                    <SelectItem key={key} value={key}>
+                                      {key.charAt(0) + key.slice(1).toLowerCase().replace('_', ' ')}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </FormControl>
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              {field.value.map((area, index) => (
+                                <Badge
+                                  key={index}
+                                  variant="secondary"
+                                  className="flex items-center gap-1"
+                                >
+                                  {area.replace('_', ' ')}
+                                  <X
+                                    className="h-3 w-3 cursor-pointer"
+                                    onClick={() => {
+                                      const newAreas = [...field.value];
+                                      newAreas.splice(index, 1);
+                                      field.onChange(newAreas);
+                                    }}
+                                  />
+                                </Badge>
+                              ))}
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="energyLevel"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Energy Level</FormLabel>
+                            <FormControl>
+                              <Slider
+                                min={1}
+                                max={5}
+                                step={1}
+                                value={[field.value]}
+                                onValueChange={([value]) => field.onChange(value)}
+                                className="w-full"
+                              />
+                            </FormControl>
+                            <div className="flex justify-between text-xs text-muted-foreground">
+                              <span>Low</span>
+                              <span>Medium</span>
+                              <span>High</span>
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </TabsContent>
+
+                    <TabsContent value="notes" className="space-y-4">
+                      <FormField
+                        control={form.control}
+                        name="notes"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Personal Notes</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                {...field}
+                                placeholder="Add any personal notes or reflections..."
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="coachFeedback"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Coach's Feedback</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                {...field}
+                                placeholder="Add any feedback from your coach..."
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </TabsContent>
+                  </Tabs>
+
                   <Button type="submit" disabled={createLogMutation.isPending}>
                     {createLogMutation.isPending ? "Saving..." : "Log Session"}
                   </Button>
@@ -674,71 +1103,9 @@ export default function HomePage() {
             </CardContent>
           </Card>
         )}
-
-        {/* Recent Training Sessions */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle>Recent Training Sessions</CardTitle>
-              <CardDescription>Your latest training activity</CardDescription>
-            </div>
-            <MessageSquareIcon className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {trainingLogs?.slice(0, 5).map((log) => (
-                <div key={log.id} className="border p-4 rounded-lg space-y-4">
-                  <div>
-                    <div className="flex justify-between">
-                      <h3 className="font-semibold">{log.type}</h3>
-                      <span className="text-muted-foreground">
-                        {new Date(log.date).toLocaleDateString()}
-                      </span>
-                    </div>
-                    <p className="text-sm mt-2">{log.notes}</p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Duration: {log.duration} minutes
-                    </p>
-                  </div>
-
-                  {/* Comments Section */}
-                  <div className="pt-4 border-t">
-                    <h4 className="font-semibold mb-2">Comments</h4>
-                    <div className="space-y-2">
-                      <div className="flex gap-2">
-                        <Input
-                          placeholder="Add a comment..."
-                          onKeyPress={(e) => {
-                            if (e.key === 'Enter') {
-                              handleCommentSubmit(log.id, e.currentTarget);
-                            }
-                          }}
-                        />
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={(e) => {
-                            const input = e.currentTarget.previousElementSibling as HTMLInputElement;
-                            handleCommentSubmit(log.id, input);
-                          }}
-                        >
-                          Comment
-                        </Button>
-                      </div>
-                      {log.comments?.map((comment) => (
-                        <div key={comment.id} className="flex items-start gap-2 text-sm">
-                          <span className="font-medium">{comment.user.username}:</span>
-                          <p>{comment.content}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );
 }
+
+export default HomePage;
