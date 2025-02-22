@@ -1,19 +1,19 @@
 import { db } from "./db";
 import { achievements, userAchievements, userAchievementProgress } from "@shared/schema";
 import { eq, and } from "drizzle-orm";
-import { pointsService } from "./points-service"; // Add this import
+import { pointsService } from "./points-service";
 
 export class AchievementService {
-  // Achievement categories
+  // Achievement categories with proper naming
   static readonly CATEGORIES = {
     TRAINING: "training",
+    TECHNIQUE: "technique",
     COMMUNITY: "community",
     COMPETITION: "competition",
-    TECHNIQUE: "technique",
     STREAK: "streak"
   };
 
-  // Achievement tiers
+  // Achievement tiers with proper naming
   static readonly TIERS = {
     BRONZE: "bronze",
     SILVER: "silver",
@@ -21,7 +21,7 @@ export class AchievementService {
     DIAMOND: "diamond"
   };
 
-  // Pre-defined achievements
+  // Pre-defined achievements with proper categories and tiers
   static readonly ACHIEVEMENTS = [
     {
       name: "Training Warrior",
@@ -44,14 +44,24 @@ export class AchievementService {
       progressMax: 20
     },
     {
-      name: "Community Mentor",
-      description: "Help others by making 50 comments",
+      name: "Community Builder",
+      description: "Follow 5 other practitioners",
       category: AchievementService.CATEGORIES.COMMUNITY,
-      tier: AchievementService.TIERS.GOLD,
-      icon: "💬",
-      pointValue: 300,
-      requirement: { type: "comment_count", count: 50 },
-      progressMax: 50
+      tier: AchievementService.TIERS.BRONZE,
+      icon: "👥",
+      pointValue: 150,
+      requirement: { type: "follow_count", count: 5 },
+      progressMax: 5
+    },
+    {
+      name: "Competition Ready",
+      description: "Log 5 competition preparation sessions",
+      category: AchievementService.CATEGORIES.COMPETITION,
+      tier: AchievementService.TIERS.SILVER,
+      icon: "🏆",
+      pointValue: 250,
+      requirement: { type: "competition_prep", count: 5 },
+      progressMax: 5
     },
     {
       name: "Dedication Master",
@@ -62,21 +72,46 @@ export class AchievementService {
       pointValue: 500,
       requirement: { type: "streak_days", days: 30 },
       progressMax: 30
+    },
+    {
+      name: "Social Butterfly",
+      description: "Make 50 comments on training logs",
+      category: AchievementService.CATEGORIES.COMMUNITY,
+      tier: AchievementService.TIERS.GOLD,
+      icon: "💬",
+      pointValue: 300,
+      requirement: { type: "comment_count", count: 50 },
+      progressMax: 50
+    },
+    {
+      name: "Technique Master",
+      description: "Log practice of 50 different techniques",
+      category: AchievementService.CATEGORIES.TECHNIQUE,
+      tier: AchievementService.TIERS.GOLD,
+      icon: "🎯",
+      pointValue: 400,
+      requirement: { type: "unique_techniques", count: 50 },
+      progressMax: 50
     }
   ];
 
   // Initialize achievements in database
   async initializeAchievements() {
     try {
+      console.log("Starting achievement initialization...");
+
       for (const achievement of AchievementService.ACHIEVEMENTS) {
         const existing = await db.select()
           .from(achievements)
           .where(eq(achievements.name, achievement.name));
 
         if (existing.length === 0) {
+          console.log(`Initializing achievement: ${achievement.name}`);
           await db.insert(achievements).values(achievement);
         }
       }
+
+      console.log("Achievement initialization completed successfully");
       return true;
     } catch (error) {
       console.error("Error initializing achievements:", error);
@@ -133,6 +168,10 @@ export class AchievementService {
         return progress >= requirement.count;
       case 'streak_days':
         return progress >= requirement.days;
+      case 'follow_count':
+        return progress >= requirement.count;
+      case 'competition_prep':
+        return progress >= requirement.count;
       default:
         return false;
     }
@@ -196,11 +235,11 @@ export class AchievementService {
         return {
           ...achievement,
           currentProgress: progress?.currentProgress || 0,
-          progressPercentage: progress ? 
+          progressPercentage: progress ?
             Math.min(100, (progress.currentProgress / achievement.progressMax) * 100) : 0,
           unlocked,
-          unlockedAt: unlocked ? 
-            unlockedAchievements.find(ua => ua.achievementId === achievement.id)?.earnedAt : 
+          unlockedAt: unlocked ?
+            unlockedAchievements.find(ua => ua.achievementId === achievement.id)?.earnedAt :
             null
         };
       });
