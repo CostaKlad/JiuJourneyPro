@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { mockFollowers, mockFollowing, mockTrainingLogs, mockSuggestedPartners, mockUserStats } from "@/lib/mock-data";
 
 type ExtendedUser = Pick<User, 'id' | 'username' | 'beltRank' | 'gym'>;
 
@@ -167,20 +168,24 @@ function CommunityPage() {
   const [partnerFilter, setPartnerFilter] = useState("all");
   const [locationFilter, setLocationFilter] = useState("all");
 
-  const { data: followers } = useQuery<ExtendedUser[]>({
+  const { data: followers = mockFollowers } = useQuery<ExtendedUser[]>({
     queryKey: ["/api/followers"],
   });
 
-  const { data: following } = useQuery<ExtendedUser[]>({
+  const { data: following = mockFollowing } = useQuery<ExtendedUser[]>({
     queryKey: ["/api/following"],
   });
 
-  const { data: activityFeed } = useQuery<TrainingLogEntry[]>({
+  const { data: activityFeed = mockTrainingLogs } = useQuery<TrainingLogEntry[]>({
     queryKey: ["/api/community/feed"],
   });
 
-  const { data: suggestedPartners } = useQuery<ExtendedUser[]>({
+  const { data: suggestedPartners = mockSuggestedPartners } = useQuery<ExtendedUser[]>({
     queryKey: ["/api/community/suggestions"],
+  });
+
+  const { data: userStats = mockUserStats } = useQuery<UserStats>({
+    queryKey: ["/api/user/stats"],
   });
 
   const followMutation = useMutation({
@@ -219,10 +224,6 @@ function CommunityPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/community/feed"] });
     }
-  });
-
-  const { data: userStats } = useQuery<UserStats>({
-    queryKey: ["/api/user/stats"],
   });
 
   const defaultStats: UserStats = {
@@ -316,7 +317,7 @@ function CommunityPage() {
                     </Button>
                   </div>
                   <div className="flex gap-2">
-                    {userStats?.achievements.map((achievement) => (
+                    {(userStats?.achievements || []).map((achievement) => (
                       <AchievementBadge key={achievement.id} achievement={achievement} />
                     ))}
                   </div>
