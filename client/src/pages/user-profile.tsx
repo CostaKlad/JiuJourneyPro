@@ -28,7 +28,7 @@ function UserProfile() {
   const { user: currentUser } = useAuth();
   const [selectedTab, setSelectedTab] = useState("activity");
 
-  const { data: profile } = useQuery({
+  const { data: profile, refetch: refetchProfile } = useQuery({
     queryKey: ["/api/users", id],
     queryFn: async () => {
       // For now, return mock data
@@ -57,6 +57,8 @@ function UserProfile() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users", id] });
       queryClient.invalidateQueries({ queryKey: ["/api/following"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/followers"] });
+      refetchProfile(); // Immediately refetch the profile to update the isFollowing status
     },
   });
 
@@ -67,6 +69,8 @@ function UserProfile() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users", id] });
       queryClient.invalidateQueries({ queryKey: ["/api/following"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/followers"] });
+      refetchProfile(); // Immediately refetch the profile to update the isFollowing status
     },
   });
 
@@ -114,17 +118,19 @@ function UserProfile() {
                       variant="outline"
                       className="gap-2"
                       onClick={() => unfollowMutation.mutate()}
+                      disabled={unfollowMutation.isPending}
                     >
                       <UserMinus className="h-4 w-4" />
-                      Unfollow
+                      {unfollowMutation.isPending ? "Unfollowing..." : "Unfollow"}
                     </Button>
                   ) : (
                     <Button
                       className="gap-2"
                       onClick={() => followMutation.mutate()}
+                      disabled={followMutation.isPending}
                     >
                       <UserPlus className="h-4 w-4" />
-                      Follow
+                      {followMutation.isPending ? "Following..." : "Follow"}
                     </Button>
                   )}
                 </>
