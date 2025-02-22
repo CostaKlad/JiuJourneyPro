@@ -171,11 +171,14 @@ function CommunityPage() {
 
   const { data: followers = mockFollowers, error: followersError } = useQuery<ExtendedUser[]>({
     queryKey: ["/api/followers"],
+    staleTime: 30000, // Consider data fresh for 30 seconds
+    retry: false, // Don't retry on failure
     queryFn: async () => {
       try {
         const response = await fetch("/api/followers");
         if (!response.ok) throw new Error("Failed to fetch followers");
-        return await response.json();
+        const data = await response.json();
+        return data.length ? data : mockFollowers; // Use mock data if empty response
       } catch (error) {
         console.error("Error fetching followers:", error);
         return mockFollowers;
@@ -185,11 +188,14 @@ function CommunityPage() {
 
   const { data: following = mockFollowing, error: followingError } = useQuery<ExtendedUser[]>({
     queryKey: ["/api/following"],
+    staleTime: 30000,
+    retry: false,
     queryFn: async () => {
       try {
         const response = await fetch("/api/following");
         if (!response.ok) throw new Error("Failed to fetch following");
-        return await response.json();
+        const data = await response.json();
+        return data.length ? data : mockFollowing;
       } catch (error) {
         console.error("Error fetching following:", error);
         return mockFollowing;
@@ -199,11 +205,14 @@ function CommunityPage() {
 
   const { data: activityFeed = mockTrainingLogs, error: feedError } = useQuery<TrainingLogEntry[]>({
     queryKey: ["/api/community/feed"],
+    staleTime: 30000,
+    retry: false,
     queryFn: async () => {
       try {
         const response = await fetch("/api/community/feed");
         if (!response.ok) throw new Error("Failed to fetch activity feed");
-        return await response.json();
+        const data = await response.json();
+        return data.length ? data : mockTrainingLogs;
       } catch (error) {
         console.error("Error fetching activity feed:", error);
         return mockTrainingLogs;
@@ -213,11 +222,14 @@ function CommunityPage() {
 
   const { data: suggestedPartners = mockSuggestedPartners, error: suggestionsError } = useQuery<ExtendedUser[]>({
     queryKey: ["/api/community/suggestions"],
+    staleTime: 30000,
+    retry: false,
     queryFn: async () => {
       try {
         const response = await fetch("/api/community/suggestions");
         if (!response.ok) throw new Error("Failed to fetch suggestions");
-        return await response.json();
+        const data = await response.json();
+        return data.length ? data : mockSuggestedPartners;
       } catch (error) {
         console.error("Error fetching suggestions:", error);
         return mockSuggestedPartners;
@@ -227,11 +239,14 @@ function CommunityPage() {
 
   const { data: userStats = mockUserStats, error: statsError } = useQuery<UserStats>({
     queryKey: ["/api/user/stats"],
+    staleTime: 30000,
+    retry: false,
     queryFn: async () => {
       try {
         const response = await fetch("/api/user/stats");
         if (!response.ok) throw new Error("Failed to fetch user stats");
-        return await response.json();
+        const data = await response.json();
+        return Object.keys(data).length ? data : mockUserStats;
       } catch (error) {
         console.error("Error fetching user stats:", error);
         return mockUserStats;
