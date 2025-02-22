@@ -23,11 +23,14 @@ import {
   Settings,
   LogOut,
   Plus,
-  Target
+  Target,
+  Swords // Added import for Swords icon
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import UserProfile from "@/pages/user-profile";
 import AchievementsDashboard from "@/pages/achievements-dashboard";
+import TechniquePassport from "@/pages/technique-passport"; // Added import for TechniquePassport
+
 
 function ErrorFallback({ error }: { error: Error }) {
   return (
@@ -49,6 +52,7 @@ function Layout({ children }: { children: React.ReactNode }) {
   const menuItems = [
     { href: "/", icon: Home, label: "Dashboard" },
     { href: "/techniques", icon: BookMarked, label: "Technique Library" },
+    { href: "/passport", icon: Swords, label: "Technique Passport" }, // Updated menuItems
     { href: "/community", icon: Users, label: "Community" },
     { href: "/achievements", icon: Trophy, label: "Achievements" },
   ];
@@ -185,6 +189,7 @@ function App() {
               <Route path="/auth" component={AuthPage} />
               <ProtectedRoute path="/" component={HomePage} />
               <ProtectedRoute path="/techniques" component={TechniqueLibrary} />
+              <ProtectedRoute path="/passport" component={TechniquePassport} />  {/* Added route */}
               <ProtectedRoute path="/community" component={CommunityPage} />
               <ProtectedRoute path="/users/:id" component={UserProfile} />
               <ProtectedRoute path="/achievements" component={AchievementsDashboard} />
