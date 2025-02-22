@@ -1,34 +1,32 @@
 import { useState } from 'react';
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { useQuery } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { User } from "@shared/schema";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import {
-  Users, UserPlus, UserMinus, MessageSquare, ThumbsUp,
-  Medal, Trophy, Star, Shield, BookOpen,
-  Flame, Target, MapPin, Calendar, Clock, Dumbbell,
-  Plus
-} from "lucide-react";
-import { formatDistanceToNow } from 'date-fns';
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-// Basic test component to verify routing
 function CommunityPage() {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="p-6">
+        <h1>Loading...</h1>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-6">
-      <h1 className="text-3xl font-bold">Community Page</h1>
-      <p>Welcome, {user?.username}</p>
+    <div className="container mx-auto p-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Community Page</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-lg">Welcome, {user?.username || 'Guest'}</p>
+          <p className="text-muted-foreground mt-2">This is the BJJ community hub</p>
+        </CardContent>
+      </Card>
     </div>
   );
 }
