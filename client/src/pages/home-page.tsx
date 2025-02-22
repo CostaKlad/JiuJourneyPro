@@ -139,6 +139,23 @@ type TrainingFormData = {
   duration: number;
 };
 
+// Add these type definitions near the top of the file, after existing types
+type AchievementCategoryType = 'TRAINING' | 'SUBMISSIONS' | 'ESCAPES' | 'STRATEGY';
+type AchievementTierType = 'BRONZE' | 'SILVER' | 'GOLD' | 'DIAMOND';
+
+interface AchievementRequirement {
+  count: number;
+  description: string;
+}
+
+interface AchievementTierRequirements {
+  [key: string]: AchievementRequirement;
+}
+
+interface AchievementRequirementsType {
+  [key: string]: AchievementTierRequirements;
+}
+
 const BELT_COLORS = {
   white: "#FFFFFF",
   blue: "#0066CC",
@@ -229,6 +246,48 @@ const BJJTechniques = {
   ]
 };
 
+
+// Update the constant definitions
+const AchievementCategory: Record<AchievementCategoryType, string> = {
+  TRAINING: 'Training',
+  SUBMISSIONS: 'Submissions',
+  ESCAPES: 'Escapes',
+  STRATEGY: 'Strategy'
+} as const;
+
+const AchievementTier: Record<AchievementTierType, string> = {
+  BRONZE: 'Bronze',
+  SILVER: 'Silver',
+  GOLD: 'Gold',
+  DIAMOND: 'Diamond'
+} as const;
+
+const AchievementRequirements: AchievementRequirementsType = {
+  TRAINING: {
+    Bronze: { count: 10, description: 'Complete 10 training sessions' },
+    Silver: { count: 50, description: 'Complete 50 training sessions' },
+    Gold: { count: 100, description: 'Complete 100 training sessions' },
+    Diamond: { count: 250, description: 'Complete 250 training sessions' }
+  },
+  SUBMISSIONS: {
+    Bronze: { count: 5, description: 'Successfully perform 5 submissions' },
+    Silver: { count: 25, description: 'Successfully perform 25 submissions' },
+    Gold: { count: 50, description: 'Successfully perform 50 submissions' },
+    Diamond: { count: 100, description: 'Successfully perform 100 submissions' }
+  },
+  ESCAPES: {
+    Bronze: { count: 5, description: 'Successfully escape 5 times' },
+    Silver: { count: 25, description: 'Successfully escape 25 times' },
+    Gold: { count: 50, description: 'Successfully escape 50 times' },
+    Diamond: { count: 100, description: 'Successfully escape 100 times' }
+  },
+  STRATEGY: {
+    Bronze: { count: 2, description: 'Utilize 2 different guard passing strategies' },
+    Silver: { count: 5, description: 'Utilize 5 different guard passing strategies' },
+    Gold: { count: 10, description: 'Utilize 10 different guard passing strategies' },
+    Diamond: { count: 20, description: 'Utilize 20 different guard passing strategies' }
+  }
+} as const;
 
 function HomePage() {
   const { user, logoutMutation } = useAuth();
@@ -361,7 +420,7 @@ function HomePage() {
     return streak;
   };
 
-  function getTierColor(tier: string) {
+  function getTierColor(tier: string): string {
     switch (tier.toLowerCase()) {
       case 'bronze':
         return 'bg-orange-100 text-orange-800';
@@ -628,7 +687,7 @@ function HomePage() {
                               </Command>
                             </FormControl>
                             <div className="flex flex-wrap gap-2 mt-2">
-                              {field.value.map((technique, index) => (
+                              {field.value && Array.isArray(field.value) && field.value.map((technique: string, index: number) => (
                                 <Badge
                                   key={index}
                                   variant="secondary"
@@ -748,9 +807,11 @@ function HomePage() {
               <BookOpen className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                {trainingLogs?.reduce((acc, log) => acc + (log.techniquesPracticed?.length || 0), 0)}
-              </div>
+              {trainingLogs && trainingLogs.length > 0 && (
+                <div className="text-2xl font-bold">
+                  {trainingLogs.reduce((acc, log) => acc + (Array.isArray(log.techniquesPracticed) ? log.techniquesPracticed.length : 0), 0)}
+                </div>
+              )}
               <p className="text-xs text-muted-foreground">Total techniques logged</p>
             </CardContent>
           </Card>
@@ -779,8 +840,10 @@ function HomePage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {trainingLogs?.reduce((acc, log) => acc + (log.submissionsSuccessful?.length || 0), 0)} / 
-                {trainingLogs?.reduce((acc, log) => acc + (log.submissionsAttempted?.length || 0), 0)}
+                {trainingLogs && trainingLogs.length > 0
+                  ? `${trainingLogs.reduce((acc, log) => acc + (Array.isArray(log.submissionsSuccessful) ? log.submissionsSuccessful.length : 0), 0)} / 
+                     ${trainingLogs.reduce((acc, log) => acc + (Array.isArray(log.submissionsAttempted) ? log.submissionsAttempted.length : 0), 0)}`
+                  : "0 / 0"}
               </div>
               <p className="text-xs text-muted-foreground">Successful vs Attempted</p>
             </CardContent>
@@ -793,8 +856,10 @@ function HomePage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {trainingLogs?.reduce((acc, log) => acc + (log.escapesSuccessful?.length || 0), 0)} / 
-                {trainingLogs?.reduce((acc, log) => acc + (log.escapesAttempted?.length || 0), 0)}
+                {trainingLogs && trainingLogs.length > 0
+                  ? `${trainingLogs.reduce((acc, log) => acc + (Array.isArray(log.escapesSuccessful) ? log.escapesSuccessful.length : 0), 0)} / 
+                     ${trainingLogs.reduce((acc, log) => acc + (Array.isArray(log.escapesAttempted) ? log.escapesAttempted.length : 0), 0)}`
+                  : "0 / 0"}
               </div>
               <p className="text-xs text-muted-foreground">Successful vs Attempted</p>
             </CardContent>
@@ -827,7 +892,7 @@ function HomePage() {
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-8">
           <Card>
             <CardHeader>
               <CardTitle>Training Progress</CardTitle>
@@ -847,8 +912,7 @@ function HomePage() {
                       strokeWidth={2}
                     />
                   </LineChart>
-                </ResponsiveContainer>
-              </div>
+                </ResponsiveContainer>              </div>
             </CardContent>
           </Card>
 
@@ -1036,79 +1100,118 @@ function HomePage() {
           </Card>
         </div>
 
-        <Card className="lg:col-span-3">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <Card className="lg:col-span-2">
+            <CardHeader>
               <CardTitle>Achievements</CardTitle>
               <CardDescription>Your earned badges and accomplishments</CardDescription>
-            </div>
-            <Crown className="h-5 w-5 text-yellow-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              {Object.entries(groupedAchievements).map(([category, achievements]) => (
-                <div key={category}>
-                  <h3 className="text-lg font-semibold mb-4">{category}</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                    {achievements.map((achievement) => (
-                      <Card key={achievement.id} className={cn(
-                        "relative overflow-hidden transition-all",
-                        achievement.unlocked ? "border-primary" : "opacity-75"
-                      )}>
-                        <div className="flex items-start gap-4">
-                          <div className={cn(
-                            "p-2 rounded-full",
-                            achievement.unlocked ? "bg-primary/10" : "bg-muted"
-                          )}>
-                            <Award className={cn(
-                              "h-6 w-6",
-                              achievement.unlocked ? "text-primary" : "text-muted-foreground"
-                            )} />
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                {Object.entries(groupedAchievements).map(([category, achievements]) => (
+                  <div key={category}>
+                    <h3 className="text-lg font-semibold mb-4">{category}</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                      {achievements.map((achievement) => (
+                        <Card key={achievement.id} className={cn(
+                          "relative overflow-hidden transition-all",
+                          achievement.unlocked ? "border-primary" : "opacity-75"
+                        )}>
+                          <div className="flex items-start gap-4">
+                            <div className={cn(
+                              "p-2 rounded-full",
+                              achievement.unlocked ? "bg-primary/10" : "bg-muted"
+                            )}>
+                              <Award className={cn(
+                                "h-6 w-6",
+                                achievement.unlocked ? "text-primary" : "text-muted-foreground"
+                              )} />
+                            </div>
+                            <div className="space-y-2 flex-1">
+                              <div className="flex items-center justify-between">
+                                <h4 className="font-semibold">
+                                  {achievement.name}
+                                </h4>
+                                <span className={cn(
+                                  "text-xs px-2 py-1 rounded-full",
+                                  getTierColor(achievement.tier)
+                                )}>
+                                  {achievement.tier}
+                                </span>
+                              </div>
+                              <p className="text-sm text-muted-foreground">
+                                {achievement.description}
+                              </p>
+                              <div className="space-y-1">
+                                <div className="h-2 rounded-full bg-secondary">
+                                  <div
+                                    className="h-full rounded-full bg-primary transition-all duration-300"
+                                    style={{ width: `${achievement.progressPercentage}%` }}
+                                  />
+                                </div>
+                                <div className="flex justify-between text-xs text-muted-foreground">
+                                  <span>
+                                    {achievement.currentProgress} / {achievement.progressMax}
+                                  </span>
+                                  <span>{achievement.progressPercentage}%</span>
+                                </div>
+                              </div>
+                              {achievement.unlocked && (
+                                <p className="text-xs text-muted-foreground mt-2">
+                                  Earned {formatDistanceToNow(new Date(achievement.unlockedAt!), { addSuffix: true })}
+                                </p>
+                              )}
+                            </div>
                           </div>
-                          <div className="space-y-2 flex-1">
-                            <div className="flex items-center justify-between">
-                              <h4 className="font-semibold">
-                                {achievement.name}
-                              </h4>
-                              <span className={cn(
-                                "text-xs px-2 py-1 rounded-full",
-                                getTierColor(achievement.tier)
-                              )}>
-                                {achievement.tier}
-                              </span>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Achievement Guide</CardTitle>
+              <CardDescription>How to earn achievements and progress in your BJJ journey</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {(Object.entries(AchievementCategory) as [AchievementCategoryType, string][]).map(([key, category]) => (
+                  <div key={category} className="space-y-4">
+                    <h3 className="font-semibold text-lg">{category}</h3>
+                    <div className="space-y-3">
+                      {(Object.entries(AchievementTier) as [AchievementTierType, string][]).map(([tierKey, tier]) => {
+                        const requirement: AchievementRequirement = AchievementRequirements[key][tier];
+                        return (
+                          <div
+                            key={tier}
+                            className={cn(
+                              "p-4 rounded-lg border",
+                              getTierColor(tier)
+                            )}
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="font-medium">{tier}</span>
+                              <Badge variant="secondary">
+                                {requirement.count} required
+                              </Badge>
                             </div>
                             <p className="text-sm text-muted-foreground">
-                              {achievement.description}
+                              {requirement.description}
                             </p>
-                            <div className="space-y-1">
-                              <div className="h-2 rounded-full bg-secondary">
-                                <div
-                                  className="h-full rounded-full bg-primary transition-all duration-300"
-                                  style={{ width: `${achievement.progressPercentage}%` }}
-                                />
-                              </div>
-                              <div className="flex justify-between text-xs text-muted-foreground">
-                                <span>
-                                  {achievement.currentProgress} / {achievement.progressMax}
-                                </span>
-                                <span>{achievement.progressPercentage}%</span>
-                              </div>
-                            </div>
-                            {achievement.unlocked && (
-                              <p className="text-xs text-muted-foreground mt-2">
-                                Earned {formatDistanceToNow(new Date(achievement.unlockedAt!), { addSuffix: true })}
-                              </p>
-                            )}
                           </div>
-                        </div>
-                      </Card>
-                    ))}
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

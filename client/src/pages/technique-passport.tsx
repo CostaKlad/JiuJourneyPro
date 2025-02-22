@@ -18,10 +18,37 @@ import {
   Award,
   CheckCircle2,
   Lock,
+  Brain,
+  Clock,
+  Dumbbell,
+  LucideIcon
 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { BJJTechniques, FocusArea } from "@shared/schema";
 
-// Mock data for initial development
-const mockTechniqueCategories = [
+interface TechniqueCategory {
+  id: string;
+  name: string;
+  icon: LucideIcon;
+  techniques: Technique[];
+}
+
+interface Technique {
+  id: number;
+  name: string;
+  difficulty: string;
+  progress: number;
+  isUnlocked: boolean;
+  achievements: Achievement[];
+}
+
+interface Achievement {
+  id: number;
+  name: string;
+  completed: boolean;
+}
+
+const mockTechniqueCategories: TechniqueCategory[] = [
   {
     id: "guard",
     name: "Guard Techniques",
@@ -89,7 +116,7 @@ const mockTechniqueCategories = [
 function TechniquePassport() {
   const [selectedCategory, setSelectedCategory] = useState("guard");
 
-  const { data: categories = mockTechniqueCategories } = useQuery({
+  const { data: categories = mockTechniqueCategories } = useQuery<TechniqueCategory[]>({
     queryKey: ["/api/technique-passport/categories"],
   });
 
@@ -104,6 +131,44 @@ function TechniquePassport() {
         </p>
       </div>
 
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>How to Earn Achievements</CardTitle>
+          <CardDescription>Track your progress and unlock achievements through training</CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Target className="h-5 w-5 text-primary" />
+                <h3 className="font-semibold">Technique Practice</h3>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Record techniques practiced in your training logs to earn technique mastery achievements
+              </p>
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Shield className="h-5 w-5 text-primary" />
+                <h3 className="font-semibold">Submissions & Escapes</h3>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Track successful submissions and escapes during rolling to unlock progression badges
+              </p>
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Clock className="h-5 w-5 text-primary" />
+                <h3 className="font-semibold">Training Consistency</h3>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Log regular training sessions to earn consistency achievements and track your dedication
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
         <TabsList className="grid grid-cols-2 lg:grid-cols-4 gap-2">
           {categories.map((category) => {
@@ -114,7 +179,7 @@ function TechniquePassport() {
                 value={category.id}
                 className="flex items-center gap-2"
               >
-                <Icon className="h-4 w-4" />
+                {Icon && <Icon className="h-4 w-4" />}
                 {category.name}
               </TabsTrigger>
             );

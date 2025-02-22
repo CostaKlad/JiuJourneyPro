@@ -63,6 +63,56 @@ export const BJJTechniques = {
   ]
 } as const;
 
+// Add achievement categories after the FocusArea enum
+export const AchievementCategory = {
+  TECHNIQUE_MASTERY: "technique_mastery",
+  TRAINING_CONSISTENCY: "training_consistency", 
+  SUBMISSION_MASTERY: "submission_mastery",
+  ESCAPE_MASTERY: "escape_mastery",
+  FOCUS_AREA: "focus_area"
+} as const;
+
+export const AchievementTier = {
+  BRONZE: "bronze",
+  SILVER: "silver",
+  GOLD: "gold",
+  DIAMOND: "diamond"
+} as const;
+
+// Update achievement requirements based on training activities
+export const AchievementRequirements = {
+  TECHNIQUE_MASTERY: {
+    BRONZE: { count: 5, description: "Practice a technique 5 times" },
+    SILVER: { count: 15, description: "Practice a technique 15 times" },
+    GOLD: { count: 30, description: "Practice a technique 30 times" },
+    DIAMOND: { count: 50, description: "Practice a technique 50 times" }
+  },
+  SUBMISSION_MASTERY: {
+    BRONZE: { count: 3, description: "Successfully execute a submission 3 times" },
+    SILVER: { count: 10, description: "Successfully execute a submission 10 times" },
+    GOLD: { count: 20, description: "Successfully execute a submission 20 times" },
+    DIAMOND: { count: 40, description: "Successfully execute a submission 40 times" }
+  },
+  ESCAPE_MASTERY: {
+    BRONZE: { count: 3, description: "Successfully perform an escape 3 times" },
+    SILVER: { count: 10, description: "Successfully perform an escape 10 times" },
+    GOLD: { count: 20, description: "Successfully perform an escape 20 times" },
+    DIAMOND: { count: 40, description: "Successfully perform an escape 40 times" }
+  },
+  TRAINING_CONSISTENCY: {
+    BRONZE: { count: 5, description: "Log 5 training sessions" },
+    SILVER: { count: 20, description: "Log 20 training sessions" },
+    GOLD: { count: 50, description: "Log 50 training sessions" },
+    DIAMOND: { count: 100, description: "Log 100 training sessions" }
+  },
+  FOCUS_AREA: {
+    BRONZE: { count: 3, description: "Practice techniques from a focus area 3 times" },
+    SILVER: { count: 10, description: "Practice techniques from a focus area 10 times" },
+    GOLD: { count: 25, description: "Practice techniques from a focus area 25 times" },
+    DIAMOND: { count: 50, description: "Practice techniques from a focus area 50 times" }
+  }
+} as const;
+
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
@@ -211,6 +261,7 @@ export const pointTransactions = pgTable("point_transactions", {
   createdAt: timestamp("created_at").notNull().defaultNow()
 });
 
+// Update achievements table with new fields
 export const achievements = pgTable("achievements", {
   id: serial("id").primaryKey(),
   name: text("name").notNull().unique(),
@@ -220,7 +271,8 @@ export const achievements = pgTable("achievements", {
   icon: text("icon").notNull(),
   pointValue: integer("point_value").notNull(),
   requirement: json("requirement").notNull(),
-  progressMax: integer("progress_max").notNull()
+  progressMax: integer("progress_max").notNull(),
+  howToEarn: text("how_to_earn").notNull() // Added field for clarity
 });
 
 export const userAchievements = pgTable("user_achievements", {
@@ -251,7 +303,24 @@ export const insertPointTransactionSchema = createInsertSchema(pointTransactions
   description: true
 });
 
-export const insertAchievementSchema = createInsertSchema(achievements);
+// Update the insert schema
+export const insertAchievementSchema = createInsertSchema(achievements)
+  .extend({
+    category: z.enum([
+      AchievementCategory.TECHNIQUE_MASTERY,
+      AchievementCategory.TRAINING_CONSISTENCY,
+      AchievementCategory.SUBMISSION_MASTERY,
+      AchievementCategory.ESCAPE_MASTERY,
+      AchievementCategory.FOCUS_AREA
+    ]),
+    tier: z.enum([
+      AchievementTier.BRONZE,
+      AchievementTier.SILVER,
+      AchievementTier.GOLD,
+      AchievementTier.DIAMOND
+    ]),
+    howToEarn: z.string()
+  });
 export const insertUserAchievementSchema = createInsertSchema(userAchievements).pick({
   userId: true,
   achievementId: true

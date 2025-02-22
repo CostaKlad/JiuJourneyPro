@@ -8,101 +8,81 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-} from "recharts";
-import { mockUserStats } from "@/lib/mock-data";
-import { Trophy, Users, Star, Target, Award } from "lucide-react";
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Trophy,
+  Star,
+  Target,
+  Award,
+  Medal,
+  Shield,
+  BookOpen,
+  Flame,
+  Clock,
+  Dumbbell,
+  Brain,
+  LucideIcon
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { AchievementCategory, AchievementTier } from "@shared/schema";
 
-const COLORS = ["#FF8042", "#00C49F", "#FFBB28", "#0088FE"];
+interface Achievement {
+  id: number;
+  name: string;
+  description: string;
+  category: keyof typeof AchievementCategory;
+  tier: keyof typeof AchievementTier;
+  progressMax: number;
+  currentProgress: number;
+  unlocked: boolean;
+  howToEarn: string;
+}
 
-// Mock data for community achievements
-const mockCommunityData = {
-  achievementDistribution: [
-    { name: "Streak Warriors", value: 45 },
-    { name: "Technique Masters", value: 30 },
-    { name: "Competition Champs", value: 15 },
-    { name: "Teaching Guides", value: 10 },
-  ],
-  recentUnlocks: [
-    {
-      id: 1,
-      username: "AliceSmith",
-      achievement: "Tournament Veteran",
-      timestamp: "2024-02-22T10:30:00Z",
-    },
-    {
-      id: 2,
-      username: "BobJohnson",
-      achievement: "Knowledge Sharer",
-      timestamp: "2024-02-22T09:15:00Z",
-    },
-    {
-      id: 3,
-      username: "CarolWhite",
-      achievement: "Consistent Warrior",
-      timestamp: "2024-02-22T08:45:00Z",
-    },
-  ],
-  leaderboard: [
-    {
-      username: "AliceSmith",
-      beltRank: "Purple",
-      totalAchievements: 15,
-      recentAchievement: "Tournament Veteran",
-    },
-    {
-      username: "BobJohnson",
-      beltRank: "Brown",
-      totalAchievements: 12,
-      recentAchievement: "Knowledge Sharer",
-    },
-    {
-      username: "CarolWhite",
-      beltRank: "Black",
-      totalAchievements: 20,
-      recentAchievement: "Technique Master",
-    },
-  ],
-  monthlyProgress: [
-    { month: "Jan", achievements: 24 },
-    { month: "Feb", achievements: 30 },
-    { month: "Mar", achievements: 28 },
-    { month: "Apr", achievements: 35 },
-    { month: "May", achievements: 40 },
-    { month: "Jun", achievements: 45 },
-  ],
+const TIER_COLORS = {
+  BRONZE: "bg-orange-100 text-orange-800 border-orange-200",
+  SILVER: "bg-gray-100 text-gray-800 border-gray-200",
+  GOLD: "bg-yellow-100 text-yellow-800 border-yellow-200",
+  DIAMOND: "bg-blue-100 text-blue-800 border-blue-200"
+} as const;
+
+const CATEGORY_ICONS: Record<keyof typeof AchievementCategory, LucideIcon> = {
+  TECHNIQUE_MASTERY: Brain,
+  TRAINING_CONSISTENCY: Clock,
+  SUBMISSION_MASTERY: Target,
+  ESCAPE_MASTERY: Shield,
+  FOCUS_AREA: Dumbbell
 };
 
 function AchievementsDashboard() {
   const [selectedView, setSelectedView] = useState("overview");
 
-  const { data: communityData = mockCommunityData } = useQuery({
-    queryKey: ["/api/community/achievements"],
+  const { data: achievements } = useQuery<Achievement[]>({
+    queryKey: ["/api/achievements/progress"],
   });
+
+  const groupedAchievements = achievements?.reduce<Record<string, Achievement[]>>((acc, achievement) => {
+    if (!acc[achievement.category]) {
+      acc[achievement.category] = [];
+    }
+    acc[achievement.category].push(achievement);
+    return acc;
+  }, {});
 
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-            Community Achievements
+            Achievement Progress
           </h1>
           <p className="text-muted-foreground">
-            Track and celebrate our community's progress
+            Track your BJJ journey and unlock achievements
           </p>
         </div>
       </div>
@@ -113,165 +93,242 @@ function AchievementsDashboard() {
             <Trophy className="h-4 w-4" />
             Overview
           </TabsTrigger>
-          <TabsTrigger value="leaderboard" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            Leaderboard
-          </TabsTrigger>
-          <TabsTrigger value="recent" className="flex items-center gap-2">
+          <TabsTrigger value="progress" className="flex items-center gap-2">
             <Star className="h-4 w-4" />
-            Recent Unlocks
+            Progress
+          </TabsTrigger>
+          <TabsTrigger value="howto" className="flex items-center gap-2">
+            <Award className="h-4 w-4" />
+            How to Earn
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Achievement Distribution */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {Object.entries(groupedAchievements || {}).map(([category, catAchievements]) => {
+              const IconComponent = CATEGORY_ICONS[category as keyof typeof AchievementCategory];
+              return (
+                <Card key={category}>
+                  <CardHeader>
+                    <div className="flex items-center gap-2">
+                      {IconComponent && <IconComponent className="h-5 w-5" />}
+                      <CardTitle className="text-lg capitalize">
+                        {category.toLowerCase().replace('_', ' ')}
+                      </CardTitle>
+                    </div>
+                    <CardDescription>
+                      {catAchievements.length} achievements available
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {catAchievements.map((achievement) => (
+                      <div
+                        key={achievement.id}
+                        className={cn(
+                          "p-4 rounded-lg border",
+                          achievement.unlocked
+                            ? TIER_COLORS[achievement.tier]
+                            : "bg-muted/50"
+                        )}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="font-semibold">{achievement.name}</h3>
+                          <Badge variant={achievement.unlocked ? "default" : "outline"}>
+                            {achievement.tier}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          {achievement.description}
+                        </p>
+                        <Progress
+                          value={(achievement.currentProgress / achievement.progressMax) * 100}
+                        />
+                        <p className="text-xs text-right mt-1">
+                          {achievement.currentProgress} / {achievement.progressMax}
+                        </p>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="howto" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>How to Earn Achievements</CardTitle>
+              <CardDescription>
+                Guide to unlocking achievements in each category
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <h3 className="font-semibold flex items-center gap-2">
+                  <Brain className="h-5 w-5" />
+                  Technique Mastery
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 rounded-lg bg-muted/50">
+                    <h4 className="font-medium mb-2">Technique Explorer</h4>
+                    <p className="text-sm text-muted-foreground">Log and practice 5 different techniques</p>
+                    <Badge variant="outline" className="mt-2">Bronze</Badge>
+                  </div>
+                  <div className="p-4 rounded-lg bg-muted/50">
+                    <h4 className="font-medium mb-2">Technique Master</h4>
+                    <p className="text-sm text-muted-foreground">Successfully practice a technique 15 times</p>
+                    <Badge variant="outline" className="mt-2">Gold</Badge>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="font-semibold flex items-center gap-2">
+                  <Target className="h-5 w-5" />
+                  Submission Mastery
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 rounded-lg bg-muted/50">
+                    <h4 className="font-medium mb-2">Submission Hunter</h4>
+                    <p className="text-sm text-muted-foreground">Successfully execute 3 submissions</p>
+                    <Badge variant="outline" className="mt-2">Bronze</Badge>
+                  </div>
+                  <div className="p-4 rounded-lg bg-muted/50">
+                    <h4 className="font-medium mb-2">Submission Expert</h4>
+                    <p className="text-sm text-muted-foreground">Successfully execute 40 submissions</p>
+                    <Badge variant="outline" className="mt-2">Diamond</Badge>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="font-semibold flex items-center gap-2">
+                  <Shield className="h-5 w-5" />
+                  Escape Mastery
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 rounded-lg bg-muted/50">
+                    <h4 className="font-medium mb-2">Escape Artist</h4>
+                    <p className="text-sm text-muted-foreground">Successfully perform 3 escapes</p>
+                    <Badge variant="outline" className="mt-2">Bronze</Badge>
+                  </div>
+                  <div className="p-4 rounded-lg bg-muted/50">
+                    <h4 className="font-medium mb-2">Grand Defender</h4>
+                    <p className="text-sm text-muted-foreground">Successfully perform 40 escapes</p>
+                    <Badge variant="outline" className="mt-2">Diamond</Badge>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="font-semibold flex items-center gap-2">
+                  <Clock className="h-5 w-5" />
+                  Training Consistency
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 rounded-lg bg-muted/50">
+                    <h4 className="font-medium mb-2">Dedicated Student</h4>
+                    <p className="text-sm text-muted-foreground">Log 5 training sessions</p>
+                    <Badge variant="outline" className="mt-2">Bronze</Badge>
+                  </div>
+                  <div className="p-4 rounded-lg bg-muted/50">
+                    <h4 className="font-medium mb-2">Mat Warrior</h4>
+                    <p className="text-sm text-muted-foreground">Complete 100 training sessions</p>
+                    <Badge variant="outline" className="mt-2">Diamond</Badge>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="font-semibold flex items-center gap-2">
+                  <Dumbbell className="h-5 w-5" />
+                  Focus Areas
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 rounded-lg bg-muted/50">
+                    <h4 className="font-medium mb-2">Well-Rounded</h4>
+                    <p className="text-sm text-muted-foreground">Train in 3 different focus areas</p>
+                    <Badge variant="outline" className="mt-2">Bronze</Badge>
+                  </div>
+                  <div className="p-4 rounded-lg bg-muted/50">
+                    <h4 className="font-medium mb-2">Area Specialist</h4>
+                    <p className="text-sm text-muted-foreground">Complete 50 sessions in a single focus area</p>
+                    <Badge variant="outline" className="mt-2">Diamond</Badge>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="progress" className="space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <Card>
               <CardHeader>
-                <CardTitle>Achievement Distribution</CardTitle>
+                <CardTitle>Achievement Progress</CardTitle>
                 <CardDescription>
-                  Types of achievements unlocked by the community
+                  Your journey across all categories
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={communityData.achievementDistribution}
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={100}
-                        fill="#8884d8"
-                        dataKey="value"
-                        label={({ name, percent }) =>
-                          `${name} ${(percent * 100).toFixed(0)}%`
-                        }
-                      >
-                        {communityData.achievementDistribution.map((entry, index) => (
-                          <Cell
-                            key={`cell-${index}`}
-                            fill={COLORS[index % COLORS.length]}
-                          />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
+                <div className="space-y-4">
+                  {Object.entries(groupedAchievements || {}).map(([category, achievements]) => {
+                    const unlockedCount = achievements.filter(a => a.unlocked).length;
+                    const totalCount = achievements.length;
+                    const Icon = CATEGORY_ICONS[category as keyof typeof AchievementCategory];
+
+                    return (
+                      <div key={category} className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            {Icon && <Icon className="h-4 w-4" />}
+                            <span className="capitalize">{category.toLowerCase().replace('_', ' ')}</span>
+                          </div>
+                          <span className="text-sm text-muted-foreground">
+                            {unlockedCount} / {totalCount}
+                          </span>
+                        </div>
+                        <Progress value={(unlockedCount / totalCount) * 100} />
+                      </div>
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
 
-            {/* Monthly Progress */}
             <Card>
               <CardHeader>
-                <CardTitle>Monthly Progress</CardTitle>
+                <CardTitle>Next Achievements</CardTitle>
                 <CardDescription>
-                  Achievement unlocks over the past months
+                  Achievements close to unlocking
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={communityData.monthlyProgress}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="month" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      <Bar
-                        dataKey="achievements"
-                        fill="#8884d8"
-                        name="Achievements Unlocked"
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
+                <div className="space-y-4">
+                  {Object.values(groupedAchievements || {})
+                    .flat()
+                    .filter(achievement => !achievement.unlocked && achievement.currentProgress > 0)
+                    .sort((a, b) => (b.currentProgress / b.progressMax) - (a.currentProgress / a.progressMax))
+                    .slice(0, 5)
+                    .map(achievement => (
+                      <div key={achievement.id} className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium">{achievement.name}</span>
+                          <Badge variant="outline">{achievement.tier}</Badge>
+                        </div>
+                        <Progress
+                          value={(achievement.currentProgress / achievement.progressMax) * 100}
+                        />
+                        <p className="text-xs text-right">
+                          {achievement.currentProgress} / {achievement.progressMax}
+                        </p>
+                      </div>
+                    ))}
                 </div>
               </CardContent>
             </Card>
           </div>
-        </TabsContent>
-
-        <TabsContent value="leaderboard">
-          <Card>
-            <CardHeader>
-              <CardTitle>Achievement Leaders</CardTitle>
-              <CardDescription>
-                Top performers in our community
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {communityData.leaderboard.map((user, index) => (
-                  <div
-                    key={user.username}
-                    className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="font-bold text-2xl text-muted-foreground w-8">
-                        #{index + 1}
-                      </div>
-                      <Avatar>
-                        <AvatarFallback>
-                          {user.username.slice(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                    </div>
-                    <div className="flex-1">
-                      <div className="font-semibold">{user.username}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {user.beltRank} Belt
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-semibold">
-                        {user.totalAchievements} Achievements
-                      </div>
-                      <Badge variant="secondary" className="mt-1">
-                        {user.recentAchievement}
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="recent">
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Achievement Unlocks</CardTitle>
-              <CardDescription>
-                Latest achievements unlocked by community members
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {communityData.recentUnlocks.map((unlock) => (
-                  <div
-                    key={unlock.id}
-                    className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg"
-                  >
-                    <Avatar>
-                      <AvatarFallback>
-                        {unlock.username.slice(0, 2).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <div className="font-semibold">{unlock.username}</div>
-                      <div className="text-sm text-muted-foreground">
-                        Unlocked "{unlock.achievement}"
-                      </div>
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      {new Date(unlock.timestamp).toLocaleString()}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
         </TabsContent>
       </Tabs>
     </div>
