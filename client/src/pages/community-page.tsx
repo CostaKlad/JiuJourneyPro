@@ -9,9 +9,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Users, UserPlus, UserMinus, MessageSquare, ThumbsUp,
-  Medal, Trophy, Crown, Star, Award, Shield, BookOpen,
+  Medal, Trophy, Star, Shield, BookOpen,
   Flame, Target, MapPin, Calendar, Clock, Dumbbell,
-  Filter, Search, Plus
+  Plus
 } from "lucide-react";
 import { formatDistanceToNow } from 'date-fns';
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -20,7 +20,6 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Link } from "wouter";
 
 interface ExtendedTrainingLog extends Omit<TrainingLog, 'userId'> {
   user: User;
@@ -132,7 +131,7 @@ function AchievementBadge({ achievement }: { achievement: UserStats['achievement
                 achievement.unlocked ? 'text-primary' : 'text-muted-foreground'
               }`}
             />
-            {achievement.level > 1 && (
+            {achievement.level && achievement.level > 1 && (
               <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-yellow-400 text-[10px] font-bold flex items-center justify-center">
                 {achievement.level}
               </div>
@@ -142,7 +141,7 @@ function AchievementBadge({ achievement }: { achievement: UserStats['achievement
         <TooltipContent>
           <p className="font-semibold">{achievement.name}</p>
           <p className="text-sm text-muted-foreground">{achievement.description}</p>
-          {!achievement.unlocked && (
+          {!achievement.unlocked && achievement.progress !== undefined && achievement.required !== undefined && (
             <p className="text-xs mt-1">
               Progress: {achievement.progress}/{achievement.required}
             </p>
@@ -154,7 +153,7 @@ function AchievementBadge({ achievement }: { achievement: UserStats['achievement
 }
 
 export default function CommunityPage() {
-  const { user, logoutMutation } = useAuth();
+  const { user } = useAuth();
   const [selectedTab, setSelectedTab] = useState("feed");
   const [partnerFilter, setPartnerFilter] = useState("all");
   const [locationFilter, setLocationFilter] = useState("all");
@@ -212,7 +211,7 @@ export default function CommunityPage() {
           beltRank: "Brown",
           gym: "Atos BJJ"
         },
-        date: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 mins ago
+        date: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
         type: "Training",
         duration: 90,
         energyLevel: 4,
@@ -230,35 +229,6 @@ export default function CommunityPage() {
             },
             content: "Your berimbolo is looking super clean! Any tips?",
             createdAt: new Date(Date.now() - 1000 * 60 * 15).toISOString()
-          }
-        ]
-      },
-      {
-        id: 2,
-        user: {
-          id: 5,
-          username: "EmilyWong",
-          beltRank: "Purple",
-          gym: "Checkmat"
-        },
-        date: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
-        type: "Competition",
-        duration: 120,
-        energyLevel: 5,
-        techniquesPracticed: ["Triangle", "Armbar", "Kimura"],
-        notes: "Won gold at the local tournament! Triangle setups were on point today.",
-        likes: 25,
-        hasLiked: true,
-        comments: [
-          {
-            id: 2,
-            user: {
-              id: 1,
-              username: "JohnDoe",
-              beltRank: "Purple"
-            },
-            content: "Incredible performance! Those triangles were super tight 🔥",
-            createdAt: new Date(Date.now() - 1000 * 60 * 45).toISOString()
           }
         ]
       }
@@ -327,7 +297,6 @@ export default function CommunityPage() {
     }
   });
 
-
   const { data: userStats } = useQuery<UserStats>({
     queryKey: ["/api/user/stats"],
     queryFn: () => ({
@@ -365,106 +334,14 @@ export default function CommunityPage() {
   });
 
   return (
-    <div className="min-h-screen bg-background p-6">
+    <div className="p-6">
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="lg:hidden">
-                  <Menu className="h-6 w-6" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="w-80">
-                <SheetHeader className="pb-6">
-                  <SheetTitle>
-                    <div className="flex items-center gap-2">
-                      <div className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-                        Ossify
-                      </div>
-                    </div>
-                  </SheetTitle>
-                </SheetHeader>
-
-                <div className="flex flex-col gap-6">
-                  {/* User Profile Section */}
-                  <div className="flex items-center gap-4 pb-6 border-b">
-                    <Avatar className="h-10 w-10">
-                      <AvatarFallback>{user?.username.slice(0, 2).toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <div className="font-semibold">{user?.username}</div>
-                      <div className="text-sm text-muted-foreground">{user?.beltRank} Belt</div>
-                    </div>
-                  </div>
-
-                  {/* Navigation Links */}
-                  <nav className="space-y-2">
-                    <Link href="/">
-                      <a className="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-primary/10 transition-colors">
-                        <Home className="h-5 w-5" />
-                        Dashboard
-                      </a>
-                    </Link>
-                    <Link href="/techniques">
-                      <a className="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-primary/10 transition-colors">
-                        <BookMarked className="h-5 w-5" />
-                        Technique Library
-                      </a>
-                    </Link>
-                    <Link href="/community">
-                      <a className="flex items-center gap-3 px-4 py-2 rounded-lg bg-primary/10">
-                        <Users className="h-5 w-5" />
-                        Community
-                      </a>
-                    </Link>
-                    <Link href="/achievements">
-                      <a className="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-primary/10 transition-colors">
-                        <Trophy className="h-5 w-5" />
-                        Achievements
-                      </a>
-                    </Link>
-                  </nav>
-
-                  {/* Quick Actions */}
-                  <div className="space-y-2">
-                    <h4 className="px-4 text-sm font-medium">Quick Actions</h4>
-                    <Button className="w-full justify-start gap-2">
-                      <Plus className="h-4 w-4" />
-                      Log Training
-                    </Button>
-                    <Button variant="outline" className="w-full justify-start gap-2">
-                      <Target className="h-4 w-4" />
-                      Find Partners
-                    </Button>
-                  </div>
-
-                  {/* Settings & Logout */}
-                  <div className="space-y-2 mt-auto">
-                    <Link href="/settings">
-                      <a className="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-primary/10 transition-colors">
-                        <Settings className="h-5 w-5" />
-                        Settings
-                      </a>
-                    </Link>
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-100"
-                      onClick={() => logoutMutation.mutate()}
-                    >
-                      <LogOut className="h-5 w-5 mr-2" />
-                      Logout
-                    </Button>
-                  </div>
-                </div>
-              </SheetContent>
-            </Sheet>
-            <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-                Ossify Community
-              </h1>
-              <p className="text-muted-foreground">Connect and level up with fellow BJJ practitioners</p>
-            </div>
+          <div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+              Community
+            </h1>
+            <p className="text-muted-foreground">Connect and level up with fellow BJJ practitioners</p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" className="gap-2">
