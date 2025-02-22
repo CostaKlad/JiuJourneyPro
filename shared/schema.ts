@@ -224,16 +224,16 @@ export const insertTrainingLogSchema = createInsertSchema(trainingLogs)
       FocusArea.SUBMISSIONS,
       FocusArea.TAKEDOWNS,
       FocusArea.POSITION_CONTROL
-    ])).optional(),
-    techniquesPracticed: z.array(z.string()),
-    submissionsAttempted: z.array(z.string()).optional(),
-    submissionsSuccessful: z.array(z.string()).optional(),
-    escapesAttempted: z.array(z.string()).optional(),
-    escapesSuccessful: z.array(z.string()).optional(),
-    gym: z.string().optional(),
-    rollingSummary: z.string().optional(),
-    notes: z.string().optional(),
-    coachFeedback: z.string().optional()
+    ])).default([]),
+    techniquesPracticed: z.array(z.string()).default([]),
+    submissionsAttempted: z.array(z.string()).default([]),
+    submissionsSuccessful: z.array(z.string()).default([]),
+    escapesAttempted: z.array(z.string()).default([]),
+    escapesSuccessful: z.array(z.string()).default([]),
+    gym: z.string().optional().nullable(),
+    rollingSummary: z.string().optional().nullable(),
+    notes: z.string().optional().nullable(),
+    coachFeedback: z.string().optional().nullable()
   });
 
 export const insertTechniqueSchema = createInsertSchema(techniques);

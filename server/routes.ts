@@ -25,20 +25,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       console.log("Training log request body:", req.body);
-      const validatedData = insertTrainingLogSchema.parse(req.body);
+
+      const validationResult = insertTrainingLogSchema.safeParse(req.body);
+
+      if (!validationResult.success) {
+        console.error("Validation errors:", validationResult.error.format());
+        return res.status(400).json({ 
+          error: "Invalid training log data", 
+          details: validationResult.error.format()
+        });
+      }
+
+      const validatedData = validationResult.data;
       console.log("Validated training log data:", validatedData);
 
       const log = await storage.createTrainingLog({
-        ...validatedData,
         userId: req.user.id,
         date: new Date(),
+        type: validatedData.type,
+        gym: validatedData.gym || null,
         techniquesPracticed: validatedData.techniquesPracticed || [],
-        focusAreas: validatedData.focusAreas || [],
+        rollingSummary: validatedData.rollingSummary || null,
         submissionsAttempted: validatedData.submissionsAttempted || [],
         submissionsSuccessful: validatedData.submissionsSuccessful || [],
         escapesAttempted: validatedData.escapesAttempted || [],
         escapesSuccessful: validatedData.escapesSuccessful || [],
         performanceRating: validatedData.performanceRating || null,
+        focusAreas: validatedData.focusAreas || [],
         energyLevel: validatedData.energyLevel || null,
         notes: validatedData.notes || null,
         coachFeedback: validatedData.coachFeedback || null,
@@ -59,8 +72,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating training log:", error);
       if (error instanceof Error) {
-        res.status(400).json({ 
-          error: "Invalid training log data", 
+        res.status(500).json({ 
+          error: "Failed to create training log", 
           details: error.message
         });
       } else {
