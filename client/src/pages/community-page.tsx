@@ -169,24 +169,74 @@ function CommunityPage() {
   const [partnerFilter, setPartnerFilter] = useState("all");
   const [locationFilter, setLocationFilter] = useState("all");
 
-  const { data: followers = mockFollowers } = useQuery<ExtendedUser[]>({
+  const { data: followers = mockFollowers, error: followersError } = useQuery<ExtendedUser[]>({
     queryKey: ["/api/followers"],
+    queryFn: async () => {
+      try {
+        const response = await fetch("/api/followers");
+        if (!response.ok) throw new Error("Failed to fetch followers");
+        return await response.json();
+      } catch (error) {
+        console.error("Error fetching followers:", error);
+        return mockFollowers;
+      }
+    }
   });
 
-  const { data: following = mockFollowing } = useQuery<ExtendedUser[]>({
+  const { data: following = mockFollowing, error: followingError } = useQuery<ExtendedUser[]>({
     queryKey: ["/api/following"],
+    queryFn: async () => {
+      try {
+        const response = await fetch("/api/following");
+        if (!response.ok) throw new Error("Failed to fetch following");
+        return await response.json();
+      } catch (error) {
+        console.error("Error fetching following:", error);
+        return mockFollowing;
+      }
+    }
   });
 
-  const { data: activityFeed = mockTrainingLogs } = useQuery<TrainingLogEntry[]>({
+  const { data: activityFeed = mockTrainingLogs, error: feedError } = useQuery<TrainingLogEntry[]>({
     queryKey: ["/api/community/feed"],
+    queryFn: async () => {
+      try {
+        const response = await fetch("/api/community/feed");
+        if (!response.ok) throw new Error("Failed to fetch activity feed");
+        return await response.json();
+      } catch (error) {
+        console.error("Error fetching activity feed:", error);
+        return mockTrainingLogs;
+      }
+    }
   });
 
-  const { data: suggestedPartners = mockSuggestedPartners } = useQuery<ExtendedUser[]>({
+  const { data: suggestedPartners = mockSuggestedPartners, error: suggestionsError } = useQuery<ExtendedUser[]>({
     queryKey: ["/api/community/suggestions"],
+    queryFn: async () => {
+      try {
+        const response = await fetch("/api/community/suggestions");
+        if (!response.ok) throw new Error("Failed to fetch suggestions");
+        return await response.json();
+      } catch (error) {
+        console.error("Error fetching suggestions:", error);
+        return mockSuggestedPartners;
+      }
+    }
   });
 
-  const { data: userStats = mockUserStats } = useQuery<UserStats>({
+  const { data: userStats = mockUserStats, error: statsError } = useQuery<UserStats>({
     queryKey: ["/api/user/stats"],
+    queryFn: async () => {
+      try {
+        const response = await fetch("/api/user/stats");
+        if (!response.ok) throw new Error("Failed to fetch user stats");
+        return await response.json();
+      } catch (error) {
+        console.error("Error fetching user stats:", error);
+        return mockUserStats;
+      }
+    }
   });
 
 
