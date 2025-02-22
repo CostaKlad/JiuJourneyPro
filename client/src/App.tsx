@@ -111,7 +111,7 @@ function Layout({ children }: { children: React.ReactNode }) {
                   <SheetTitle>
                     <div className="flex items-center gap-2">
                       <div className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-                        Ossify
+                        OssRyu
                       </div>
                     </div>
                   </SheetTitle>
@@ -187,7 +187,7 @@ function Layout({ children }: { children: React.ReactNode }) {
             {/* Logo */}
             <Link href="/">
               <a className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent font-bold">
-                Ossify
+                OssRyu
               </a>
             </Link>
           </div>

@@ -63,7 +63,7 @@ export default function AuthPage() {
       <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-8 p-4">
         <div className="flex flex-col justify-center">
           <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            Welcome to Ossify
+            Welcome to OssRyu
           </h1>
           <p className="text-muted-foreground mb-8 text-lg">
             Your digital companion for mastering Brazilian Jiu-Jitsu. Track progress, learn techniques, and connect with the community.
@@ -82,7 +82,7 @@ export default function AuthPage() {
                   <CardHeader>
                     <CardTitle>Welcome Back</CardTitle>
                     <CardDescription>
-                      Continue your BJJ journey with Ossify
+                      Continue your BJJ journey with OssRyu
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
