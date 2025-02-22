@@ -3,15 +3,13 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
-import { User } from "@shared/schema";
+import { User, Challenge, ChallengeParticipation } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Users, UserPlus, UserMinus, MessageSquare, ThumbsUp,
-  Medal, Trophy, Star, Shield, BookOpen,
-  Flame, Target, MapPin, Calendar, Clock, Dumbbell,
-  Plus, ChevronRight
+  Medal, Trophy, Star, Target, Award
 } from "lucide-react";
 import { formatDistanceToNow } from 'date-fns';
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -59,6 +57,15 @@ interface UserStats {
     required?: number;
   }[];
 }
+
+type ChallengeWithParticipation = Challenge & {
+  isParticipating?: boolean;
+  participation?: ChallengeParticipation;
+};
+
+type LeaderboardEntry = ChallengeParticipation & {
+  user: User;
+};
 
 const BELT_COLORS: Record<string, string> = {
   white: "#FFFFFF",
@@ -163,6 +170,128 @@ function AchievementBadge({ achievement }: { achievement: UserStats['achievement
   );
 }
 
+function ChallengeCard({ challenge }: { challenge: ChallengeWithParticipation }) {
+  const { user } = useAuth();
+  const joinChallengeMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("POST", `/api/challenges/${challenge.id}/join`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/challenges"] });
+    }
+  });
+
+  const updateProgressMutation = useMutation({
+    mutationFn: async (progress: Record<string, number>) => {
+      await apiRequest("POST", `/api/challenges/${challenge.id}/progress`, { progress });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/challenges/${challenge.id}/leaderboard`] });
+    }
+  });
+
+  const { data: leaderboard = [] } = useQuery<LeaderboardEntry[]>({
+    queryKey: [`/api/challenges/${challenge.id}/leaderboard`],
+    enabled: challenge.isParticipating,
+  });
+
+  return (
+    <Card className="mb-6">
+      <CardHeader>
+        <div className="flex items-start justify-between">
+          <div>
+            <CardTitle className="text-xl">{challenge.title}</CardTitle>
+            <CardDescription className="mt-2">
+              {challenge.description}
+            </CardDescription>
+          </div>
+          <Badge variant={
+            challenge.status === "upcoming" ? "secondary" :
+            challenge.status === "active" ? "default" :
+            "outline"
+          }>
+            {challenge.status.charAt(0).toUpperCase() + challenge.status.slice(1)}
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          <div className="flex gap-4 text-sm">
+            <div>
+              <span className="text-muted-foreground">Start Date:</span>{" "}
+              {new Date(challenge.startDate).toLocaleDateString()}
+            </div>
+            <div>
+              <span className="text-muted-foreground">End Date:</span>{" "}
+              {new Date(challenge.endDate).toLocaleDateString()}
+            </div>
+          </div>
+
+          {challenge.isParticipating ? (
+            <div className="space-y-4">
+              <div className="p-4 bg-muted rounded-lg">
+                <h4 className="font-medium mb-2">Your Progress</h4>
+                <div className="space-y-2">
+                  {Object.entries(challenge.participation?.progress || {}).map(([key, value]) => (
+                    <div key={key} className="flex items-center gap-2">
+                      <span className="text-sm">{key}:</span>
+                      <Progress value={value} className="flex-1" />
+                      <span className="text-sm text-muted-foreground">{value}%</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <h4 className="font-medium mb-2">Leaderboard</h4>
+                <ScrollArea className="h-40">
+                  <div className="space-y-2">
+                    {leaderboard.map((entry, index) => (
+                      <div
+                        key={entry.userId}
+                        className="flex items-center gap-4 p-2 rounded-lg hover:bg-muted/50"
+                      >
+                        <div className="font-mono w-6 text-center text-muted-foreground">
+                          #{index + 1}
+                        </div>
+                        <Avatar className="h-8 w-8">
+                          <AvatarFallback>
+                            {entry.user.username.slice(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                          <div className="font-medium">
+                            {entry.user.username}
+                            {entry.user.id === user?.id && (
+                              <Badge variant="secondary" className="ml-2">You</Badge>
+                            )}
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            Score: {entry.score}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </div>
+            </div>
+          ) : (
+            <Button
+              className="w-full"
+              onClick={() => joinChallengeMutation.mutate()}
+              disabled={joinChallengeMutation.isPending}
+            >
+              <Trophy className="w-4 h-4 mr-2" />
+              Join Challenge
+            </Button>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 function CommunityPage() {
   const { user } = useAuth();
   const [selectedTab, setSelectedTab] = useState("feed");
@@ -188,6 +317,11 @@ function CommunityPage() {
   const { data: userStats = mockUserStats } = useQuery<UserStats>({
     queryKey: ["/api/user/stats"],
   });
+
+  const { data: challenges = [] } = useQuery<ChallengeWithParticipation[]>({
+    queryKey: ["/api/challenges"],
+  });
+
 
   const followMutation = useMutation({
     mutationFn: async (userId: number) => {
@@ -415,7 +549,7 @@ function CommunityPage() {
 
           <div className="lg:col-span-2">
             <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="feed" className="flex items-center gap-2">
                   <MessageSquare className="h-4 w-4" />
                   Activity Feed
@@ -427,6 +561,10 @@ function CommunityPage() {
                 <TabsTrigger value="following" className="flex items-center gap-2">
                   <UserPlus className="h-4 w-4" />
                   Following ({following?.length || 0})
+                </TabsTrigger>
+                <TabsTrigger value="challenges" className="flex items-center gap-2">
+                  <Trophy className="h-4 w-4" />
+                  Challenges
                 </TabsTrigger>
               </TabsList>
 
@@ -655,6 +793,13 @@ function CommunityPage() {
                         </CardContent>
                       </Card>
                     </Link>
+                  ))}
+                </div>
+              </TabsContent>
+              <TabsContent value="challenges">
+                <div className="space-y-6">
+                  {challenges.map((challenge) => (
+                    <ChallengeCard key={challenge.id} challenge={challenge} />
                   ))}
                 </div>
               </TabsContent>
