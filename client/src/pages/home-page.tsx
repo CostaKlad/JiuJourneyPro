@@ -29,7 +29,8 @@ import {
   X,
   Shield,
   BookOpen,
-  Flame
+  Flame,
+  Loader2
 } from "lucide-react";
 import {
   LineChart,
@@ -52,12 +53,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
 import {
   Command,
@@ -204,7 +199,6 @@ function HomePage() {
 
   const createLogMutation = useMutation({
     mutationFn: async (data: TrainingFormData) => {
-      console.log("Submitting training log:", data);
       const res = await apiRequest("POST", "/api/training-logs", {
         ...data,
         duration: Number(data.duration),
@@ -215,6 +209,10 @@ function HomePage() {
         escapesAttempted: data.escapesAttempted || [],
         escapesSuccessful: data.escapesSuccessful || []
       });
+      if (!res.ok) {
+        const error = await res.text();
+        throw new Error(error || 'Failed to save training log');
+      }
       return res.json();
     },
     onSuccess: () => {
@@ -316,7 +314,6 @@ function HomePage() {
 
   const groupedAchievements = groupBy(achievementsProgress, (achievement) => achievement.category);
 
-  // Updates for the remaining TypeScript errors around line 936, 949, and 962
   const pointsSummaryStats = [
     {
       title: "Total",
@@ -374,7 +371,6 @@ function HomePage() {
           </div>
         </div>
 
-        {/* Move Log Training Button to Top */}
         <Button
           className="w-full mb-8"
           size="lg"
@@ -393,28 +389,16 @@ function HomePage() {
             <CardContent>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(data => createLogMutation.mutate(data))} className="space-y-6">
-                  <Tabs defaultValue="basic" className="w-full">
-                    <TabsList className="grid w-full grid-cols-4">
-                      <TabsTrigger value="basic">Basic Info</TabsTrigger>
-                      <TabsTrigger value="details">Details</TabsTrigger>
-                      <TabsTrigger value="assessment">Assessment</TabsTrigger>
-                      <TabsTrigger value="notes">Notes</TabsTrigger>
-                    </TabsList>
-
-                    <TabsContent value="basic" className="space-y-6">
-                      <div className="text-sm text-muted-foreground mb-4">
-                        Fill in the basic information about your training session.
-                      </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <div className="font-semibold text-lg">Basic Information</div>
                       <FormField
                         control={form.control}
                         name="type"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Training Type</FormLabel>
-                            <Select
-                              onValueChange={field.onChange}
-                              defaultValue={field.value}
-                            >
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
                               <FormControl>
                                 <SelectTrigger>
                                   <SelectValue placeholder="Select training type" />
@@ -468,28 +452,41 @@ function HomePage() {
                             <FormControl>
                               <Input {...field} placeholder="Where did you train today?" />
                             </FormControl>
-                            <FormDescription>
-                              Enter the name of the gym or location where you trained
-                            </FormDescription>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-                    </TabsContent>
 
-                    <TabsContent value="details" className="space-y-6">
-                      <div className="text-sm text-muted-foreground mb-4">
-                        Record the techniques you practiced and your rolling performance.
-                      </div>
+                      <FormField
+                        control={form.control}
+                        name="energyLevel"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Energy Level (1-5)</FormLabel>
+                            <FormControl>
+                              <Slider
+                                min={1}
+                                max={5}
+                                step={1}
+                                value={[field.value]}
+                                onValueChange={([value]) => field.onChange(value)}
+                                className="py-4"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="font-semibold text-lg">Techniques & Performance</div>
                       <FormField
                         control={form.control}
                         name="techniquesPracticed"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Techniques Practiced</FormLabel>
-                            <FormDescription>
-                              Select all the techniques you worked on during this session
-                            </FormDescription>
                             <FormControl>
                               <Command className="rounded-lg border shadow-md">
                                 <CommandInput placeholder="Search techniques..." />
@@ -566,320 +563,20 @@ function HomePage() {
                         )}
                       />
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-6">
-                          <div className="font-semibold text-sm">Submissions</div>
-                          <FormField
-                            control={form.control}
-                            name="submissionsAttempted"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Attempted</FormLabel>
-                                <FormDescription>
-                                  Select the submissions you attempted during rolling
-                                </FormDescription>
-                                <FormControl>
-                                  <Command className="rounded-lg border shadow-md">
-                                    <CommandInput placeholder="Search submissions..." />
-                                    <CommandList>
-                                      <CommandEmpty>No submissions found.</CommandEmpty>
-                                      <CommandGroup>
-                                        {BJJTechniques.SUBMISSIONS.map((submission) => (
-                                          <CommandItem
-                                            key={submission}
-                                            onSelect={() => {
-                                              if (!field.value?.includes(submission)) {
-                                                field.onChange([...(field.value || []), submission]);
-                                              }
-                                            }}
-                                          >
-                                            {submission}
-                                          </CommandItem>
-                                        ))}
-                                      </CommandGroup>
-                                    </CommandList>
-                                  </Command>
-                                </FormControl>
-                                <div className="flex flex-wrap gap-2 mt-2">
-                                  {field.value?.map((submission, index) => (
-                                    <Badge
-                                      key={index}
-                                      variant="secondary"
-                                      className="flex items-center gap-1"
-                                    >
-                                      {submission}
-                                      <X
-                                        className="h-3 w-3 cursor-pointer"
-                                        onClick={() => {
-                                          const newSubmissions = [...field.value];
-                                          newSubmissions.splice(index, 1);
-                                          field.onChange(newSubmissions);
-                                        }}
-                                      />
-                                    </Badge>
-                                  ))}
-                                </div>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-
-                          <FormField
-                            control={form.control}
-                            name="submissionsSuccessful"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Successful</FormLabel>
-                                <FormDescription>
-                                  Select the submissions you successfully executed
-                                </FormDescription>
-                                <FormControl>
-                                  <Command className="rounded-lg border shadow-md">
-                                    <CommandInput placeholder="Search successful submissions..." />
-                                    <CommandList>
-                                      <CommandEmpty>No submissions found.</CommandEmpty>
-                                      <CommandGroup>
-                                        {BJJTechniques.SUBMISSIONS.map((submission) => (
-                                          <CommandItem
-                                            key={submission}
-                                            onSelect={() => {
-                                              if (!field.value?.includes(submission)) {
-                                                field.onChange([...(field.value || []), submission]);
-                                              }
-                                            }}
-                                          >
-                                            {submission}
-                                          </CommandItem>
-                                        ))}
-                                      </CommandGroup>
-                                    </CommandList>
-                                  </Command>
-                                </FormControl>
-                                <div className="flex flex-wrap gap-2 mt-2">
-                                  {field.value?.map((submission, index) => (
-                                    <Badge
-                                      key={index}
-                                      variant="secondary"
-                                      className="flex items-center gap-1"
-                                    >
-                                      {submission}
-                                      <X
-                                        className="h-3 w-3 cursor-pointer"
-                                        onClick={() => {
-                                          const newSubmissions = [...field.value];
-                                          newSubmissions.splice(index, 1);
-                                          field.onChange(newSubmissions);
-                                        }}
-                                      />
-                                    </Badge>
-                                  ))}
-                                </div>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-
-                        <div className="space-y-6">
-                          <div className="font-semibold text-sm">Escapes</div>
-                          <FormField
-                            control={form.control}
-                            name="escapesAttempted"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Attempted</FormLabel>
-                                <FormDescription>
-                                  Select the escapes you attempted during rolling
-                                </FormDescription>
-                                <FormControl>
-                                  <Command className="rounded-lg border shadow-md">
-                                    <CommandInput placeholder="Search escapes..." />
-                                    <CommandList>
-                                      <CommandEmpty>No escapes found.</CommandEmpty>
-                                      <CommandGroup>
-                                        {BJJTechniques.ESCAPES.map((escape) => (
-                                          <CommandItem
-                                            key={escape}
-                                            onSelect={() => {
-                                              if (!field.value?.includes(escape)) {
-                                                field.onChange([...(field.value || []), escape]);
-                                              }
-                                            }}
-                                          >
-                                            {escape}
-                                          </CommandItem>
-                                        ))}
-                                      </CommandGroup>
-                                    </CommandList>
-                                  </Command>
-                                </FormControl>
-                                <div className="flex flex-wrap gap-2 mt-2">
-                                  {field.value?.map((escape, index) => (
-                                    <Badge
-                                      key={index}
-                                      variant="secondary"
-                                      className="flex items-center gap-1"
-                                    >
-                                      {escape}
-                                      <X
-                                        className="h-3 w-3 cursor-pointer"
-                                        onClick={() => {
-                                          const newEscapes = [...field.value];
-                                          newEscapes.splice(index, 1);
-                                          field.onChange(newEscapes);
-                                        }}
-                                      />
-                                    </Badge>
-                                  ))}
-                                </div>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-
-                          <FormField
-                            control={form.control}
-                            name="escapesSuccessful"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Successful</FormLabel>
-                                <FormDescription>
-                                  Select the escapes you successfully executed
-                                </FormDescription>
-                                <FormControl>
-                                  <Command className="rounded-lg border shadow-md">
-                                    <CommandInput placeholder="Search successful escapes..." />
-                                    <CommandList>
-                                      <CommandEmpty>No escapes found.</CommandEmpty>
-                                      <CommandGroup>
-                                        {BJJTechniques.ESCAPES.map((escape) => (
-                                          <CommandItem
-                                            key={escape}
-                                            onSelect={() => {
-                                              if (!field.value?.includes(escape)) {
-                                                field.onChange([...(field.value || []), escape]);
-                                              }
-                                            }}
-                                          >
-                                            {escape}
-                                          </CommandItem>
-                                        ))}
-                                      </CommandGroup>
-                                    </CommandList>
-                                  </Command>
-                                </FormControl>
-                                <div className="flex flex-wrap gap-2 mt-2">
-                                  {field.value?.map((escape, index) => (
-                                    <Badge
-                                      key={index}
-                                      variant="secondary"
-                                      className="flex items-center gap-1"
-                                    >
-                                      {escape}
-                                      <X
-                                        className="h-3 w-3 cursor-pointer"
-                                        onClick={() => {
-                                          const newEscapes = [...field.value];
-                                          newEscapes.splice(index, 1);
-                                          field.onChange(newEscapes);
-                                        }}
-                                      />
-                                    </Badge>
-                                  ))}
-                                </div>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                      </div>
-                    </TabsContent>
-
-                    <TabsContent value="assessment" className="space-y-6">
-                      <div className="text-sm text-muted-foreground mb-4">
-                        Rate your performance and energy levels during this session.
-                      </div>
                       <FormField
                         control={form.control}
                         name="performanceRating"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Performance Rating</FormLabel>
-                            <FormDescription>
-                              How well do you think you performed today?
-                            </FormDescription>
+                            <FormLabel>Performance Rating (1-5)</FormLabel>
                             <FormControl>
-                              <div className="space-y-2">
-                                <Slider
-                                  min={1}
-                                  max={5}
-                                  step={1}
-                                  value={[field.value]}
-                                  onValueChange={([value]) => field.onChange(value)}
-                                  className="py-4"
-                                />
-                                <div className="flex justify-between text-sm text-muted-foreground">
-                                  <span>Poor</span>
-                                  <span>Average</span>
-                                  <span>Excellent</span>
-                                </div>
-                              </div>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="energyLevel"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Energy Level</FormLabel>
-                            <FormDescription>
-                              How was your energy level during training?
-                            </FormDescription>
-                            <FormControl>
-                              <div className="space-y-2">
-                                <Slider
-                                  min={1}
-                                  max={5}
-                                  step={1}
-                                  value={[field.value]}
-                                  onValueChange={([value]) => field.onChange(value)}
-                                  className="py-4"
-                                />
-                                <div className="flex justify-between text-sm text-muted-foreground">
-                                  <span>Low</span>
-                                  <span>Medium</span>
-                                  <span>High</span>
-                                </div>
-                              </div>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </TabsContent>
-
-                    <TabsContent value="notes" className="space-y-6">
-                      <div className="text-sm text-muted-foreground mb-4">
-                        Add any additional notes or feedback about your training session.
-                      </div>
-                      <FormField
-                        control={form.control}
-                        name="rollingSummary"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Rolling Summary</FormLabel>
-                            <FormDescription>
-                              Describe how your rolling sessions went
-                            </FormDescription>
-                            <FormControl>
-                              <Textarea
-                                {...field}
-                                placeholder="What went well? What could be improved?"
-                                className="min-h-[100px]"
+                              <Slider
+                                min={1}
+                                max={5}
+                                step={1}
+                                value={[field.value]}
+                                onValueChange={([value]) => field.onChange(value)}
+                                className="py-4"
                               />
                             </FormControl>
                             <FormMessage />
@@ -892,49 +589,42 @@ function HomePage() {
                         name="notes"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Personal Notes</FormLabel>
-                            <FormDescription>
-                              Any additional notes about your training
-                            </FormDescription>
+                            <FormLabel>Notes</FormLabel>
                             <FormControl>
                               <Textarea
                                 {...field}
-                                placeholder="What would you like to remember about this session?"
-                                className="min-h-[100px]"
+                                placeholder="Any additional notes about your training session..."
                               />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
+                    </div>
+                  </div>
 
-                      <FormField
-                        control={form.control}
-                        name="coachFeedback"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Coach's Feedback</FormLabel>
-                            <FormDescription>
-                              Any feedback or tips from your coach
-                            </FormDescription>
-                            <FormControl>
-                              <Textarea
-                                {...field}
-                                placeholder="What did your coach suggest?"
-                                className="min-h-[100px]"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </TabsContent>
-
-                  </Tabs>
-
-                  <Button type="submit" disabled={createLogMutation.isPending}>
-                    {createLogMutation.isPending ? "Saving..." : "Log Session"}
-                  </Button>
+                  <div className="flex justify-end gap-4 mt-6">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setShowTrainingForm(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={createLogMutation.isPending}
+                    >
+                      {createLogMutation.isPending ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        'Save Training Log'
+                      )}
+                    </Button>
+                  </div>
                 </form>
               </Form>
             </CardContent>
@@ -1187,10 +877,8 @@ function HomePage() {
               </div>
             </CardContent>
           </Card>
-
         </div>
 
-        {/* Keep existing achievements section */}
         <Card className="lg:col-span-3">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
