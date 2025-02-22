@@ -6,13 +6,12 @@ import { useAuth } from "@/hooks/use-auth";
 import { User, TrainingLog } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Users, UserPlus, UserMinus, MessageSquare, ThumbsUp,
   Medal, Trophy, Crown, Star, Award, Shield, BookOpen,
   Flame, Target, MapPin, Calendar, Clock, Dumbbell,
-  Filter, Search, Plus, Menu, Home, BookMarked, Trophy as TrophyIcon,
-  Settings, LogOut
+  Filter, Search, Plus
 } from "lucide-react";
 import { formatDistanceToNow } from 'date-fns';
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -21,12 +20,37 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Link } from "wouter";
 
-// Types remain the same...
+interface ExtendedTrainingLog extends Omit<TrainingLog, 'userId'> {
+  user: User;
+  likes: number;
+  hasLiked: boolean;
+  comments: {
+    id: number;
+    user: User;
+    content: string;
+    createdAt: string;
+  }[];
+}
 
-const BELT_COLORS = {
+interface UserStats {
+  totalSessions: number;
+  totalHours: number;
+  techniquesLearned: number;
+  achievements: {
+    id: number;
+    type: 'streak' | 'technique' | 'competition' | 'teaching' | 'attendance';
+    name: string;
+    description: string;
+    unlocked: boolean;
+    level?: number;
+    progress?: number;
+    required?: number;
+  }[];
+}
+
+const BELT_COLORS: Record<string, string> = {
   white: "#FFFFFF",
   blue: "#0066CC",
   purple: "#660099",
@@ -57,7 +81,7 @@ function BeltProgressIndicator({ belt, stripes }: { belt: string; stripes: numbe
   );
 }
 
-function QuickStats({ stats }: { stats: any }) {
+function QuickStats({ stats }: { stats: UserStats }) {
   return (
     <div className="grid grid-cols-3 gap-2 p-2">
       {[
@@ -84,7 +108,7 @@ function QuickStats({ stats }: { stats: any }) {
   );
 }
 
-function AchievementBadge({ achievement }: { achievement: any }) {
+function AchievementBadge({ achievement }: { achievement: UserStats['achievements'][number] }) {
   const iconMap = {
     streak: Flame,
     technique: BookOpen,
@@ -304,7 +328,7 @@ export default function CommunityPage() {
   });
 
 
-  const { data: userStats } = useQuery({
+  const { data: userStats } = useQuery<UserStats>({
     queryKey: ["/api/user/stats"],
     queryFn: () => ({
       totalSessions: 48,
@@ -396,7 +420,7 @@ export default function CommunityPage() {
                     </Link>
                     <Link href="/achievements">
                       <a className="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-primary/10 transition-colors">
-                        <TrophyIcon className="h-5 w-5" />
+                        <Trophy className="h-5 w-5" />
                         Achievements
                       </a>
                     </Link>
@@ -423,8 +447,8 @@ export default function CommunityPage() {
                         Settings
                       </a>
                     </Link>
-                    <Button 
-                      variant="ghost" 
+                    <Button
+                      variant="ghost"
                       className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-100"
                       onClick={() => logoutMutation.mutate()}
                     >
@@ -472,7 +496,6 @@ export default function CommunityPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="space-y-6">
-            {/* Enhanced Profile Card */}
             <Card className="sticky top-6">
               <div className="relative h-32 rounded-t-lg overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-r from-primary to-purple-600 opacity-20" />
@@ -511,7 +534,7 @@ export default function CommunityPage() {
                   <BeltProgressIndicator belt={user?.beltRank || 'white'} stripes={2} />
                 </div>
 
-                <QuickStats stats={userStats || {}} />
+                <QuickStats stats={userStats || { totalSessions: 0, totalHours: 0, techniquesLearned: 0, achievements: [] }} />
 
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
@@ -540,7 +563,6 @@ export default function CommunityPage() {
               </CardContent>
             </Card>
 
-            {/* Enhanced Training Partners Section */}
             <Card>
               <CardHeader>
                 <CardTitle>Discover Training Partners</CardTitle>
@@ -826,7 +848,6 @@ export default function CommunityPage() {
                   ))}
                 </div>
               </TabsContent>
-
               <TabsContent value="following" className="mt-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {following?.map((followed) => (
@@ -847,7 +868,8 @@ export default function CommunityPage() {
                           <p className="text-sm mb-4">Trains at: {followed.gym}</p>
                         )}
                         <Button
-                          variant="outline"                          className="w-full"
+                          variant="outline"
+                          className="w-full"
                           onClick={() => unfollowMutation.mutate(followed.id)}
                         >
                           <UserMinus className="mr-2 h-4 w-4" />
@@ -864,14 +886,4 @@ export default function CommunityPage() {
       </div>
     </div>
   );
-}
-
-interface ExtendedTrainingLog extends TrainingLog {
-  hasLiked: boolean;
-  comments: {
-    id: number;
-    user: User;
-    content: string;
-    createdAt: string;
-  }[];
 }
