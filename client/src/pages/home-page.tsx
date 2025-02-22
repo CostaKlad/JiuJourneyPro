@@ -634,50 +634,51 @@ function HomePage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Training Streak</CardTitle>
-              <FlameIcon className="h-4 w-4 text-orange-500" />
+              <CardTitle className="text-sm font-medium">Total Training Sessions</CardTitle>
+              <BookOpenIcon className="h-4 w-4 text-purple-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{calculateStreak()} days</div>
-              <p className="text-xs text-muted-foreground">Keep the momentum going!</p>
+              <div className="text-2xl font-bold">{totalSessions}</div>
+              <p className="text-xs text-muted-foreground">Lifetime training sessions</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Successful Submissions</CardTitle>
-              <Medal className="h-4 w-4 text-green-500" />
+              <CardTitle className="text-sm font-medium">Training Hours</CardTitle>
+              <TimerIcon className="h-4 w-4 text-blue-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                {trainingLogs?.reduce((acc, log) => acc + (log.submissionsSuccessful?.length || 0), 0)}
-              </div>
-              <p className="text-xs text-muted-foreground">Total successful submissions</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Successful Escapes</CardTitle>
-              <Shield className="h-4 w-4 text-blue-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {trainingLogs?.reduce((acc, log) => acc + (log.escapesSuccessful?.length || 0), 0)}
-              </div>
-              <p className="text-xs text-muted-foreground">Total successful escapes</p>
+              <div className="text-2xl font-bold">{Math.round(totalTime / 60)}</div>
+              <p className="text-xs text-muted-foreground">Total mat time</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Techniques Practiced</CardTitle>
-              <BookOpen className="h-4 w-4 text-purple-500" />
+              <BookOpen className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {trainingLogs?.reduce((acc, log) => acc + (log.techniquesPracticed?.length || 0), 0)}              </div>
+                {trainingLogs?.reduce((acc, log) => acc + (log.techniquesPracticed?.length || 0), 0)}
+              </div>
               <p className="text-xs text-muted-foreground">Total techniques logged</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Average Performance</CardTitle>
+              <TrendingUpIcon className="h-4 w-4 text-orange-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {trainingLogs && trainingLogs.length > 0
+                  ? (trainingLogs.reduce((acc, log) => acc + (log.performanceRating || 0), 0) / trainingLogs.length).toFixed(1)
+                  : "N/A"}
+              </div>
+              <p className="text-xs text-muted-foreground">Average performance rating</p>
             </CardContent>
           </Card>
         </div>

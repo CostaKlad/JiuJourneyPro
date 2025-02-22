@@ -104,25 +104,78 @@ export const forgotPasswordSchema = z.object({
   email: z.string().email("Invalid email address")
 });
 
+// Updated training logs schema
 export const trainingLogs = pgTable("training_logs", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull(),
   date: timestamp("date").notNull().defaultNow(),
   type: text("type").notNull(),
   gym: text("gym"),
-  techniquesPracticed: json("techniques_practiced").notNull(),
+  techniquesPracticed: json("techniques_practiced").notNull().default([]),
   rollingSummary: text("rolling_summary"),
-  submissionsAttempted: json("submissions_attempted"),
-  submissionsSuccessful: json("submissions_successful"),
-  escapesAttempted: json("escapes_attempted"),
-  escapesSuccessful: json("escapes_successful"),
+  submissionsAttempted: json("submissions_attempted").default([]),
+  submissionsSuccessful: json("submissions_successful").default([]),
+  escapesAttempted: json("escapes_attempted").default([]),
+  escapesSuccessful: json("escapes_successful").default([]),
   performanceRating: integer("performance_rating"),
-  focusAreas: json("focus_areas").notNull(),
+  focusAreas: json("focus_areas").notNull().default([]),
   energyLevel: integer("energy_level"),
   notes: text("notes"),
   coachFeedback: text("coach_feedback"),
   duration: integer("duration").notNull()
 });
+
+export const insertTrainingLogSchema = createInsertSchema(trainingLogs)
+  .pick({
+    type: true,
+    gym: true,
+    techniquesPracticed: true,
+    rollingSummary: true,
+    submissionsAttempted: true,
+    submissionsSuccessful: true,
+    escapesAttempted: true,
+    escapesSuccessful: true,
+    performanceRating: true,
+    focusAreas: true,
+    energyLevel: true,
+    notes: true,
+    coachFeedback: true,
+    duration: true
+  })
+  .extend({
+    type: z.enum([TrainingType.GI, TrainingType.NOGI, TrainingType.OPEN_MAT]),
+    duration: z.coerce
+      .number()
+      .min(1, "Duration must be at least 1 minute")
+      .max(480, "Duration cannot exceed 8 hours"),
+    performanceRating: z.coerce
+      .number()
+      .min(1, "Rating must be between 1 and 5")
+      .max(5)
+      .optional(),
+    energyLevel: z.coerce
+      .number()
+      .min(1, "Energy level must be between 1 and 5")
+      .max(5)
+      .optional(),
+    focusAreas: z.array(z.enum([
+      FocusArea.GUARD,
+      FocusArea.PASSING,
+      FocusArea.ESCAPES,
+      FocusArea.SUBMISSIONS,
+      FocusArea.TAKEDOWNS,
+      FocusArea.POSITION_CONTROL
+    ])).default([]),
+    techniquesPracticed: z.array(z.string()).default([]),
+    submissionsAttempted: z.array(z.string()).default([]),
+    submissionsSuccessful: z.array(z.string()).default([]),
+    escapesAttempted: z.array(z.string()).default([]),
+    escapesSuccessful: z.array(z.string()).default([]),
+    gym: z.string().optional().nullable(),
+    rollingSummary: z.string().optional().nullable(),
+    notes: z.string().optional().nullable(),
+    coachFeedback: z.string().optional().nullable()
+  });
 
 export const techniques = pgTable("techniques", {
   id: serial("id").primaryKey(),
@@ -183,58 +236,6 @@ export const userAchievementProgress = pgTable("user_achievement_progress", {
   currentProgress: integer("current_progress").notNull().default(0),
   updatedAt: timestamp("updated_at").notNull().defaultNow()
 });
-
-export const insertTrainingLogSchema = createInsertSchema(trainingLogs)
-  .pick({
-    type: true,
-    gym: true,
-    techniquesPracticed: true,
-    rollingSummary: true,
-    submissionsAttempted: true,
-    submissionsSuccessful: true,
-    escapesAttempted: true,
-    escapesSuccessful: true,
-    performanceRating: true,
-    focusAreas: true,
-    energyLevel: true,
-    notes: true,
-    coachFeedback: true,
-    duration: true
-  })
-  .extend({
-    type: z.enum([TrainingType.GI, TrainingType.NOGI, TrainingType.OPEN_MAT]),
-    duration: z.coerce
-      .number()
-      .min(1, "Duration must be at least 1 minute")
-      .max(480, "Duration cannot exceed 8 hours"),
-    performanceRating: z.coerce
-      .number()
-      .min(1, "Rating must be between 1 and 5")
-      .max(5)
-      .optional(),
-    energyLevel: z.coerce
-      .number()
-      .min(1, "Energy level must be between 1 and 5")
-      .max(5)
-      .optional(),
-    focusAreas: z.array(z.enum([
-      FocusArea.GUARD,
-      FocusArea.PASSING,
-      FocusArea.ESCAPES,
-      FocusArea.SUBMISSIONS,
-      FocusArea.TAKEDOWNS,
-      FocusArea.POSITION_CONTROL
-    ])).default([]),
-    techniquesPracticed: z.array(z.string()).default([]),
-    submissionsAttempted: z.array(z.string()).default([]),
-    submissionsSuccessful: z.array(z.string()).default([]),
-    escapesAttempted: z.array(z.string()).default([]),
-    escapesSuccessful: z.array(z.string()).default([]),
-    gym: z.string().optional().nullable(),
-    rollingSummary: z.string().optional().nullable(),
-    notes: z.string().optional().nullable(),
-    coachFeedback: z.string().optional().nullable()
-  });
 
 export const insertTechniqueSchema = createInsertSchema(techniques);
 
