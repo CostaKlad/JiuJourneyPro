@@ -11,7 +11,8 @@ import {
   Users, UserPlus, UserMinus, MessageSquare, ThumbsUp,
   Medal, Trophy, Crown, Star, Award, Shield, BookOpen,
   Flame, Target, MapPin, Calendar, Clock, Dumbbell,
-  Filter, Search, Plus
+  Filter, Search, Plus, Menu, Home, BookMarked, Trophy as TrophyIcon,
+  Settings, LogOut
 } from "lucide-react";
 import { formatDistanceToNow } from 'date-fns';
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -20,6 +21,8 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Link } from "wouter";
 
 // Types remain the same...
 
@@ -127,47 +130,139 @@ function AchievementBadge({ achievement }: { achievement: any }) {
 }
 
 export default function CommunityPage() {
-  const { user } = useAuth();
+  const { user, logoutMutation } = useAuth();
   const [selectedTab, setSelectedTab] = useState("feed");
   const [partnerFilter, setPartnerFilter] = useState("all");
   const [locationFilter, setLocationFilter] = useState("all");
 
-  // Existing queries remain the same...
+  const { data: followers } = useQuery<User[]>({
+    queryKey: ["/api/followers"],
+    queryFn: () => [
+      {
+        id: 1,
+        username: "JohnDoe",
+        beltRank: "Purple",
+        gym: "Alliance BJJ"
+      },
+      {
+        id: 2,
+        username: "SarahSmith",
+        beltRank: "Blue",
+        gym: "Gracie Barra"
+      },
+      {
+        id: 3,
+        username: "MikeBrown",
+        beltRank: "White",
+        gym: "10th Planet"
+      }
+    ]
+  });
 
-  const { data: userStats } = useQuery({
-    queryKey: ["/api/user/stats"],
-    queryFn: () => ({
-      totalSessions: 48,
-      totalHours: 72,
-      techniquesLearned: 25,
-      achievements: [
-        {
-          id: 1,
-          type: "streak",
-          name: "Consistent Warrior",
-          description: "Train 5 days in a row",
-          unlocked: true,
-          level: 2,
+  const { data: following } = useQuery<User[]>({
+    queryKey: ["/api/following"],
+    queryFn: () => [
+      {
+        id: 4,
+        username: "AlexLee",
+        beltRank: "Brown",
+        gym: "Atos BJJ"
+      },
+      {
+        id: 5,
+        username: "EmilyWong",
+        beltRank: "Purple",
+        gym: "Checkmat"
+      }
+    ]
+  });
+
+  const { data: activityFeed } = useQuery<ExtendedTrainingLog[]>({
+    queryKey: ["/api/community/feed"],
+    queryFn: () => [
+      {
+        id: 1,
+        user: {
+          id: 4,
+          username: "AlexLee",
+          beltRank: "Brown",
+          gym: "Atos BJJ"
         },
-        {
-          id: 2,
-          type: "technique",
-          name: "Technique Hunter",
-          description: "Learn 25 different techniques",
-          unlocked: true,
-          level: 1,
+        date: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 mins ago
+        type: "Training",
+        duration: 90,
+        energyLevel: 4,
+        techniquesPracticed: ["De la Riva Guard", "Berimbolo", "Back Take"],
+        notes: "Great session working on guard transitions. Finally hitting clean berimbolo entries!",
+        likes: 12,
+        hasLiked: false,
+        comments: [
+          {
+            id: 1,
+            user: {
+              id: 2,
+              username: "SarahSmith",
+              beltRank: "Blue"
+            },
+            content: "Your berimbolo is looking super clean! Any tips?",
+            createdAt: new Date(Date.now() - 1000 * 60 * 15).toISOString()
+          }
+        ]
+      },
+      {
+        id: 2,
+        user: {
+          id: 5,
+          username: "EmilyWong",
+          beltRank: "Purple",
+          gym: "Checkmat"
         },
-        {
-          id: 3,
-          type: "competition",
-          name: "Competition Ready",
-          description: "Participate in your first competition",
-          unlocked: false,
-          progress: 0,
-          required: 1,
-        },
-      ],
-    }),
+        date: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
+        type: "Competition",
+        duration: 120,
+        energyLevel: 5,
+        techniquesPracticed: ["Triangle", "Armbar", "Kimura"],
+        notes: "Won gold at the local tournament! Triangle setups were on point today.",
+        likes: 25,
+        hasLiked: true,
+        comments: [
+          {
+            id: 2,
+            user: {
+              id: 1,
+              username: "JohnDoe",
+              beltRank: "Purple"
+            },
+            content: "Incredible performance! Those triangles were super tight 🔥",
+            createdAt: new Date(Date.now() - 1000 * 60 * 45).toISOString()
+          }
+        ]
+      }
+    ]
+  });
+
+  const { data: suggestedPartners } = useQuery<User[]>({
+    queryKey: ["/api/community/suggestions"],
+    queryFn: () => [
+      {
+        id: 6,
+        username: "CarlosRios",
+        beltRank: "Black",
+        gym: "Alliance BJJ"
+      },
+      {
+        id: 7,
+        username: "JennaKim",
+        beltRank: "Blue",
+        gym: "10th Planet"
+      },
+      {
+        id: 8,
+        username: "RyanPark",
+        beltRank: "Purple",
+        gym: "Gracie Barra"
+      }
+    ]
   });
 
   const followMutation = useMutation({
@@ -209,31 +304,143 @@ export default function CommunityPage() {
   });
 
 
-  const { data: followers } = useQuery<User[]>({
-    queryKey: ["/api/followers"]
-  });
-
-  const { data: following } = useQuery<User[]>({
-    queryKey: ["/api/following"]
-  });
-
-  const { data: activityFeed } = useQuery<ExtendedTrainingLog[]>({
-    queryKey: ["/api/community/feed"]
-  });
-
-  const { data: suggestedPartners } = useQuery<User[]>({
-    queryKey: ["/api/community/suggestions"]
+  const { data: userStats } = useQuery({
+    queryKey: ["/api/user/stats"],
+    queryFn: () => ({
+      totalSessions: 48,
+      totalHours: 72,
+      techniquesLearned: 25,
+      achievements: [
+        {
+          id: 1,
+          type: "streak",
+          name: "Consistent Warrior",
+          description: "Train 5 days in a row",
+          unlocked: true,
+          level: 2,
+        },
+        {
+          id: 2,
+          type: "technique",
+          name: "Technique Hunter",
+          description: "Learn 25 different techniques",
+          unlocked: true,
+          level: 1,
+        },
+        {
+          id: 3,
+          type: "competition",
+          name: "Competition Ready",
+          description: "Participate in your first competition",
+          unlocked: false,
+          progress: 0,
+          required: 1,
+        },
+      ],
+    }),
   });
 
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-              Ossify Community
-            </h1>
-            <p className="text-muted-foreground">Connect and level up with fellow BJJ practitioners</p>
+          <div className="flex items-center gap-4">
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="lg:hidden">
+                  <Menu className="h-6 w-6" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-80">
+                <SheetHeader className="pb-6">
+                  <SheetTitle>
+                    <div className="flex items-center gap-2">
+                      <div className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+                        Ossify
+                      </div>
+                    </div>
+                  </SheetTitle>
+                </SheetHeader>
+
+                <div className="flex flex-col gap-6">
+                  {/* User Profile Section */}
+                  <div className="flex items-center gap-4 pb-6 border-b">
+                    <Avatar className="h-10 w-10">
+                      <AvatarFallback>{user?.username.slice(0, 2).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <div className="font-semibold">{user?.username}</div>
+                      <div className="text-sm text-muted-foreground">{user?.beltRank} Belt</div>
+                    </div>
+                  </div>
+
+                  {/* Navigation Links */}
+                  <nav className="space-y-2">
+                    <Link href="/">
+                      <a className="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-primary/10 transition-colors">
+                        <Home className="h-5 w-5" />
+                        Dashboard
+                      </a>
+                    </Link>
+                    <Link href="/techniques">
+                      <a className="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-primary/10 transition-colors">
+                        <BookMarked className="h-5 w-5" />
+                        Technique Library
+                      </a>
+                    </Link>
+                    <Link href="/community">
+                      <a className="flex items-center gap-3 px-4 py-2 rounded-lg bg-primary/10">
+                        <Users className="h-5 w-5" />
+                        Community
+                      </a>
+                    </Link>
+                    <Link href="/achievements">
+                      <a className="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-primary/10 transition-colors">
+                        <TrophyIcon className="h-5 w-5" />
+                        Achievements
+                      </a>
+                    </Link>
+                  </nav>
+
+                  {/* Quick Actions */}
+                  <div className="space-y-2">
+                    <h4 className="px-4 text-sm font-medium">Quick Actions</h4>
+                    <Button className="w-full justify-start gap-2">
+                      <Plus className="h-4 w-4" />
+                      Log Training
+                    </Button>
+                    <Button variant="outline" className="w-full justify-start gap-2">
+                      <Target className="h-4 w-4" />
+                      Find Partners
+                    </Button>
+                  </div>
+
+                  {/* Settings & Logout */}
+                  <div className="space-y-2 mt-auto">
+                    <Link href="/settings">
+                      <a className="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-primary/10 transition-colors">
+                        <Settings className="h-5 w-5" />
+                        Settings
+                      </a>
+                    </Link>
+                    <Button 
+                      variant="ghost" 
+                      className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-100"
+                      onClick={() => logoutMutation.mutate()}
+                    >
+                      <LogOut className="h-5 w-5 mr-2" />
+                      Logout
+                    </Button>
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+                Ossify Community
+              </h1>
+              <p className="text-muted-foreground">Connect and level up with fellow BJJ practitioners</p>
+            </div>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" className="gap-2">
@@ -640,8 +847,7 @@ export default function CommunityPage() {
                           <p className="text-sm mb-4">Trains at: {followed.gym}</p>
                         )}
                         <Button
-                          variant="outline"
-                          className="w-full"
+                          variant="outline"                          className="w-full"
                           onClick={() => unfollowMutation.mutate(followed.id)}
                         >
                           <UserMinus className="mr-2 h-4 w-4" />
@@ -658,4 +864,14 @@ export default function CommunityPage() {
       </div>
     </div>
   );
+}
+
+interface ExtendedTrainingLog extends TrainingLog {
+  hasLiked: boolean;
+  comments: {
+    id: number;
+    user: User;
+    content: string;
+    createdAt: string;
+  }[];
 }
