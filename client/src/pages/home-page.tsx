@@ -149,11 +149,84 @@ const BELT_COLORS = {
 
 const CHART_COLORS = ["#0066CC", "#660099", "#8B4513", "#FF4444", "#00CC99"];
 
-// Assume BJJTechniques is defined elsewhere and contains the technique data
+// Update the BJJTechniques constant with the new comprehensive list
 const BJJTechniques = {
-  SUBMISSIONS: ["Armbar", "Triangle Choke", "Rear Naked Choke", "Kimura"],
-  POSITIONS_AND_SWEEPS: ["Guard", "Mount", "Side Control", "Sweep"],
-  ESCAPES: ["Escape from Mount", "Escape from Side Control", "Escape from Guard"]
+  "POSITIONS_AND_SWEEPS": [
+    "Armbar from Closed Guard",
+    "Triangle Choke from Closed Guard",
+    "Omoplata from Closed Guard",
+    "Scissor Sweep",
+    "Hip Bump Sweep",
+    "Pendulum Sweep",
+    "Balloon Sweep",
+    "Sit-Up Guard Sweep",
+    "Old School Sweep",
+    "Lockdown to Electric Chair Sweep",
+    "Deep Half Guard Sweep",
+    "Spider Guard to Triangle",
+    "Dela Riva Guard to Berimbolo",
+    "X-Guard Sweep",
+    "Half Guard Knee Shield Sweep",
+    "Reverse De La Riva to Back Take",
+    "Butterfly Guard Hook Sweep",
+    "Sumi Gaeshi Sweep",
+    "Shin to Shin Guard Sweep",
+    "De La Riva to X-Guard Sweep",
+    "Tripod Sweep"
+  ],
+  "SUBMISSIONS": [
+    "Cross Collar Choke from Closed Guard",
+    "Bow and Arrow Choke",
+    "Loop Choke",
+    "D'arce Choke",
+    "Rear Naked Choke",
+    "Kimura from Side Control",
+    "Americana from Mount",
+    "Armbar from Mount",
+    "Straight Ankle Lock",
+    "Heel Hook",
+    "Kneebar",
+    "North-South Choke",
+    "Baseball Bat Choke",
+    "Paper Cutter Choke",
+    "Ezekiel Choke from Mount",
+    "Arm Triangle Choke",
+    "Peruvian Necktie",
+    "Anaconda Choke",
+    "Standing Guillotine Choke",
+    "Clock Choke from Turtle"
+  ],
+  "ESCAPES": [
+    "Bridge and Roll Escape",
+    "Elbow Escape (Shrimping)",
+    "Knee-to-Elbow Escape",
+    "Frame and Hip Escape",
+    "Bridge and Recover Guard",
+    "Escape to Mount",
+    "Escape to Turtle",
+    "Leg Pummel to Side Control",
+    "Reverse Kimura Trap",
+    "Half Guard Underhook to Back Take",
+    "Hip Heist Escape from Side Control",
+    "Hip Bump Escape from Mount",
+    "Underhook Knee Shield Escape",
+    "Running Escape from Side Control",
+    "Deep Half Escape from Side Control"
+  ],
+  "TAKEDOWNS": [
+    "Ogoshi (Hip Throw)",
+    "Seoi Nage (Shoulder Throw)",
+    "Double Leg Takedown",
+    "Single Leg Takedown",
+    "Lapel Drag to Ankle Pick",
+    "Head and Arm Throw",
+    "Collar Drag Takedown",
+    "Yoko Tomoe Nage",
+    "Kouchi Gari (Inside Trip)",
+    "Uchi Mata (Inner Thigh Throw)",
+    "Harai Goshi (Sweeping Hip Throw)",
+    "Osoto Gari (Outer Reap)"
+  ]
 };
 
 
@@ -490,23 +563,8 @@ function HomePage() {
                             <FormControl>
                               <Command className="rounded-lg border shadow-md">
                                 <CommandInput placeholder="Search techniques..." />
-                                <CommandList>
+                                <CommandList className="max-h-[300px] overflow-y-auto">
                                   <CommandEmpty>No techniques found.</CommandEmpty>
-                                  <CommandGroup heading="Submissions">
-                                    {BJJTechniques.SUBMISSIONS.map((technique) => (
-                                      <CommandItem
-                                        key={technique}
-                                        onSelect={() => {
-                                          if (!field.value.includes(technique)) {
-                                            field.onChange([...field.value, technique]);
-                                          }
-                                        }}
-                                      >
-                                        {technique}
-                                      </CommandItem>
-                                    ))}
-                                  </CommandGroup>
-                                  <CommandSeparator />
                                   <CommandGroup heading="Positions & Sweeps">
                                     {BJJTechniques.POSITIONS_AND_SWEEPS.map((technique) => (
                                       <CommandItem
@@ -522,8 +580,38 @@ function HomePage() {
                                     ))}
                                   </CommandGroup>
                                   <CommandSeparator />
+                                  <CommandGroup heading="Submissions">
+                                    {BJJTechniques.SUBMISSIONS.map((technique) => (
+                                      <CommandItem
+                                        key={technique}
+                                        onSelect={() => {
+                                          if (!field.value.includes(technique)) {
+                                            field.onChange([...field.value, technique]);
+                                          }
+                                        }}
+                                      >
+                                        {technique}
+                                      </CommandItem>
+                                    ))}
+                                  </CommandGroup>
+                                  <CommandSeparator />
                                   <CommandGroup heading="Escapes">
                                     {BJJTechniques.ESCAPES.map((technique) => (
+                                      <CommandItem
+                                        key={technique}
+                                        onSelect={() => {
+                                          if (!field.value.includes(technique)) {
+                                            field.onChange([...field.value, technique]);
+                                          }
+                                        }}
+                                      >
+                                        {technique}
+                                      </CommandItem>
+                                    ))}
+                                  </CommandGroup>
+                                  <CommandSeparator />
+                                  <CommandGroup heading="Takedowns">
+                                    {BJJTechniques.TAKEDOWNS.map((technique) => (
                                       <CommandItem
                                         key={technique}
                                         onSelect={() => {
@@ -943,43 +1031,6 @@ function HomePage() {
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <h4 className="text-sm font-medium">Points Breakdown</h4>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div className="flex items-center gap-2 p-2 rounded-lg bg-secondary/10">
-                      <Medal className="h-4 w-4 text-blue-500" />
-                      <div className="flex-1">
-                        <p>Training</p>
-                        <p className="text-xs text-muted-foreground">Per session</p>
-                      </div>
-                      <span className="font-medium">+100</span>
-                    </div>
-                    <div className="flex items-center gap-2 p-2 rounded-lg bg-secondary/10">
-                      <Target className="h-4 w-4 text-green-500" />
-                      <div className="flex-1">
-                        <p>Submissions</p>
-                        <p className="text-xs text-muted-foreground">Per success</p>
-                      </div>
-                      <span className="font-medium">+40</span>
-                    </div>
-                    <div className="flex items-center gap-2 p-2 rounded-lg bg-secondary/10">
-                      <Shield className="h-4 w-4 text-purple-500" />
-                      <div className="flex-1">
-                        <p>Escapes</p>
-                        <p className="text-xs text-muted-foreground">Per success</p>
-                      </div>
-                      <span className="font-medium">+35</span>
-                    </div>
-                    <div className="flex items-center gap-2 p-2 rounded-lg bg-secondary/10">
-                      <Flame className="h-4 w-4 text-orange-500" />
-                      <div className="flex-1">
-                        <p>Streak</p>
-                        <p className="text-xs text-muted-foreground">Per day</p>
-                      </div>
-                      <span className="font-medium">+50</span>
-                    </div>
-                  </div>
-                </div>
               </div>
             </CardContent>
           </Card>
