@@ -30,7 +30,7 @@ import { useAuth } from "@/hooks/use-auth";
 import UserProfile from "@/pages/user-profile";
 import AchievementsDashboard from "@/pages/achievements-dashboard";
 import TechniquePassport from "@/pages/technique-passport";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"; // Added Tooltip imports
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"; // Added TooltipProvider
 
 
 function ErrorFallback({ error }: { error: Error }) {
@@ -119,23 +119,25 @@ function Layout({ children }: { children: React.ReactNode }) {
                   </div>
 
                   {/* Navigation Links */}
-                  <nav className="space-y-2">
-                    {menuItems.map((item) => (
-                      <Tooltip key={item.href}>
-                        <TooltipTrigger asChild>
-                          <Link href={item.href}>
-                            <a className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${location === item.href ? "bg-primary/10" : "hover:bg-primary/10"}`}>
-                              <item.icon className="h-5 w-5" />
-                              {item.label}
-                            </a>
-                          </Link>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>{item.tooltip}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    ))}
-                  </nav>
+                  <TooltipProvider>
+                    <nav className="space-y-2">
+                      {menuItems.map((item) => (
+                        <Tooltip key={item.href}>
+                          <TooltipTrigger asChild>
+                            <Link href={item.href}>
+                              <a className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${location === item.href ? "bg-primary/10" : "hover:bg-primary/10"}`}>
+                                <item.icon className="h-5 w-5" />
+                                {item.label}
+                              </a>
+                            </Link>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{item.tooltip}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      ))}
+                    </nav>
+                  </TooltipProvider>
 
                   {/* Quick Actions */}
                   <div className="space-y-2">
@@ -180,25 +182,27 @@ function Layout({ children }: { children: React.ReactNode }) {
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center gap-6">
-            {menuItems.map((item) => (
-              <Tooltip key={item.href}>
-                <TooltipTrigger asChild>
-                  <Link href={item.href}>
-                    <a className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                      location === item.href ? "bg-primary/10" : "hover:bg-primary/10"
-                    }`}>
-                      <item.icon className="h-4 w-4" />
-                      {item.label}
-                    </a>
-                  </Link>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>{item.tooltip}</p>
-                </TooltipContent>
-              </Tooltip>
-            ))}
-          </nav>
+          <TooltipProvider>
+            <nav className="hidden lg:flex items-center gap-6">
+              {menuItems.map((item) => (
+                <Tooltip key={item.href}>
+                  <TooltipTrigger asChild>
+                    <Link href={item.href}>
+                      <a className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                        location === item.href ? "bg-primary/10" : "hover:bg-primary/10"
+                      }`}>
+                        <item.icon className="h-4 w-4" />
+                        {item.label}
+                      </a>
+                    </Link>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{item.tooltip}</p>
+                  </TooltipContent>
+                </Tooltip>
+              ))}
+            </nav>
+          </TooltipProvider>
 
           {/* User Menu */}
           <div className="flex items-center gap-4">
