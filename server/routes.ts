@@ -30,13 +30,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const log = await storage.createTrainingLog({
         ...validatedData,
         userId: req.user.id,
-        date: new Date()
+        date: new Date(),
+        techniques: validatedData.techniquesPracticed || [],
+        gym: validatedData.gym || null,
+        rollingSummary: validatedData.rollingSummary || null,
+        submissionsAttempted: validatedData.submissionsAttempted || [],
+        submissionsSuccessful: validatedData.submissionsSuccessful || [],
+        escapesAttempted: validatedData.escapesAttempted || [],
+        escapesSuccessful: validatedData.escapesSuccessful || []
       });
 
       // Award points for training session
-      const techniquesCount = Array.isArray(validatedData.techniques) 
-        ? validatedData.techniques.length 
-        : 0;
+      const techniquesCount = validatedData.techniquesPracticed?.length || 0;
 
       console.log(`Awarding points for training session - userId: ${req.user.id}, duration: ${validatedData.duration}, techniques: ${techniquesCount}`);
 
@@ -48,8 +53,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json(log);
     } catch (error) {
-      console.error("Error creating training log:", error);
-      res.status(400).json({ error: "Invalid training log data", details: error.message });
+      console.error("Error creating training log:", error instanceof Error ? error.message : 'Unknown error');
+      res.status(400).json({ 
+        error: "Invalid training log data", 
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   });
 
@@ -84,7 +92,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
       res.json(suggestions);
     } catch (error) {
-      console.error("OpenAI API error:", error);
+      console.error("OpenAI API error:", error instanceof Error ? error.message : 'Unknown error');
       res.json({
         focusAreas: ["Focus on fundamentals"],
         suggestedTechniques: ["Basic guard passes", "Submissions from mount"],
@@ -180,11 +188,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       const { trainingFrequency, focusAreas, goals } = req.body;
-
-      // Get recent training logs
       const recentLogs = await storage.getTrainingLogs(req.user.id);
-
-      // Get personalized recommendations
       const recommendations = await getTrainingSuggestions(
         recentLogs,
         req.user.beltRank,
@@ -194,13 +198,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           goals
         }
       );
-
       res.json(recommendations);
     } catch (error) {
-      console.error("Error getting recommendations:", error);
+      console.error("Error getting recommendations:", error instanceof Error ? error.message : 'Unknown error');
       res.status(500).json({ 
         error: "Failed to get recommendations",
-        details: error.message 
+        details: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   });
