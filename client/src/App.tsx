@@ -153,30 +153,20 @@ function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-function Router() {
-  return (
-    <Switch>
-      <Route path="/auth" component={AuthPage} />
-      <Route path="/">
-        <Layout>
-          <Switch>
-            <ProtectedRoute path="/" component={HomePage} />
-            <ProtectedRoute path="/techniques" component={TechniqueLibrary} />
-            <ProtectedRoute path="/community" component={CommunityPage} />
-            <Route component={NotFound} />
-          </Switch>
-        </Layout>
-      </Route>
-    </Switch>
-  );
-}
-
 function App() {
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <Router />
+          <Layout>
+            <Switch>
+              <Route path="/auth" component={AuthPage} />
+              <ProtectedRoute path="/" component={HomePage} />
+              <ProtectedRoute path="/techniques" component={TechniqueLibrary} />
+              <ProtectedRoute path="/community" component={CommunityPage} />
+              <Route component={NotFound} />
+            </Switch>
+          </Layout>
           <Toaster />
         </AuthProvider>
       </QueryClientProvider>
