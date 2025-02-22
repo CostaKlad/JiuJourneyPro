@@ -1,24 +1,30 @@
 import { useAuth } from "@/hooks/use-auth";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertUserSchema, type InsertUser } from "@shared/schema";
+import { insertUserSchema, forgotPasswordSchema, resetPasswordSchema, type InsertUser, type ForgotPassword } from "@shared/schema";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Redirect } from "wouter";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Redirect, useLocation } from "wouter";
+import { useState } from "react";
 
 export default function AuthPage() {
-  const { user, loginMutation, registerMutation } = useAuth();
+  const { user, loginMutation, registerMutation, forgotPasswordMutation } = useAuth();
+  const [, params] = useLocation();
+  const [activeTab, setActiveTab] = useState(() => {
+    // If there's a reset token in the URL, show the reset password tab
+    return params.has("token") ? "reset" : "login";
+  });
 
   const loginForm = useForm<InsertUser>({
-    resolver: zodResolver(insertUserSchema),
+    resolver: zodResolver(insertUserSchema.pick({ username: true, password: true })),
     defaultValues: {
       username: "",
-      password: "",
-      beltRank: ""
+      password: ""
     }
   });
 
@@ -26,14 +32,30 @@ export default function AuthPage() {
     resolver: zodResolver(insertUserSchema),
     defaultValues: {
       username: "",
+      email: "",
       password: "",
       beltRank: "White" // Set default belt rank for new users
+    }
+  });
+
+  const forgotPasswordForm = useForm<ForgotPassword>({
+    resolver: zodResolver(forgotPasswordSchema),
+    defaultValues: {
+      email: ""
     }
   });
 
   if (user) {
     return <Redirect to="/" />;
   }
+
+  const passwordRequirements = [
+    "At least 8 characters long",
+    "Must contain at least one uppercase letter",
+    "Must contain at least one lowercase letter",
+    "Must contain at least one number",
+    "Must contain at least one special character"
+  ];
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
@@ -47,10 +69,11 @@ export default function AuthPage() {
           </p>
 
           <TooltipProvider>
-            <Tabs defaultValue="login" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="login">Sign In</TabsTrigger>
                 <TabsTrigger value="register">Create Account</TabsTrigger>
+                <TabsTrigger value="forgot">Reset Password</TabsTrigger>
               </TabsList>
 
               <TabsContent value="login">
@@ -93,6 +116,14 @@ export default function AuthPage() {
                         <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
                           {loginMutation.isPending ? "Signing in..." : "Sign In"}
                         </Button>
+                        <Button
+                          type="button"
+                          variant="link"
+                          className="w-full"
+                          onClick={() => setActiveTab("forgot")}
+                        >
+                          Forgot your password?
+                        </Button>
                       </form>
                     </Form>
                   </CardContent>
@@ -132,6 +163,19 @@ export default function AuthPage() {
                         />
                         <FormField
                           control={registerForm.control}
+                          name="email"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Email Address</FormLabel>
+                              <FormControl>
+                                <Input type="email" placeholder="Enter your email" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={registerForm.control}
                           name="password"
                           render={({ field }) => (
                             <FormItem>
@@ -140,6 +184,15 @@ export default function AuthPage() {
                                 <Input type="password" placeholder="Choose a secure password" {...field} />
                               </FormControl>
                               <FormMessage />
+                              <Alert>
+                                <AlertDescription>
+                                  <ul className="list-disc pl-4 text-sm text-muted-foreground">
+                                    {passwordRequirements.map((req, index) => (
+                                      <li key={index}>{req}</li>
+                                    ))}
+                                  </ul>
+                                </AlertDescription>
+                              </Alert>
                             </FormItem>
                           )}
                         />
@@ -165,6 +218,39 @@ export default function AuthPage() {
                         />
                         <Button type="submit" className="w-full" disabled={registerMutation.isPending}>
                           {registerMutation.isPending ? "Creating your account..." : "Start Training"}
+                        </Button>
+                      </form>
+                    </Form>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="forgot">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Reset Your Password</CardTitle>
+                    <CardDescription>
+                      Enter your email to receive a password reset link
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Form {...forgotPasswordForm}>
+                      <form onSubmit={forgotPasswordForm.handleSubmit(data => forgotPasswordMutation.mutate(data))} className="space-y-4">
+                        <FormField
+                          control={forgotPasswordForm.control}
+                          name="email"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Email Address</FormLabel>
+                              <FormControl>
+                                <Input type="email" placeholder="Enter your registered email" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <Button type="submit" className="w-full" disabled={forgotPasswordMutation.isPending}>
+                          {forgotPasswordMutation.isPending ? "Sending reset link..." : "Send Reset Link"}
                         </Button>
                       </form>
                     </Form>

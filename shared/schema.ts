@@ -92,6 +92,17 @@ export const insertUserSchema = createInsertSchema(users)
     email: z.string().email("Invalid email address"),
   });
 
+// Create reset password schema
+export const resetPasswordSchema = z.object({
+  token: z.string(),
+  newPassword: passwordSchema
+});
+
+// Create forgot password schema
+export const forgotPasswordSchema = z.object({
+  email: z.string().email("Invalid email address")
+});
+
 export const trainingLogs = pgTable("training_logs", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull(),
@@ -255,3 +266,5 @@ export type PointTransaction = typeof pointTransactions.$inferSelect;
 export type Achievement = typeof achievements.$inferSelect;
 export type UserAchievement = typeof userAchievements.$inferSelect;
 export type UserAchievementProgress = typeof userAchievementProgress.$inferSelect;
+export type ResetPassword = z.infer<typeof resetPasswordSchema>;
+export type ForgotPassword = z.infer<typeof forgotPasswordSchema>;
