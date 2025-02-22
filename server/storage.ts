@@ -156,27 +156,49 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getFollowers(userId: number): Promise<User[]> {
-    // This query gets users who follow the specified userId
-    const followersResult = await db.select({
-      follower: users
-    })
-      .from(followers)
-      .where(eq(followers.followingId, userId))
-      .innerJoin(users, eq(users.id, followers.followerId));
+    // Get users who follow the specified userId
+    const followersResult = await db
+      .select()
+      .from(users)
+      .innerJoin(followers, eq(users.id, followers.followerId))
+      .where(eq(followers.followingId, userId));
 
-    return followersResult.map(r => r.follower);
+    return followersResult.map(row => ({
+      id: row.users.id,
+      username: row.users.username,
+      email: row.users.email,
+      password: row.users.password,
+      beltRank: row.users.beltRank,
+      gym: row.users.gym,
+      goals: row.users.goals,
+      totalPoints: row.users.totalPoints,
+      level: row.users.level,
+      resetPasswordToken: row.users.resetPasswordToken,
+      resetPasswordExpires: row.users.resetPasswordExpires
+    }));
   }
 
   async getFollowing(userId: number): Promise<User[]> {
-    // This query gets users who are followed by the specified userId
-    const followingResult = await db.select({
-      following: users
-    })
-      .from(followers)
-      .where(eq(followers.followerId, userId))
-      .innerJoin(users, eq(users.id, followers.followingId));
+    // Get users who are followed by the specified userId
+    const followingResult = await db
+      .select()
+      .from(users)
+      .innerJoin(followers, eq(users.id, followers.followingId))
+      .where(eq(followers.followerId, userId));
 
-    return followingResult.map(r => r.following);
+    return followingResult.map(row => ({
+      id: row.users.id,
+      username: row.users.username,
+      email: row.users.email,
+      password: row.users.password,
+      beltRank: row.users.beltRank,
+      gym: row.users.gym,
+      goals: row.users.goals,
+      totalPoints: row.users.totalPoints,
+      level: row.users.level,
+      resetPasswordToken: row.users.resetPasswordToken,
+      resetPasswordExpires: row.users.resetPasswordExpires
+    }));
   }
 
   async createComment(userId: number, trainingLogId: number, content: string): Promise<Comment> {
