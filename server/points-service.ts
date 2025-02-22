@@ -1,6 +1,15 @@
 import { db } from "./db";
 import { users, pointTransactions, achievements, userAchievements, type User } from "@shared/schema";
 import { eq, and, gte, lte } from "drizzle-orm";
+import { trainingLogs } from "@shared/schema"; // Assuming this import is needed for trainingLogs table
+import { userAchievementProgress } from "@shared/schema"; // Assuming this import is needed for userAchievementProgress table
+enum AchievementCategory {
+  TRAINING_CONSISTENCY = 'trainingConsistency',
+  TECHNIQUE_MASTERY = 'techniqueMastery',
+  SUBMISSION_MASTERY = 'submissionMastery',
+  ESCAPE_MASTERY = 'escapeMastery',
+  FOCUS_AREA = 'focusArea'
+}
 
 export class PointsService {
   // Point values for different actions
@@ -143,9 +152,9 @@ export class PointsService {
         // Update user's total points and level
         await tx
           .update(users)
-          .set({ 
+          .set({
             totalPoints: newTotal,
-            level: level 
+            level: level
           })
           .where(eq(users.id, userId));
 
@@ -209,15 +218,15 @@ export class PointsService {
   // Award points for maintaining a streak
   async awardStreakPoints(userId: number, streakDays: number): Promise<void> {
     const points = PointsService.calculateStreakBonus(streakDays);
-    await this.addPoints(userId, points, 'streak', 
+    await this.addPoints(userId, points, 'streak',
       `${streakDays} day training streak maintained`);
   }
 
   // Add points and update user's total
   async addPoints(
-    userId: number, 
-    amount: number, 
-    type: string, 
+    userId: number,
+    amount: number,
+    type: string,
     description: string
   ): Promise<void> {
     await db.transaction(async (tx) => {
@@ -240,9 +249,9 @@ export class PointsService {
 
       await tx
         .update(users)
-        .set({ 
+        .set({
           totalPoints: newTotal,
-          level: level 
+          level: level
         })
         .where(eq(users.id, userId));
 
@@ -298,63 +307,125 @@ export class PointsService {
 
   // Check and award achievements
   private async checkAchievements(userId: number, tx: any): Promise<void> {
-    const [user] = await tx
-      .select()
-      .from(users)
-      .where(eq(users.id, userId));
+    try {
+      console.log(`Checking achievements for user ${userId}`);
 
-    const allAchievements = await tx
-      .select()
-      .from(achievements);
+      // Get user's current data
+      const [user] = await tx
+        .select()
+        .from(users)
+        .where(eq(users.id, userId));
 
-    const userAchievementIds = (await tx
-      .select()
-      .from(userAchievements)
-      .where(eq(userAchievements.userId, userId)))
-      .map((ua: any) => ua.achievementId);
+      if (!user) {
+        console.error('User not found when checking achievements');
+        return;
+      }
 
-    for (const achievement of allAchievements) {
-      if (!userAchievementIds.includes(achievement.id)) {
-        const requirement = achievement.requirement as any;
-        let earned = false;
+      // Get all training logs for progress calculation
+      const trainingLogs = await tx
+        .select()
+        .from(trainingLogs)
+        .where(eq(trainingLogs.userId, userId));
 
-        switch (requirement.type) {
-          case 'points':
-            earned = user.totalPoints >= requirement.amount;
-            break;
-          case 'level':
-            earned = user.level >= requirement.level;
-            break;
-          case 'streak':
-            // Calculate current streak and compare
-            const streak = await this.calculateCurrentStreak(userId, tx);
-            earned = streak >= requirement.days;
-            break;
-        }
+      // Get all achievements
+      const allAchievements = await tx
+        .select()
+        .from(achievements);
 
-        if (earned) {
-          await tx.insert(userAchievements).values({
-            userId,
-            achievementId: achievement.id
-          });
+      // Get user's current achievements
+      const userAchievementIds = (await tx
+        .select()
+        .from(userAchievements)
+        .where(eq(userAchievements.userId, userId)))
+        .map((ua: any) => ua.achievementId);
 
-          // Award bonus points for earning the achievement
-          await tx.insert(pointTransactions).values({
-            userId,
-            amount: achievement.pointValue,
-            type: 'achievement',
-            description: `Earned achievement: ${achievement.name}`
-          });
+      // Calculate current progress metrics
+      const metrics = {
+        totalTrainingSessions: trainingLogs.length,
+        uniqueTechniques: new Set(trainingLogs.flatMap(log => log.techniquesPracticed || [])).size,
+        successfulSubmissions: trainingLogs.reduce((acc, log) => acc + (log.submissionsSuccessful?.length || 0), 0),
+        successfulEscapes: trainingLogs.reduce((acc, log) => acc + (log.escapesSuccessful?.length || 0), 0),
+        focusAreas: new Set(trainingLogs.flatMap(log => log.focusAreas || [])).size
+      };
 
-          // Update user's total points with achievement bonus
+      console.log('Current achievement metrics:', metrics);
+
+      for (const achievement of allAchievements) {
+        if (!userAchievementIds.includes(achievement.id)) {
+          let currentProgress = 0;
+          let progressMax = achievement.progressMax;
+          let earned = false;
+
+          switch (achievement.category) {
+            case AchievementCategory.TRAINING_CONSISTENCY:
+              currentProgress = metrics.totalTrainingSessions;
+              earned = currentProgress >= progressMax;
+              break;
+
+            case AchievementCategory.TECHNIQUE_MASTERY:
+              currentProgress = metrics.uniqueTechniques;
+              earned = currentProgress >= progressMax;
+              break;
+
+            case AchievementCategory.SUBMISSION_MASTERY:
+              currentProgress = metrics.successfulSubmissions;
+              earned = currentProgress >= progressMax;
+              break;
+
+            case AchievementCategory.ESCAPE_MASTERY:
+              currentProgress = metrics.successfulEscapes;
+              earned = currentProgress >= progressMax;
+              break;
+
+            case AchievementCategory.FOCUS_AREA:
+              currentProgress = metrics.focusAreas;
+              earned = currentProgress >= progressMax;
+              break;
+          }
+
+          // Update progress in database
           await tx
-            .update(users)
-            .set({ 
-              totalPoints: user.totalPoints + achievement.pointValue 
+            .insert(userAchievementProgress)
+            .values({
+              userId,
+              achievementId: achievement.id,
+              currentProgress
             })
-            .where(eq(users.id, userId));
+            .onConflictDoUpdate({
+              target: [userAchievementProgress.userId, userAchievementProgress.achievementId],
+              set: { currentProgress, updatedAt: new Date() }
+            });
+
+          if (earned) {
+            console.log(`User ${userId} earned achievement: ${achievement.name}`);
+
+            // Award the achievement
+            await tx.insert(userAchievements).values({
+              userId,
+              achievementId: achievement.id
+            });
+
+            // Award bonus points
+            await tx.insert(pointTransactions).values({
+              userId,
+              amount: achievement.pointValue,
+              type: 'achievement',
+              description: `Earned achievement: ${achievement.name}`
+            });
+
+            // Update user's total points
+            await tx
+              .update(users)
+              .set({
+                totalPoints: user.totalPoints + achievement.pointValue
+              })
+              .where(eq(users.id, userId));
+          }
         }
       }
+    } catch (error) {
+      console.error('Error checking achievements:', error);
+      throw error;
     }
   }
 

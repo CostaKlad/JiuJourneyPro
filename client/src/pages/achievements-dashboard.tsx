@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   Card,
@@ -62,9 +62,16 @@ const CATEGORY_ICONS: Record<keyof typeof AchievementCategory, LucideIcon> = {
 function AchievementsDashboard() {
   const [selectedView, setSelectedView] = useState("overview");
 
-  const { data: achievements } = useQuery<Achievement[]>({
+  const { data: achievements, refetch: refetchAchievements } = useQuery<Achievement[]>({
     queryKey: ["/api/achievements/progress"],
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+    staleTime: 1000 * 60, // Consider data stale after 1 minute
   });
+
+  useEffect(() => {
+    refetchAchievements();
+  }, [refetchAchievements]);
 
   const groupedAchievements = achievements?.reduce<Record<string, Achievement[]>>((acc, achievement) => {
     if (!acc[achievement.category]) {
