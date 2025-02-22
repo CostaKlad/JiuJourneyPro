@@ -195,8 +195,10 @@ function CommunityPage() {
       await apiRequest("POST", `/api/follow/${userId}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/following"] });
+      // Invalidate both followers and following queries to refresh the lists
       queryClient.invalidateQueries({ queryKey: ["/api/followers"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/following"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/community/suggestions"] });
     }
   });
 
@@ -205,8 +207,10 @@ function CommunityPage() {
       await apiRequest("POST", `/api/unfollow/${userId}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/following"] });
+      // Invalidate both followers and following queries to refresh the lists
       queryClient.invalidateQueries({ queryKey: ["/api/followers"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/following"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/community/suggestions"] });
     }
   });
 

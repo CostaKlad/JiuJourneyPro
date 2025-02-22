@@ -120,10 +120,18 @@ export class DatabaseStorage implements IStorage {
   }
 
   async followUser(followerId: number, followingId: number): Promise<void> {
-    await db.insert(followers).values({
-      followerId,
-      followingId
-    });
+    try {
+      await db.insert(followers).values({
+        followerId,
+        followingId,
+        createdAt: new Date()
+      });
+    } catch (error) {
+      // If error is about unique constraint violation, ignore it
+      if (!(error instanceof Error) || !error.message.includes('followers_unique_relationship')) {
+        throw error;
+      }
+    }
   }
 
   async unfollowUser(followerId: number, followingId: number): Promise<void> {
@@ -148,6 +156,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getFollowers(userId: number): Promise<User[]> {
+    // This query gets users who follow the specified userId
     const followersResult = await db.select({
       follower: users
     })
@@ -159,6 +168,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getFollowing(userId: number): Promise<User[]> {
+    // This query gets users who are followed by the specified userId
     const followingResult = await db.select({
       following: users
     })
