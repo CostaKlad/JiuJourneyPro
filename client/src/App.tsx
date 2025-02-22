@@ -26,7 +26,8 @@ import {
   Target
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import UserProfile from "@/pages/user-profile"; // Added import
+import UserProfile from "@/pages/user-profile";
+import AchievementsDashboard from "@/pages/achievements-dashboard"; // Add this line
 
 function ErrorFallback({ error }: { error: Error }) {
   return (
@@ -165,7 +166,8 @@ function App() {
               <ProtectedRoute path="/" component={HomePage} />
               <ProtectedRoute path="/techniques" component={TechniqueLibrary} />
               <ProtectedRoute path="/community" component={CommunityPage} />
-              <ProtectedRoute path="/users/:id" component={UserProfile} /> {/* Added route */}
+              <ProtectedRoute path="/users/:id" component={UserProfile} />
+              <ProtectedRoute path="/achievements" component={AchievementsDashboard} /> {/* Add this line */}
               <Route component={NotFound} />
             </Switch>
           </Layout>
