@@ -17,6 +17,45 @@ export const FocusArea = {
   POSITION_CONTROL: "position_control"
 } as const;
 
+// Add predefined BJJ techniques
+export const BJJTechniques = {
+  SUBMISSIONS: [
+    "Armbar",
+    "Triangle Choke",
+    "Kimura",
+    "Omoplata",
+    "Guillotine Choke",
+    "Rear Naked Choke",
+    "Americana",
+    "Cross Collar Choke",
+    "Loop Choke",
+    "D'Arce Choke",
+    "Anaconda Choke",
+    "Heel Hook",
+    "Straight Ankle Lock",
+    "Toe Hold",
+    "Kneebar"
+  ],
+  POSITIONS_AND_SWEEPS: [
+    "Half Guard Pass",
+    "Closed Guard Pass",
+    "De La Riva Guard Retention",
+    "Butterfly Guard Sweeps",
+    "X-Guard Sweeps"
+  ],
+  ESCAPES: [
+    "Side Control Escape",
+    "Mount Escape",
+    "Back Escape",
+    "Triangle Escape",
+    "Armbar Escape",
+    "Kimura Escape",
+    "Guillotine Escape",
+    "Heel Hook Escape",
+    "Toe Hold Escape"
+  ]
+} as const;
+
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),

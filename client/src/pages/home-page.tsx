@@ -148,6 +148,14 @@ const BELT_COLORS = {
 
 const CHART_COLORS = ["#0066CC", "#660099", "#8B4513", "#FF4444", "#00CC99"];
 
+// Assume BJJTechniques is defined elsewhere and contains the technique data
+const BJJTechniques = {
+  SUBMISSIONS: ["Armbar", "Triangle Choke", "Rear Naked Choke", "Kimura"],
+  POSITIONS_AND_SWEEPS: ["Guard", "Mount", "Side Control", "Sweep"],
+  ESCAPES: ["Escape from Mount", "Escape from Side Control", "Escape from Guard"]
+};
+
+
 function HomePage() {
   const { user, logoutMutation } = useAuth();
   const [showTrainingForm, setShowTrainingForm] = useState(false);
@@ -723,8 +731,47 @@ function HomePage() {
                                 <CommandInput placeholder="Search techniques..." />
                                 <CommandList>
                                   <CommandEmpty>No techniques found.</CommandEmpty>
-                                  <CommandGroup heading="Add techniques">
-                                    {/* Add technique items here */}
+                                  <CommandGroup heading="Submissions">
+                                    {BJJTechniques.SUBMISSIONS.map((technique) => (
+                                      <CommandItem
+                                        key={technique}
+                                        onSelect={() => {
+                                          if (!field.value.includes(technique)) {
+                                            field.onChange([...field.value, technique]);
+                                          }
+                                        }}
+                                      >
+                                        {technique}
+                                      </CommandItem>
+                                    ))}
+                                  </CommandGroup>
+                                  <CommandGroup heading="Positions & Sweeps">
+                                    {BJJTechniques.POSITIONS_AND_SWEEPS.map((technique) => (
+                                      <CommandItem
+                                        key={technique}
+                                        onSelect={() => {
+                                          if (!field.value.includes(technique)) {
+                                            field.onChange([...field.value, technique]);
+                                          }
+                                        }}
+                                      >
+                                        {technique}
+                                      </CommandItem>
+                                    ))}
+                                  </CommandGroup>
+                                  <CommandGroup heading="Escapes">
+                                    {BJJTechniques.ESCAPES.map((technique) => (
+                                      <CommandItem
+                                        key={technique}
+                                        onSelect={() => {
+                                          if (!field.value.includes(technique)) {
+                                            field.onChange([...field.value, technique]);
+                                          }
+                                        }}
+                                      >
+                                        {technique}
+                                      </CommandItem>
+                                    ))}
                                   </CommandGroup>
                                 </CommandList>
                               </Command>
@@ -779,19 +826,26 @@ function HomePage() {
                               <FormItem>
                                 <FormLabel>Submissions Attempted</FormLabel>
                                 <FormControl>
-                                  <Input
-                                    placeholder="Add submission..."
-                                    onKeyDown={(e) => {
-                                      if (e.key === 'Enter') {
-                                        e.preventDefault();
-                                        const value = e.currentTarget.value.trim();
-                                        if (value) {
-                                          field.onChange([...field.value || [], value]);
-                                          e.currentTarget.value = '';
-                                        }
-                                      }
-                                    }}
-                                  />
+                                  <Command className="rounded-lg border shadow-md">
+                                    <CommandInput placeholder="Search submissions..." />
+                                    <CommandList>
+                                      <CommandEmpty>No submissions found.</CommandEmpty>
+                                      <CommandGroup heading="Submissions">
+                                        {BJJTechniques.SUBMISSIONS.map((submission) => (
+                                          <CommandItem
+                                            key={submission}
+                                            onSelect={() => {
+                                              if (!field.value?.includes(submission)) {
+                                                field.onChange([...(field.value || []), submission]);
+                                              }
+                                            }}
+                                          >
+                                            {submission}
+                                          </CommandItem>
+                                        ))}
+                                      </CommandGroup>
+                                    </CommandList>
+                                  </Command>
                                 </FormControl>
                                 <div className="flex flex-wrap gap-2 mt-2">
                                   {field.value?.map((submission, index) => (
@@ -812,6 +866,7 @@ function HomePage() {
                                     </Badge>
                                   ))}
                                 </div>
+                                <FormMessage />
                               </FormItem>
                             )}
                           />
@@ -823,19 +878,26 @@ function HomePage() {
                               <FormItem>
                                 <FormLabel>Successful Submissions</FormLabel>
                                 <FormControl>
-                                  <Input
-                                    placeholder="Add successful submission..."
-                                    onKeyDown={(e) => {
-                                      if (e.key === 'Enter') {
-                                        e.preventDefault();
-                                        const value = e.currentTarget.value.trim();
-                                        if (value) {
-                                          field.onChange([...field.value || [], value]);
-                                          e.currentTarget.value = '';
-                                        }
-                                      }
-                                    }}
-                                  />
+                                  <Command className="rounded-lg border shadow-md">
+                                    <CommandInput placeholder="Search successful submissions..." />
+                                    <CommandList>
+                                      <CommandEmpty>No submissions found.</CommandEmpty>
+                                      <CommandGroup heading="Submissions">
+                                        {BJJTechniques.SUBMISSIONS.map((submission) => (
+                                          <CommandItem
+                                            key={submission}
+                                            onSelect={() => {
+                                              if (!field.value?.includes(submission)) {
+                                                field.onChange([...(field.value || []), submission]);
+                                              }
+                                            }}
+                                          >
+                                            {submission}
+                                          </CommandItem>
+                                        ))}
+                                      </CommandGroup>
+                                    </CommandList>
+                                  </Command>
                                 </FormControl>
                                 <div className="flex flex-wrap gap-2 mt-2">
                                   {field.value?.map((submission, index) => (
@@ -856,6 +918,7 @@ function HomePage() {
                                     </Badge>
                                   ))}
                                 </div>
+                                <FormMessage />
                               </FormItem>
                             )}
                           />
@@ -869,19 +932,26 @@ function HomePage() {
                               <FormItem>
                                 <FormLabel>Escapes Attempted</FormLabel>
                                 <FormControl>
-                                  <Input
-                                    placeholder="Add escape..."
-                                    onKeyDown={(e) => {
-                                      if (e.key === 'Enter') {
-                                        e.preventDefault();
-                                        const value = e.currentTarget.value.trim();
-                                        if (value) {
-                                          field.onChange([...field.value || [], value]);
-                                          e.currentTarget.value = '';
-                                        }
-                                      }
-                                    }}
-                                  />
+                                  <Command className="rounded-lg border shadow-md">
+                                    <CommandInput placeholder="Search escapes..." />
+                                    <CommandList>
+                                      <CommandEmpty>No escapes found.</CommandEmpty>
+                                      <CommandGroup heading="Escapes">
+                                        {BJJTechniques.ESCAPES.map((escape) => (
+                                          <CommandItem
+                                            key={escape}
+                                            onSelect={() => {
+                                              if (!field.value?.includes(escape)) {
+                                                field.onChange([...(field.value || []), escape]);
+                                              }
+                                            }}
+                                          >
+                                            {escape}
+                                          </CommandItem>
+                                        ))}
+                                      </CommandGroup>
+                                    </CommandList>
+                                  </Command>
                                 </FormControl>
                                 <div className="flex flex-wrap gap-2 mt-2">
                                   {field.value?.map((escape, index) => (
@@ -902,6 +972,7 @@ function HomePage() {
                                     </Badge>
                                   ))}
                                 </div>
+                                <FormMessage />
                               </FormItem>
                             )}
                           />
@@ -913,19 +984,26 @@ function HomePage() {
                               <FormItem>
                                 <FormLabel>Successful Escapes</FormLabel>
                                 <FormControl>
-                                  <Input
-                                    placeholder="Add successful escape..."
-                                    onKeyDown={(e) => {
-                                      if (e.key === 'Enter') {
-                                        e.preventDefault();
-                                        const value = e.currentTarget.value.trim();
-                                        if (value) {
-                                          field.onChange([...field.value || [], value]);
-                                          e.currentTarget.value = '';
-                                        }
-                                      }
-                                    }}
-                                  />
+                                  <Command className="rounded-lg border shadow-md">
+                                    <CommandInput placeholder="Search successful escapes..." />
+                                    <CommandList>
+                                      <CommandEmpty>No escapes found.</CommandEmpty>
+                                      <CommandGroup heading="Escapes">
+                                        {BJJTechniques.ESCAPES.map((escape) => (
+                                          <CommandItem
+                                            key={escape}
+                                            onSelect={() => {
+                                              if (!field.value?.includes(escape)) {
+                                                field.onChange([...(field.value || []), escape]);
+                                              }
+                                            }}
+                                          >
+                                            {escape}
+                                          </CommandItem>
+                                        ))}
+                                      </CommandGroup>
+                                    </CommandList>
+                                  </Command>
                                 </FormControl>
                                 <div className="flex flex-wrap gap-2 mt-2">
                                   {field.value?.map((escape, index) => (
@@ -946,6 +1024,7 @@ function HomePage() {
                                     </Badge>
                                   ))}
                                 </div>
+                                <FormMessage />
                               </FormItem>
                             )}
                           />
