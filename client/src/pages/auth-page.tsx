@@ -14,10 +14,11 @@ import { useState } from "react";
 
 export default function AuthPage() {
   const { user, loginMutation, registerMutation, forgotPasswordMutation } = useAuth();
-  const [, params] = useLocation();
+  const [location] = useLocation();
   const [activeTab, setActiveTab] = useState(() => {
-    // If there's a reset token in the URL, show the reset password tab
-    return params.has("token") ? "reset" : "login";
+    // Use URLSearchParams to check for token in the URL
+    const searchParams = new URLSearchParams(window.location.search);
+    return searchParams.has("token") ? "reset" : "login";
   });
 
   const loginForm = useForm<InsertUser>({
