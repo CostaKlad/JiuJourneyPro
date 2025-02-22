@@ -24,8 +24,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
     try {
+      console.log("Training log request body:", req.body);
       const validatedData = insertTrainingLogSchema.parse(req.body);
-      console.log("Creating training log with data:", validatedData);
+      console.log("Validated training log data:", validatedData);
 
       const log = await storage.createTrainingLog({
         ...validatedData,
@@ -36,14 +37,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         submissionsAttempted: validatedData.submissionsAttempted || [],
         submissionsSuccessful: validatedData.submissionsSuccessful || [],
         escapesAttempted: validatedData.escapesAttempted || [],
-        escapesSuccessful: validatedData.escapesSuccessful || []
+        escapesSuccessful: validatedData.escapesSuccessful || [],
+        performanceRating: validatedData.performanceRating || null,
+        energyLevel: validatedData.energyLevel || null,
+        notes: validatedData.notes || null,
+        coachFeedback: validatedData.coachFeedback || null,
+        duration: validatedData.duration
       });
+
+      console.log("Created training log:", log);
 
       // Award points for training session
       const techniquesCount = validatedData.techniquesPracticed?.length || 0;
-
-      console.log(`Awarding points for training session - userId: ${req.user.id}, duration: ${validatedData.duration}, techniques: ${techniquesCount}`);
-
       await pointsService.awardTrainingPoints(
         req.user.id,
         validatedData.duration,
@@ -52,11 +57,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json(log);
     } catch (error) {
-      console.error("Error creating training log:", error instanceof Error ? error.message : 'Unknown error');
-      res.status(400).json({ 
-        error: "Invalid training log data", 
-        details: error instanceof Error ? error.message : 'Unknown error'
-      });
+      console.error("Error creating training log:", error);
+      if (error instanceof Error) {
+        res.status(400).json({ 
+          error: "Invalid training log data", 
+          details: error.message
+        });
+      } else {
+        res.status(500).json({ 
+          error: "Failed to create training log", 
+          details: "Unknown error occurred"
+        });
+      }
     }
   });
 
