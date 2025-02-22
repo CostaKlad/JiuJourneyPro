@@ -11,13 +11,23 @@ import { Redirect } from "wouter";
 
 export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
-  
+
   const loginForm = useForm<InsertUser>({
-    resolver: zodResolver(insertUserSchema)
+    resolver: zodResolver(insertUserSchema),
+    defaultValues: {
+      username: "",
+      password: "",
+      beltRank: ""
+    }
   });
 
   const registerForm = useForm<InsertUser>({
-    resolver: zodResolver(insertUserSchema)
+    resolver: zodResolver(insertUserSchema),
+    defaultValues: {
+      username: "",
+      password: "",
+      beltRank: ""
+    }
   });
 
   if (user) {
@@ -34,7 +44,7 @@ export default function AuthPage() {
           <p className="text-muted-foreground mb-8">
             Track your progress, learn new techniques, and connect with the BJJ community.
           </p>
-          
+
           <Tabs defaultValue="login" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="login">Login</TabsTrigger>
@@ -79,7 +89,7 @@ export default function AuthPage() {
                         )}
                       />
                       <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
-                        Login
+                        {loginMutation.isPending ? "Logging in..." : "Login"}
                       </Button>
                     </form>
                   </Form>
@@ -138,7 +148,7 @@ export default function AuthPage() {
                         )}
                       />
                       <Button type="submit" className="w-full" disabled={registerMutation.isPending}>
-                        Register
+                        {registerMutation.isPending ? "Creating account..." : "Register"}
                       </Button>
                     </form>
                   </Form>
