@@ -3,6 +3,8 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/hooks/use-auth";
+import { TourProvider } from "@/hooks/use-tour";
+import { TourGuide } from "@/components/ui/tour-guide";
 import { ProtectedRoute } from "./lib/protected-route";
 import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
@@ -265,19 +267,22 @@ function App() {
     <ErrorBoundary FallbackComponent={ErrorFallback}>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <Layout>
-            <Switch>
-              <Route path="/auth" component={AuthPage} />
-              <ProtectedRoute path="/" component={HomePage} />
-              <ProtectedRoute path="/techniques" component={TechniqueLibrary} />
-              <ProtectedRoute path="/passport" component={TechniquePassport} />
-              <ProtectedRoute path="/community" component={CommunityPage} />
-              <ProtectedRoute path="/users/:id" component={UserProfile} />
-              <ProtectedRoute path="/achievements" component={AchievementsDashboard} />
-              <Route component={NotFound} />
-            </Switch>
-          </Layout>
-          <Toaster />
+          <TourProvider>
+            <Layout>
+              <Switch>
+                <Route path="/auth" component={AuthPage} />
+                <ProtectedRoute path="/" component={HomePage} />
+                <ProtectedRoute path="/techniques" component={TechniqueLibrary} />
+                <ProtectedRoute path="/passport" component={TechniquePassport} />
+                <ProtectedRoute path="/community" component={CommunityPage} />
+                <ProtectedRoute path="/users/:id" component={UserProfile} />
+                <ProtectedRoute path="/achievements" component={AchievementsDashboard} />
+                <Route component={NotFound} />
+              </Switch>
+            </Layout>
+            <Toaster />
+            <TourGuide />
+          </TourProvider>
         </AuthProvider>
       </QueryClientProvider>
     </ErrorBoundary>
