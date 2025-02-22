@@ -9,7 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Users, UserPlus, UserMinus, MessageSquare, ThumbsUp,
-  Medal, Trophy, Star, Target, Award, Plus, MapPin
+  Medal, Trophy, Star, Target, Award, Plus, MapPin,
+  Flame, BookOpen, Calendar, Clock, Dumbbell, Shield
 } from "lucide-react";
 import { formatDistanceToNow } from 'date-fns';
 import { ScrollArea } from "@/components/ui/scroll-area";
