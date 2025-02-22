@@ -532,13 +532,10 @@ export default function HomePage() {
                   <h3 className="font-semibold capitalize">{category}</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {achievements.map((achievement) => (
-                      <div
-                        key={achievement.name}
-                        className={cn(
-                          "p-4 rounded-lg border bg-card text-card-foreground",
-                          achievement.unlocked && "border-primary"
-                        )}
-                      >
+                      <div key={achievement.name} className={cn(
+                        "p-4 rounded-lg border bg-card text-card-foreground",
+                        achievement.unlocked && "border-primary"
+                      )}>
                         <div className="flex items-start gap-4">
                           <div className={cn(
                             "p-2 rounded-full",
