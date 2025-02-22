@@ -39,10 +39,10 @@ export default function AuthPage() {
       <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-8 p-4">
         <div className="flex flex-col justify-center">
           <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            BJJ Training Log
+            Ossify
           </h1>
           <p className="text-muted-foreground mb-8">
-            Track your progress, learn new techniques, and connect with the BJJ community.
+            Your digital companion for mastering Brazilian Jiu-Jitsu. Track progress, learn techniques, and connect with the community.
           </p>
 
           <Tabs defaultValue="login" className="w-full">
@@ -54,9 +54,9 @@ export default function AuthPage() {
             <TabsContent value="login">
               <Card>
                 <CardHeader>
-                  <CardTitle>Login</CardTitle>
+                  <CardTitle>Welcome Back</CardTitle>
                   <CardDescription>
-                    Welcome back! Enter your credentials to continue.
+                    Continue your BJJ journey with Ossify
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -100,9 +100,9 @@ export default function AuthPage() {
             <TabsContent value="register">
               <Card>
                 <CardHeader>
-                  <CardTitle>Register</CardTitle>
+                  <CardTitle>Join Ossify</CardTitle>
                   <CardDescription>
-                    Create an account to start tracking your BJJ journey.
+                    Start your BJJ tracking journey today
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -141,7 +141,7 @@ export default function AuthPage() {
                           <FormItem>
                             <FormLabel>Belt Rank</FormLabel>
                             <FormControl>
-                              <Input {...field} />
+                              <Input {...field} placeholder="e.g., White, Blue, Purple" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -158,12 +158,28 @@ export default function AuthPage() {
           </Tabs>
         </div>
 
-        <div className="hidden md:block">
-          <img
-            src="https://images.unsplash.com/photo-1585511543150-dc91145bbc77"
-            alt="BJJ Training"
-            className="w-full h-full object-cover rounded-lg"
-          />
+        <div className="hidden md:flex flex-col justify-center items-center p-6 bg-gradient-to-br from-primary/5 to-purple-500/5 rounded-lg">
+          <div className="max-w-md text-center space-y-6">
+            <h2 className="text-3xl font-bold">Transform Your BJJ Journey</h2>
+            <ul className="space-y-4 text-muted-foreground">
+              <li className="flex items-center gap-2">
+                <span className="bg-primary/10 p-2 rounded-full">📊</span>
+                Track your progress and training sessions
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="bg-primary/10 p-2 rounded-full">🤼</span>
+                Connect with training partners
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="bg-primary/10 p-2 rounded-full">📚</span>
+                Access technique library and training resources
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="bg-primary/10 p-2 rounded-full">🏆</span>
+                Earn achievements and track your milestones
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>

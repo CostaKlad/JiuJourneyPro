@@ -92,32 +92,99 @@ export default function CommunityPage() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-              BJJ Community
+              Ossify Community
             </h1>
-            <p className="text-muted-foreground">Connect with fellow practitioners</p>
+            <p className="text-muted-foreground">Connect and grow with fellow BJJ practitioners</p>
           </div>
           <Users className="h-8 w-8 text-primary" />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
+          <div className="space-y-6">
+            <Card className="sticky top-6">
+              <CardHeader>
+                <CardTitle>Your Profile</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-4 mb-4">
+                  <Avatar className="h-16 w-16">
+                    <AvatarFallback className="text-xl">
+                      {user?.username.slice(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <h3 className="text-lg font-semibold">{user?.username}</h3>
+                    <p className="text-sm text-muted-foreground">{user?.beltRank} Belt</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4 text-center">
+                  <div className="p-3 rounded-lg bg-primary/10 hover:bg-primary/20 transition-colors cursor-pointer">
+                    <div className="text-2xl font-bold">{followers?.length || 0}</div>
+                    <div className="text-sm text-muted-foreground">Followers</div>
+                  </div>
+                  <div className="p-3 rounded-lg bg-primary/10 hover:bg-primary/20 transition-colors cursor-pointer">
+                    <div className="text-2xl font-bold">{following?.length || 0}</div>
+                    <div className="text-sm text-muted-foreground">Following</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Discover Training Partners</CardTitle>
+                <CardDescription>Connect with practitioners at your level</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {suggestedPartners?.map((partner) => (
+                    <div key={partner.id} className="flex items-center gap-4 p-2 rounded-lg hover:bg-primary/5 transition-colors">
+                      <Avatar>
+                        <AvatarFallback className="bg-primary/10">
+                          {partner.username.slice(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <div className="font-medium">{partner.username}</div>
+                        <p className="text-sm text-muted-foreground">{partner.beltRank} Belt</p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => followMutation.mutate(partner.id)}
+                        className="hover:bg-primary/20"
+                      >
+                        <UserPlus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
           <div className="lg:col-span-2">
-            <Tabs value={selectedTab} onValueChange={setSelectedTab}>
+            <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
               <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="feed">Activity Feed</TabsTrigger>
-                <TabsTrigger value="followers">
+                <TabsTrigger value="feed" className="flex items-center gap-2">
+                  <MessageSquare className="h-4 w-4" />
+                  Activity Feed
+                </TabsTrigger>
+                <TabsTrigger value="followers" className="flex items-center gap-2">
+                  <Users className="h-4 w-4" />
                   Followers ({followers?.length || 0})
                 </TabsTrigger>
-                <TabsTrigger value="following">
+                <TabsTrigger value="following" className="flex items-center gap-2">
+                  <UserPlus className="h-4 w-4" />
                   Following ({following?.length || 0})
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="feed" className="space-y-6 mt-6">
+              <TabsContent value="feed" className="space-y-6">
                 {activityFeed?.map((log) => (
-                  <Card key={log.id}>
-                    <CardHeader className="flex flex-row items-start gap-4">
-                      <Avatar>
+                  <Card key={log.id} className="hover:shadow-md transition-shadow">
+                    <CardHeader className="flex flex-row items-start gap-4 pb-2">
+                      <Avatar className="cursor-pointer hover:ring-2 hover:ring-primary/20 transition-all">
                         <AvatarFallback className="bg-primary/10">
                           {log.user.username.slice(0, 2).toUpperCase()}
                         </AvatarFallback>
@@ -125,34 +192,42 @@ export default function CommunityPage() {
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
                           <div>
-                            <CardTitle className="text-lg">{log.user.username}</CardTitle>
+                            <CardTitle className="text-lg hover:text-primary cursor-pointer">
+                              {log.user.username}
+                            </CardTitle>
                             <CardDescription>
                               {formatDistanceToNow(new Date(log.date), { addSuffix: true })}
                             </CardDescription>
                           </div>
-                          <Badge variant="secondary">{log.type}</Badge>
+                          <Badge variant="secondary" className="capitalize">
+                            {log.type.toLowerCase()}
+                          </Badge>
                         </div>
                       </div>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div className="grid grid-cols-2 gap-4 p-3 bg-muted rounded-lg text-sm">
                           <div>
                             <span className="text-muted-foreground">Duration:</span>{" "}
-                            {log.duration} minutes
+                            <span className="font-medium">{log.duration} minutes</span>
                           </div>
                           <div>
                             <span className="text-muted-foreground">Energy Level:</span>{" "}
-                            {log.energyLevel}/5
+                            <span className="font-medium">{log.energyLevel}/5</span>
                           </div>
                         </div>
 
                         {log.techniquesPracticed?.length > 0 && (
                           <div>
-                            <h4 className="text-sm font-medium mb-2">Techniques Practiced:</h4>
+                            <h4 className="text-sm font-medium mb-2">Techniques:</h4>
                             <div className="flex flex-wrap gap-2">
                               {log.techniquesPracticed.map((technique, index) => (
-                                <Badge key={index} variant="outline">
+                                <Badge 
+                                  key={index} 
+                                  variant="outline"
+                                  className="hover:bg-primary/5 cursor-pointer"
+                                >
                                   {technique}
                                 </Badge>
                               ))}
@@ -161,7 +236,9 @@ export default function CommunityPage() {
                         )}
 
                         {log.notes && (
-                          <p className="text-sm text-muted-foreground">{log.notes}</p>
+                          <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
+                            {log.notes}
+                          </p>
                         )}
 
                         <div className="flex items-center gap-4 pt-4 border-t">
@@ -169,22 +246,26 @@ export default function CommunityPage() {
                             variant="ghost"
                             size="sm"
                             onClick={() => likeMutation.mutate(log.id)}
-                            className={log.hasLiked ? "text-primary" : ""}
+                            className={`hover:bg-primary/10 ${log.hasLiked ? "text-primary" : ""}`}
                           >
-                            <ThumbsUp className="h-4 w-4 mr-2" />
+                            <ThumbsUp className={`h-4 w-4 mr-2 ${log.hasLiked ? "fill-current" : ""}`} />
                             {log.likes}
                           </Button>
-                          <Button variant="ghost" size="sm">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            className="hover:bg-primary/10"
+                          >
                             <MessageSquare className="h-4 w-4 mr-2" />
                             {log.comments.length}
                           </Button>
                         </div>
 
                         {log.comments.length > 0 && (
-                          <ScrollArea className="h-40 rounded-md border p-4">
+                          <ScrollArea className="h-40 rounded-lg border p-4">
                             <div className="space-y-4">
                               {log.comments.map((comment) => (
-                                <div key={comment.id} className="flex gap-4">
+                                <div key={comment.id} className="flex gap-4 group">
                                   <Avatar className="h-8 w-8">
                                     <AvatarFallback className="text-xs">
                                       {comment.user.username.slice(0, 2).toUpperCase()}
@@ -192,7 +273,7 @@ export default function CommunityPage() {
                                   </Avatar>
                                   <div className="flex-1">
                                     <div className="flex items-center gap-2">
-                                      <span className="text-sm font-medium">
+                                      <span className="text-sm font-medium hover:text-primary cursor-pointer">
                                         {comment.user.username}
                                       </span>
                                       <span className="text-xs text-muted-foreground">
@@ -201,7 +282,9 @@ export default function CommunityPage() {
                                         })}
                                       </span>
                                     </div>
-                                    <p className="text-sm">{comment.content}</p>
+                                    <p className="text-sm mt-1 bg-muted/50 p-2 rounded-lg">
+                                      {comment.content}
+                                    </p>
                                   </div>
                                 </div>
                               ))}
@@ -232,7 +315,7 @@ export default function CommunityPage() {
                           >
                             <Input
                               name="comment"
-                              placeholder="Add a comment..."
+                              placeholder="Share your thoughts..."
                               className="flex-1"
                             />
                             <Button type="submit" size="sm">
@@ -312,71 +395,6 @@ export default function CommunityPage() {
                 </div>
               </TabsContent>
             </Tabs>
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* User Profile Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Your Profile</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-4 mb-4">
-                  <Avatar className="h-16 w-16">
-                    <AvatarFallback className="text-xl">
-                      {user?.username.slice(0, 2).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <h3 className="text-lg font-semibold">{user?.username}</h3>
-                    <p className="text-sm text-muted-foreground">{user?.beltRank} Belt</p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4 text-center">
-                  <div className="p-2 rounded-lg bg-primary/10">
-                    <div className="text-2xl font-bold">{followers?.length || 0}</div>
-                    <div className="text-sm text-muted-foreground">Followers</div>
-                  </div>
-                  <div className="p-2 rounded-lg bg-primary/10">
-                    <div className="text-2xl font-bold">{following?.length || 0}</div>
-                    <div className="text-sm text-muted-foreground">Following</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Training Partners Suggestions */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Suggested Training Partners</CardTitle>
-                <CardDescription>People you might want to train with</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {suggestedPartners?.map((partner) => (
-                    <div key={partner.id} className="flex items-center gap-4">
-                      <Avatar>
-                        <AvatarFallback className="bg-primary/10">
-                          {partner.username.slice(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1">
-                        <div className="font-medium">{partner.username}</div>
-                        <p className="text-sm text-muted-foreground">{partner.beltRank} Belt</p>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => followMutation.mutate(partner.id)}
-                      >
-                        <UserPlus className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
           </div>
         </div>
       </div>
