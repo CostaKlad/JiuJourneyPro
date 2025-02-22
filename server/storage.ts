@@ -33,6 +33,7 @@ export interface IStorage {
   // Comments
   createComment(userId: number, trainingLogId: number, content: string): Promise<Comment>;
   getComments(trainingLogId: number): Promise<(Comment & { user: User })[]>;
+  getAllUsers(): Promise<User[]>;
 
   sessionStore: session.Store;
 }
@@ -225,6 +226,10 @@ export class DatabaseStorage implements IStorage {
       ...r.comment,
       user: r.user
     }));
+  }
+  async getAllUsers(): Promise<User[]> {
+    const users = await db.select().from(users);
+    return users;
   }
 }
 

@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
-import { getTrainingSuggestions } from "./openai";
+import { getTrainingSuggestions, getPeerRecommendations } from "./openai";
 import { insertTrainingLogSchema, insertCommentSchema } from "@shared/schema";
 import { pointsService } from "./points-service";
 import { achievementService } from "./achievement-service"; 
@@ -281,6 +281,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
         error: "Failed to get peer recommendations",
         details: error instanceof Error ? error.message : 'Unknown error'
       });
+    }
+  });
+
+
+  // Add these routes to handle community and user stats
+  app.get("/api/user/stats", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const trainingLogs = await storage.getTrainingLogs(req.user.id);
+      const totalSessions = trainingLogs.length;
+      const totalHours = trainingLogs.reduce((acc, log) => acc + (log.duration / 60), 0);
+      const techniquesLearned = new Set(trainingLogs.flatMap(log => log.techniquesPracticed || [])).size;
+
+      res.json({
+        totalSessions,
+        totalHours,
+        techniquesLearned,
+        achievements: []
+      });
+    } catch (error) {
+      console.error("Error getting user stats:", error);
+      res.status(500).json({ error: "Failed to get user stats" });
+    }
+  });
+
+  app.get("/api/community/feed", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const following = await storage.getFollowing(req.user.id);
+      const followingIds = following.map(f => f.id);
+      const userIds = [req.user.id, ...followingIds];
+
+      const allLogs = await Promise.all(
+        userIds.map(userId => storage.getTrainingLogs(userId))
+      );
+
+      const feedLogs = allLogs
+        .flat()
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .slice(0, 20);
+
+      res.json(feedLogs);
+    } catch (error) {
+      console.error("Error getting community feed:", error);
+      res.status(500).json({ error: "Failed to get community feed" });
+    }
+  });
+
+  app.get("/api/community/suggestions", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      // Get all users except the current user and those they already follow
+      const following = await storage.getFollowing(req.user.id);
+      const followingIds = following.map(f => f.id);
+
+      const allUsers = await storage.getAllUsers();
+      const suggestions = allUsers
+        .filter(u => u.id !== req.user.id && !followingIds.includes(u.id))
+        .slice(0, 5);
+
+      res.json(suggestions);
+    } catch (error) {
+      console.error("Error getting suggestions:", error);
+      res.status(500).json({ error: "Failed to get suggestions" });
     }
   });
 
