@@ -22,6 +22,9 @@ import {
 } from "lucide-react";
 import { mockTrainingLogs, mockUserStats } from "@/lib/mock-data";
 
+// Add a simple mock storage for follow state
+const mockFollowState = new Map<number, boolean>();
+
 function UserProfile() {
   const { id } = useParams();
   const [, navigate] = useLocation();
@@ -31,13 +34,13 @@ function UserProfile() {
   const { data: profile, refetch: refetchProfile } = useQuery({
     queryKey: ["/api/users", id],
     queryFn: async () => {
-      // For now, return mock data
+      // For now, return mock data with persistent follow state
       return {
         id: parseInt(id!),
         username: "JohnDoe",
         beltRank: "Purple",
         gym: "Gracie Barra HQ",
-        isFollowing: false,
+        isFollowing: mockFollowState.get(parseInt(id!)) || false,
       };
     },
   });
@@ -52,25 +55,33 @@ function UserProfile() {
 
   const followMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("POST", `/api/follow/${id}`);
+      // In mock mode, we'll just update the local state
+      mockFollowState.set(parseInt(id!), true);
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      return { success: true };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users", id] });
       queryClient.invalidateQueries({ queryKey: ["/api/following"] });
       queryClient.invalidateQueries({ queryKey: ["/api/followers"] });
-      refetchProfile(); // Immediately refetch the profile to update the isFollowing status
+      refetchProfile();
     },
   });
 
   const unfollowMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("POST", `/api/unfollow/${id}`);
+      // In mock mode, we'll just update the local state
+      mockFollowState.set(parseInt(id!), false);
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      return { success: true };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users", id] });
       queryClient.invalidateQueries({ queryKey: ["/api/following"] });
       queryClient.invalidateQueries({ queryKey: ["/api/followers"] });
-      refetchProfile(); // Immediately refetch the profile to update the isFollowing status
+      refetchProfile();
     },
   });
 
