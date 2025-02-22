@@ -683,6 +683,62 @@ function HomePage() {
           </Card>
         </div>
 
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Submissions Success</CardTitle>
+              <Target className="h-4 w-4 text-green-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {trainingLogs?.reduce((acc, log) => acc + (log.submissionsSuccessful?.length || 0), 0)} / 
+                {trainingLogs?.reduce((acc, log) => acc + (log.submissionsAttempted?.length || 0), 0)}
+              </div>
+              <p className="text-xs text-muted-foreground">Successful vs Attempted</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Escape Success</CardTitle>
+              <Shield className="h-4 w-4 text-blue-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {trainingLogs?.reduce((acc, log) => acc + (log.escapesSuccessful?.length || 0), 0)} / 
+                {trainingLogs?.reduce((acc, log) => acc + (log.escapesAttempted?.length || 0), 0)}
+              </div>
+              <p className="text-xs text-muted-foreground">Successful vs Attempted</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Average Energy</CardTitle>
+              <Flame className="h-4 w-4 text-orange-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {trainingLogs && trainingLogs.length > 0
+                  ? (trainingLogs.reduce((acc, log) => acc + (log.energyLevel || 0), 0) / trainingLogs.length).toFixed(1)
+                  : "N/A"}
+              </div>
+              <p className="text-xs text-muted-foreground">Average energy level</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Hours</CardTitle>
+              <TimerIcon className="h-4 w-4 text-purple-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{Math.round(totalTime / 60)}</div>
+              <p className="text-xs text-muted-foreground">Mat time (hours)</p>
+            </CardContent>
+          </Card>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           <Card>
             <CardHeader>
@@ -710,8 +766,8 @@ function HomePage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Training Distribution</CardTitle>
-              <CardDescription>Breakdown of your trainingtypes</CardDescription>
+              <CardTitle>Training Type Distribution</CardTitle>
+              <CardDescription>Breakdown of your training sessions</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="h-[300px]">
@@ -733,6 +789,55 @@ function HomePage() {
                     <Tooltip />
                   </PieChart>
                 </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <CardTitle>Focus Areas</CardTitle>
+              <CardDescription>Your training priorities</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {Object.values(FocusArea).map(area => {
+                  const count = trainingLogs?.reduce(
+                    (acc, log) => acc + (log.focusAreas?.includes(area) ? 1 : 0),
+                    0
+                  ) || 0;
+
+                  return (
+                    <div key={area} className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-primary" />
+                        <span className="capitalize">{area.replace('_', ' ')}</span>
+                      </div>
+                      <span className="font-medium">{count} sessions</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Techniques</CardTitle>
+              <CardDescription>Latest techniques practiced</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {trainingLogs?.[0]?.techniquesPracticed?.map((technique, index) => (
+                  <Badge
+                    key={index}
+                    variant="secondary"
+                    className="mr-2 mb-2"
+                  >
+                    {technique}
+                  </Badge>
+                )) || <p className="text-muted-foreground">No recent techniques</p>}
               </div>
             </CardContent>
           </Card>
