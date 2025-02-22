@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { Link } from "wouter";
 import { TrainingLog, insertTrainingLogSchema, TrainingType, FocusArea } from "@shared/schema";
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
@@ -659,7 +659,10 @@ function HomePage() {
                       <TabsTrigger value="notes">Notes</TabsTrigger>
                     </TabsList>
 
-                    <TabsContent value="basic" className="space-y-4">
+                    <TabsContent value="basic" className="space-y-6">
+                      <div className="text-sm text-muted-foreground mb-4">
+                        Fill in the basic information about your training session.
+                      </div>
                       <FormField
                         control={form.control}
                         name="type"
@@ -676,25 +679,11 @@ function HomePage() {
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                <SelectItem value={TrainingType.GI}>Gi</SelectItem>
-                                <SelectItem value={TrainingType.NOGI}>No-Gi</SelectItem>
+                                <SelectItem value={TrainingType.GI}>Gi Training</SelectItem>
+                                <SelectItem value={TrainingType.NOGI}>No-Gi Training</SelectItem>
                                 <SelectItem value={TrainingType.OPEN_MAT}>Open Mat</SelectItem>
                               </SelectContent>
                             </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="gym"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Gym/Location</FormLabel>
-                            <FormControl>
-                              <Input {...field} placeholder="Enter gym or location" />
-                            </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -707,25 +696,58 @@ function HomePage() {
                           <FormItem>
                             <FormLabel>Duration (minutes)</FormLabel>
                             <FormControl>
-                              <Input
-                                type="number"
-                                {...field}
-                                onChange={e => field.onChange(parseInt(e.target.value))}
-                              />
+                              <div className="space-y-2">
+                                <Slider
+                                  min={30}
+                                  max={180}
+                                  step={15}
+                                  value={[field.value]}
+                                  onValueChange={([value]) => field.onChange(value)}
+                                  className="py-4"
+                                />
+                                <div className="flex justify-between text-sm text-muted-foreground">
+                                  <span>30 min</span>
+                                  <span>{field.value} min</span>
+                                  <span>180 min</span>
+                                </div>
+                              </div>
                             </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="gym"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Gym/Location</FormLabel>
+                            <FormControl>
+                              <Input {...field} placeholder="Where did you train today?" />
+                            </FormControl>
+                            <FormDescription>
+                              Enter the name of the gym or location where you trained
+                            </FormDescription>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
                     </TabsContent>
 
-                    <TabsContent value="details" className="space-y-4">
+                    <TabsContent value="details" className="space-y-6">
+                      <div className="text-sm text-muted-foreground mb-4">
+                        Record the techniques you practiced and your rolling performance.
+                      </div>
                       <FormField
                         control={form.control}
                         name="techniquesPracticed"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Techniques Practiced</FormLabel>
+                            <FormDescription>
+                              Select all the techniques you worked on during this session
+                            </FormDescription>
                             <FormControl>
                               <Command className="rounded-lg border shadow-md">
                                 <CommandInput placeholder="Search techniques..." />
@@ -745,6 +767,7 @@ function HomePage() {
                                       </CommandItem>
                                     ))}
                                   </CommandGroup>
+                                  <CommandSeparator />
                                   <CommandGroup heading="Positions & Sweeps">
                                     {BJJTechniques.POSITIONS_AND_SWEEPS.map((technique) => (
                                       <CommandItem
@@ -759,6 +782,7 @@ function HomePage() {
                                       </CommandItem>
                                     ))}
                                   </CommandGroup>
+                                  <CommandSeparator />
                                   <CommandGroup heading="Escapes">
                                     {BJJTechniques.ESCAPES.map((technique) => (
                                       <CommandItem
@@ -800,37 +824,24 @@ function HomePage() {
                         )}
                       />
 
-                      <FormField
-                        control={form.control}
-                        name="rollingSummary"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Rolling Summary</FormLabel>
-                            <FormControl>
-                              <Textarea
-                                {...field}
-                                placeholder="Summarize your rolling sessions..."
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-6">
+                          <div className="font-semibold text-sm">Submissions</div>
                           <FormField
                             control={form.control}
                             name="submissionsAttempted"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Submissions Attempted</FormLabel>
+                                <FormLabel>Attempted</FormLabel>
+                                <FormDescription>
+                                  Select the submissions you attempted during rolling
+                                </FormDescription>
                                 <FormControl>
                                   <Command className="rounded-lg border shadow-md">
                                     <CommandInput placeholder="Search submissions..." />
                                     <CommandList>
                                       <CommandEmpty>No submissions found.</CommandEmpty>
-                                      <CommandGroup heading="Submissions">
+                                      <CommandGroup>
                                         {BJJTechniques.SUBMISSIONS.map((submission) => (
                                           <CommandItem
                                             key={submission}
@@ -858,7 +869,7 @@ function HomePage() {
                                       <X
                                         className="h-3 w-3 cursor-pointer"
                                         onClick={() => {
-                                          const newSubmissions = [...field.value || []];
+                                          const newSubmissions = [...field.value];
                                           newSubmissions.splice(index, 1);
                                           field.onChange(newSubmissions);
                                         }}
@@ -876,13 +887,16 @@ function HomePage() {
                             name="submissionsSuccessful"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Successful Submissions</FormLabel>
+                                <FormLabel>Successful</FormLabel>
+                                <FormDescription>
+                                  Select the submissions you successfully executed
+                                </FormDescription>
                                 <FormControl>
                                   <Command className="rounded-lg border shadow-md">
                                     <CommandInput placeholder="Search successful submissions..." />
                                     <CommandList>
                                       <CommandEmpty>No submissions found.</CommandEmpty>
-                                      <CommandGroup heading="Submissions">
+                                      <CommandGroup>
                                         {BJJTechniques.SUBMISSIONS.map((submission) => (
                                           <CommandItem
                                             key={submission}
@@ -910,7 +924,7 @@ function HomePage() {
                                       <X
                                         className="h-3 w-3 cursor-pointer"
                                         onClick={() => {
-                                          const newSubmissions = [...field.value || []];
+                                          const newSubmissions = [...field.value];
                                           newSubmissions.splice(index, 1);
                                           field.onChange(newSubmissions);
                                         }}
@@ -924,19 +938,23 @@ function HomePage() {
                           />
                         </div>
 
-                        <div className="space-y-4">
+                        <div className="space-y-6">
+                          <div className="font-semibold text-sm">Escapes</div>
                           <FormField
                             control={form.control}
                             name="escapesAttempted"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Escapes Attempted</FormLabel>
+                                <FormLabel>Attempted</FormLabel>
+                                <FormDescription>
+                                  Select the escapes you attempted during rolling
+                                </FormDescription>
                                 <FormControl>
                                   <Command className="rounded-lg border shadow-md">
                                     <CommandInput placeholder="Search escapes..." />
                                     <CommandList>
                                       <CommandEmpty>No escapes found.</CommandEmpty>
-                                      <CommandGroup heading="Escapes">
+                                      <CommandGroup>
                                         {BJJTechniques.ESCAPES.map((escape) => (
                                           <CommandItem
                                             key={escape}
@@ -964,7 +982,7 @@ function HomePage() {
                                       <X
                                         className="h-3 w-3 cursor-pointer"
                                         onClick={() => {
-                                          const newEscapes = [...field.value || []];
+                                          const newEscapes = [...field.value];
                                           newEscapes.splice(index, 1);
                                           field.onChange(newEscapes);
                                         }}
@@ -982,13 +1000,16 @@ function HomePage() {
                             name="escapesSuccessful"
                             render={({ field }) => (
                               <FormItem>
-                                <FormLabel>Successful Escapes</FormLabel>
+                                <FormLabel>Successful</FormLabel>
+                                <FormDescription>
+                                  Select the escapes you successfully executed
+                                </FormDescription>
                                 <FormControl>
                                   <Command className="rounded-lg border shadow-md">
                                     <CommandInput placeholder="Search successful escapes..." />
                                     <CommandList>
                                       <CommandEmpty>No escapes found.</CommandEmpty>
-                                      <CommandGroup heading="Escapes">
+                                      <CommandGroup>
                                         {BJJTechniques.ESCAPES.map((escape) => (
                                           <CommandItem
                                             key={escape}
@@ -1016,7 +1037,7 @@ function HomePage() {
                                       <X
                                         className="h-3 w-3 cursor-pointer"
                                         onClick={() => {
-                                          const newEscapes = [...field.value || []];
+                                          const newEscapes = [...field.value];
                                           newEscapes.splice(index, 1);
                                           field.onChange(newEscapes);
                                         }}
@@ -1032,79 +1053,36 @@ function HomePage() {
                       </div>
                     </TabsContent>
 
-                    <TabsContent value="assessment" className="space-y-4">
+                    <TabsContent value="assessment" className="space-y-6">
+                      <div className="text-sm text-muted-foreground mb-4">
+                        Rate your performance and energy levels during this session.
+                      </div>
                       <FormField
                         control={form.control}
                         name="performanceRating"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Performance Rating</FormLabel>
+                            <FormDescription>
+                              How well do you think you performed today?
+                            </FormDescription>
                             <FormControl>
-                              <Slider
-                                min={1}
-                                max={5}
-                                step={1}
-                                value={[field.value]}
-                                onValueChange={([value]) => field.onChange(value)}
-                                className="w-full"
-                              />
+                              <div className="space-y-2">
+                                <Slider
+                                  min={1}
+                                  max={5}
+                                  step={1}
+                                  value={[field.value]}
+                                  onValueChange={([value]) => field.onChange(value)}
+                                  className="py-4"
+                                />
+                                <div className="flex justify-between text-sm text-muted-foreground">
+                                  <span>Poor</span>
+                                  <span>Average</span>
+                                  <span>Excellent</span>
+                                </div>
+                              </div>
                             </FormControl>
-                            <div className="flex justify-between text-xs text-muted-foreground">
-                              <span>Poor</span>
-                              <span>Average</span>
-                              <span>Excellent</span>
-                            </div>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="focusAreas"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Focus Areas</FormLabel>
-                            <FormControl>
-                              <Select
-                                onValueChange={(value) => {
-                                  const focusArea = FocusArea[value as keyof typeof FocusArea];
-                                  if (!field.value.includes(focusArea)) {
-                                    field.onChange([...field.value, focusArea]);
-                                  }
-                                }}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select focus areas" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {Object.entries(FocusArea).map(([key, value]) => (
-                                    <SelectItem key={key} value={key}>
-                                      {key.charAt(0) + key.slice(1).toLowerCase().replace('_', ' ')}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </FormControl>
-                            <div className="flex flex-wrap gap-2 mt-2">
-                              {field.value.map((area, index) => (
-                                <Badge
-                                  key={index}
-                                  variant="secondary"
-                                  className="flex items-center gap-1"
-                                >
-                                  {area.replace('_', ' ')}
-                                  <X
-                                    className="h-3 w-3 cursor-pointer"
-                                    onClick={() => {
-                                      const newAreas = [...field.value];
-                                      newAreas.splice(index, 1);
-                                      field.onChange(newAreas);
-                                    }}
-                                  />
-                                </Badge>
-                              ))}
-                            </div>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -1116,38 +1094,71 @@ function HomePage() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Energy Level</FormLabel>
+                            <FormDescription>
+                              How was your energy level during training?
+                            </FormDescription>
                             <FormControl>
-                              <Slider
-                                min={1}
-                                max={5}
-                                step={1}
-                                value={[field.value]}
-                                onValueChange={([value]) => field.onChange(value)}
-                                className="w-full"
-                              />
+                              <div className="space-y-2">
+                                <Slider
+                                  min={1}
+                                  max={5}
+                                  step={1}
+                                  value={[field.value]}
+                                  onValueChange={([value]) => field.onChange(value)}
+                                  className="py-4"
+                                />
+                                <div className="flex justify-between text-sm text-muted-foreground">
+                                  <span>Low</span>
+                                  <span>Medium</span>
+                                  <span>High</span>
+                                </div>
+                              </div>
                             </FormControl>
-                            <div className="flex justify-between text-xs text-muted-foreground">
-                              <span>Low</span>
-                              <span>Medium</span>
-                              <span>High</span>
-                            </div>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
                     </TabsContent>
 
-                    <TabsContent value="notes" className="space-y-4">
+                    <TabsContent value="notes" className="space-y-6">
+                      <div className="text-sm text-muted-foreground mb-4">
+                        Add any additional notes or feedback about your training session.
+                      </div>
+                      <FormField
+                        control={form.control}
+                        name="rollingSummary"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Rolling Summary</FormLabel>
+                            <FormDescription>
+                              Describe how your rolling sessions went
+                            </FormDescription>
+                            <FormControl>
+                              <Textarea
+                                {...field}
+                                placeholder="What went well? What could be improved?"
+                                className="min-h-[100px]"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
                       <FormField
                         control={form.control}
                         name="notes"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Personal Notes</FormLabel>
+                            <FormDescription>
+                              Any additional notes about your training
+                            </FormDescription>
                             <FormControl>
                               <Textarea
                                 {...field}
-                                placeholder="Add any personal notes or reflections..."
+                                placeholder="What would you like to remember about this session?"
+                                className="min-h-[100px]"
                               />
                             </FormControl>
                             <FormMessage />
@@ -1161,10 +1172,14 @@ function HomePage() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Coach's Feedback</FormLabel>
+                            <FormDescription>
+                              Any feedback or tips from your coach
+                            </FormDescription>
                             <FormControl>
                               <Textarea
                                 {...field}
-                                placeholder="Add any feedback from your coach..."
+                                placeholder="What did your coach suggest?"
+                                className="min-h-[100px]"
                               />
                             </FormControl>
                             <FormMessage />
@@ -1172,6 +1187,7 @@ function HomePage() {
                         )}
                       />
                     </TabsContent>
+
                   </Tabs>
 
                   <Button type="submit" disabled={createLogMutation.isPending}>
