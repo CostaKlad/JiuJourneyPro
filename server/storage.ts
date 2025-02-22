@@ -1,4 +1,4 @@
-import { users, trainingLogs, techniques, followers, comments, challenges, challengeParticipations, type User, type TrainingLog, type Technique, type InsertUser, type Comment, type Follower, type Challenge, type InsertChallenge, type ChallengeParticipation, type InsertChallengeParticipation } from "@shared/schema";
+import { users, trainingLogs, techniques, followers, comments, type User, type TrainingLog, type Technique, type InsertUser, type Comment, type Follower } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, sql } from "drizzle-orm";
 import session from "express-session";
@@ -35,14 +35,6 @@ export interface IStorage {
   getComments(trainingLogId: number): Promise<(Comment & { user: User })[]>;
 
   sessionStore: session.Store;
-
-  // New challenge-related methods
-  getChallenges(): Promise<Challenge[]>;
-  getChallenge(id: number): Promise<Challenge | undefined>;
-  createChallenge(challenge: InsertChallenge): Promise<Challenge>;
-  joinChallenge(userId: number, challengeId: number): Promise<ChallengeParticipation>;
-  updateChallengeProgress(userId: number, challengeId: number, progress: Record<string, number>): Promise<ChallengeParticipation>;
-  getChallengeLeaderboard(challengeId: number): Promise<(ChallengeParticipation & { user: User })[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -199,96 +191,6 @@ export class DatabaseStorage implements IStorage {
 
     return results.map(r => ({
       ...r.comment,
-      user: r.user
-    }));
-  }
-
-  async getChallenges(): Promise<Challenge[]> {
-    return await db.select().from(challenges).orderBy(desc(challenges.createdAt));
-  }
-
-  async getChallenge(id: number): Promise<Challenge | undefined> {
-    const [challenge] = await db.select().from(challenges).where(eq(challenges.id, id));
-    return challenge;
-  }
-
-  async createChallenge(challenge: InsertChallenge): Promise<Challenge> {
-    const [newChallenge] = await db.insert(challenges).values(challenge).returning();
-    return newChallenge;
-  }
-
-  async joinChallenge(userId: number, challengeId: number): Promise<ChallengeParticipation> {
-    // Check if already joined
-    const [existing] = await db.select()
-      .from(challengeParticipations)
-      .where(
-        and(
-          eq(challengeParticipations.userId, userId),
-          eq(challengeParticipations.challengeId, challengeId)
-        )
-      );
-
-    if (existing) {
-      return existing;
-    }
-
-    // Create new participation
-    const [participation] = await db.insert(challengeParticipations)
-      .values({
-        userId,
-        challengeId,
-        score: 0,
-        progress: {},
-      })
-      .returning();
-
-    return participation;
-  }
-
-  async updateChallengeProgress(
-    userId: number,
-    challengeId: number,
-    progress: Record<string, number>
-  ): Promise<ChallengeParticipation> {
-    // Calculate total score from progress values
-    const score = Object.values(progress).reduce((sum, value) => sum + value, 0);
-
-    const [participation] = await db.update(challengeParticipations)
-      .set({
-        progress,
-        score,
-        lastUpdated: new Date(),
-        // Update rank based on new score
-        rank: sql`(
-          SELECT count(*) + 1 
-          FROM ${challengeParticipations} cp2 
-          WHERE cp2.challenge_id = ${challengeId} 
-          AND cp2.score > ${score}
-        )`
-      })
-      .where(
-        and(
-          eq(challengeParticipations.userId, userId),
-          eq(challengeParticipations.challengeId, challengeId)
-        )
-      )
-      .returning();
-
-    return participation;
-  }
-
-  async getChallengeLeaderboard(challengeId: number): Promise<(ChallengeParticipation & { user: User })[]> {
-    const results = await db.select({
-      participation: challengeParticipations,
-      user: users
-    })
-      .from(challengeParticipations)
-      .where(eq(challengeParticipations.challengeId, challengeId))
-      .innerJoin(users, eq(users.id, challengeParticipations.userId))
-      .orderBy(desc(challengeParticipations.score));
-
-    return results.map(r => ({
-      ...r.participation,
       user: r.user
     }));
   }

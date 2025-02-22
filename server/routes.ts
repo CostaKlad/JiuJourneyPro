@@ -2,9 +2,9 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
-import { getTrainingSuggestions, getPeerRecommendations } from "./openai"; // Added import for getPeerRecommendations
-import { insertTrainingLogSchema, insertCommentSchema, insertChallengeSchema, insertChallengeParticipationSchema } from "@shared/schema";
-import { pointsService, PointsService } from "./points-service";
+import { getTrainingSuggestions } from "./openai";
+import { insertTrainingLogSchema, insertCommentSchema } from "@shared/schema";
+import { pointsService } from "./points-service";
 import { achievementService } from "./achievement-service"; 
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -221,7 +221,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-
   // Update achievement progress manually (if needed)
   app.post("/api/achievements/:id/progress", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
@@ -240,94 +239,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating achievement progress:", error);
       res.status(500).json({ error: "Failed to update achievement progress" });
-    }
-  });
-
-  // Add these routes before the final httpServer creation
-  app.get("/api/challenges", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-
-    try {
-      const challenges = await storage.getChallenges();
-      res.json(challenges);
-    } catch (error) {
-      console.error("Error getting challenges:", error);
-      res.status(500).json({ error: "Failed to get challenges" });
-    }
-  });
-
-  app.get("/api/challenges/:id", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-
-    try {
-      const challenge = await storage.getChallenge(parseInt(req.params.id));
-      if (!challenge) {
-        return res.status(404).json({ error: "Challenge not found" });
-      }
-      res.json(challenge);
-    } catch (error) {
-      console.error("Error getting challenge:", error);
-      res.status(500).json({ error: "Failed to get challenge" });
-    }
-  });
-
-  app.get("/api/challenges/:id/leaderboard", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-
-    try {
-      const leaderboard = await storage.getChallengeLeaderboard(parseInt(req.params.id));
-      res.json(leaderboard);
-    } catch (error) {
-      console.error("Error getting challenge leaderboard:", error);
-      res.status(500).json({ error: "Failed to get challenge leaderboard" });
-    }
-  });
-
-  app.post("/api/challenges/:id/join", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-
-    try {
-      const challengeId = parseInt(req.params.id);
-      const participation = await storage.joinChallenge(req.user.id, challengeId);
-      res.status(201).json(participation);
-    } catch (error) {
-      console.error("Error joining challenge:", error);
-      res.status(500).json({ error: "Failed to join challenge" });
-    }
-  });
-
-  app.post("/api/challenges/:id/progress", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-
-    try {
-      const challengeId = parseInt(req.params.id);
-      const { progress } = req.body;
-
-      const updatedParticipation = await storage.updateChallengeProgress(
-        req.user.id,
-        challengeId,
-        progress
-      );
-
-      res.json(updatedParticipation);
-    } catch (error) {
-      console.error("Error updating challenge progress:", error);
-      res.status(500).json({ error: "Failed to update challenge progress" });
-    }
-  });
-
-  // Add for administrators or moderators
-  app.post("/api/challenges", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-    // TODO: Add admin check here
-
-    try {
-      const data = insertChallengeSchema.parse(req.body);
-      const challenge = await storage.createChallenge(data);
-      res.status(201).json(challenge);
-    } catch (error) {
-      console.error("Error creating challenge:", error);
-      res.status(400).json({ error: "Invalid challenge data" });
     }
   });
 

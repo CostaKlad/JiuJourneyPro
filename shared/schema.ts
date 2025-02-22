@@ -63,19 +63,6 @@ export const BJJTechniques = {
   ]
 } as const;
 
-export const ChallengeType = {
-  TRAINING_STREAK: "training_streak",
-  TECHNIQUE_MASTERY: "technique_mastery",
-  COMPETITION_PREP: "competition_prep",
-  COMMUNITY_ENGAGEMENT: "community_engagement"
-} as const;
-
-export const ChallengeStatus = {
-  UPCOMING: "upcoming",
-  ACTIVE: "active",
-  COMPLETED: "completed"
-} as const;
-
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
@@ -197,46 +184,6 @@ export const userAchievementProgress = pgTable("user_achievement_progress", {
   updatedAt: timestamp("updated_at").notNull().defaultNow()
 });
 
-export const challenges = pgTable("challenges", {
-  id: serial("id").primaryKey(),
-  title: text("title").notNull(),
-  description: text("description").notNull(),
-  type: text("type").notNull(),
-  startDate: timestamp("start_date").notNull(),
-  endDate: timestamp("end_date").notNull(),
-  status: text("status").notNull().default("upcoming"),
-  rules: json("rules").notNull(),
-  rewards: json("rewards").notNull(),
-  createdAt: timestamp("created_at").notNull().defaultNow()
-});
-
-export const challengeParticipations = pgTable("challenge_participations", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
-  challengeId: integer("challenge_id").notNull(),
-  score: integer("score").notNull().default(0),
-  rank: integer("rank"),
-  progress: json("progress").notNull().default({}),
-  joinedAt: timestamp("joined_at").notNull().defaultNow(),
-  lastUpdated: timestamp("last_updated").notNull().defaultNow()
-});
-
-export const challengesRelations = relations(challenges, ({ many }) => ({
-  participations: many(challengeParticipations)
-}));
-
-export const challengeParticipationsRelations = relations(challengeParticipations, ({ one }) => ({
-  user: one(users, {
-    fields: [challengeParticipations.userId],
-    references: [users.id]
-  }),
-  challenge: one(challenges, {
-    fields: [challengeParticipations.challengeId],
-    references: [challenges.id]
-  })
-}));
-
-
 export const insertTrainingLogSchema = createInsertSchema(trainingLogs)
   .pick({
     type: true,
@@ -310,36 +257,6 @@ export const insertAchievementProgressSchema = createInsertSchema(userAchievemen
   currentProgress: true
 });
 
-export const insertChallengeSchema = createInsertSchema(challenges)
-  .extend({
-    type: z.enum([
-      ChallengeType.TRAINING_STREAK,
-      ChallengeType.TECHNIQUE_MASTERY,
-      ChallengeType.COMPETITION_PREP,
-      ChallengeType.COMMUNITY_ENGAGEMENT
-    ]),
-    status: z.enum([
-      ChallengeStatus.UPCOMING,
-      ChallengeStatus.ACTIVE,
-      ChallengeStatus.COMPLETED
-    ]),
-    rules: z.object({
-      requirements: z.array(z.string()),
-      minScore: z.number().optional(),
-      maxParticipants: z.number().optional()
-    }),
-    rewards: z.object({
-      points: z.number(),
-      badge: z.string().optional(),
-      achievement: z.string().optional()
-    })
-  });
-
-export const insertChallengeParticipationSchema = createInsertSchema(challengeParticipations)
-  .extend({
-    progress: z.record(z.string(), z.number())
-  });
-
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type TrainingLog = typeof trainingLogs.$inferSelect;
@@ -352,7 +269,3 @@ export type UserAchievement = typeof userAchievements.$inferSelect;
 export type UserAchievementProgress = typeof userAchievementProgress.$inferSelect;
 export type ResetPassword = z.infer<typeof resetPasswordSchema>;
 export type ForgotPassword = z.infer<typeof forgotPasswordSchema>;
-export type Challenge = typeof challenges.$inferSelect;
-export type InsertChallenge = z.infer<typeof insertChallengeSchema>;
-export type ChallengeParticipation = typeof challengeParticipations.$inferSelect;
-export type InsertChallengeParticipation = z.infer<typeof insertChallengeParticipationSchema>;
