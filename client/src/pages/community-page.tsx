@@ -11,7 +11,7 @@ import {
   Users, UserPlus, UserMinus, MessageSquare, ThumbsUp,
   Medal, Trophy, Star, Shield, BookOpen,
   Flame, Target, MapPin, Calendar, Clock, Dumbbell,
-  Plus
+  Plus, ChevronRight
 } from "lucide-react";
 import { formatDistanceToNow } from 'date-fns';
 import { ScrollArea } from "@/components/ui/scroll-area";

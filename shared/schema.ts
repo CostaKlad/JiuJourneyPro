@@ -8,6 +8,12 @@ export const TrainingType = {
   OPEN_MAT: "open_mat"
 } as const;
 
+export const AuthProvider = {
+  LOCAL: "local",
+  GOOGLE: "google",
+  FACEBOOK: "facebook"
+} as const;
+
 export const FocusArea = {
   GUARD: "guard",
   PASSING: "passing",
@@ -60,12 +66,31 @@ export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
+  email: text("email").notNull().unique(),
   beltRank: text("belt_rank").notNull().default("white"),
   gym: text("gym"),
   goals: text("goals"),
   totalPoints: integer("total_points").notNull().default(0),
-  level: integer("level").notNull().default(1)
+  level: integer("level").notNull().default(1),
+  resetPasswordToken: text("reset_password_token"),
+  resetPasswordExpires: timestamp("reset_password_expires")
 });
+
+// Strong password validation schema
+const passwordSchema = z.string()
+  .min(8, "Password must be at least 8 characters")
+  .max(100, "Password is too long")
+  .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+  .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+  .regex(/[0-9]/, "Password must contain at least one number")
+  .regex(/[^A-Za-z0-9]/, "Password must contain at least one special character");
+
+// Update the insert schema with new validation
+export const insertUserSchema = createInsertSchema(users)
+  .extend({
+    password: passwordSchema,
+    email: z.string().email("Invalid email address"),
+  });
 
 export const trainingLogs = pgTable("training_logs", {
   id: serial("id").primaryKey(),
@@ -145,16 +170,6 @@ export const userAchievementProgress = pgTable("user_achievement_progress", {
   achievementId: integer("achievement_id").notNull(),
   currentProgress: integer("current_progress").notNull().default(0),
   updatedAt: timestamp("updated_at").notNull().defaultNow()
-});
-
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
-  beltRank: true,
-  gym: true,
-  goals: true,
-  totalPoints: true,
-  level: true
 });
 
 export const insertTrainingLogSchema = createInsertSchema(trainingLogs)

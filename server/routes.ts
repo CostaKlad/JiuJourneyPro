@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
-import { getTrainingSuggestions } from "./openai";
+import { getTrainingSuggestions, getPeerRecommendations } from "./openai"; // Added import for getPeerRecommendations
 import { insertTrainingLogSchema, insertCommentSchema } from "@shared/schema";
 import { pointsService, PointsService } from "./points-service";
 import { achievementService } from "./achievement-service"; 
@@ -240,6 +240,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating achievement progress:", error);
       res.status(500).json({ error: "Failed to update achievement progress" });
+    }
+  });
+
+  // Add this endpoint after the existing community routes
+  app.get("/api/peer-recommendations", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      // Get user's profile and training data
+      const user = await storage.getUser(req.user.id);
+      const recentLogs = await storage.getTrainingLogs(req.user.id);
+      const potentialPartners = await storage.getPotentialTrainingPartners(req.user.id);
+
+      const userProfile = {
+        beltRank: user.beltRank,
+        techniques: recentLogs.flatMap(log => log.techniquesPracticed || []),
+        goals: user.trainingGoals || [],
+        trainingFrequency: recentLogs.length, // Simple estimate based on log count
+        gym: user.gym
+      };
+
+      const recommendations = await getPeerRecommendations(
+        req.user.id,
+        userProfile,
+        potentialPartners.map(partner => ({
+          id: partner.id,
+          beltRank: partner.beltRank,
+          techniques: partner.techniques || [],
+          goals: partner.goals || [],
+          trainingFrequency: partner.trainingFrequency || 3,
+          gym: partner.gym
+        })),
+        recentLogs
+      );
+
+      res.json(recommendations);
+    } catch (error) {
+      console.error("Error getting peer recommendations:", error);
+      res.status(500).json({ 
+        error: "Failed to get peer recommendations",
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   });
 
