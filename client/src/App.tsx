@@ -8,7 +8,6 @@ import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
 import TechniqueLibrary from "@/pages/technique-library";
 import CommunityPage from "@/pages/community-page";
-import TrainingWizard from "@/pages/training-wizard";
 import NotFound from "@/pages/not-found";
 import { ErrorBoundary } from "react-error-boundary";
 import { Button } from "@/components/ui/button";
@@ -127,8 +126,8 @@ function Layout({ children }: { children: React.ReactNode }) {
                       Settings
                     </a>
                   </Link>
-                  <Button 
-                    variant="ghost" 
+                  <Button
+                    variant="ghost"
                     className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-100"
                     onClick={() => logoutMutation.mutate()}
                   >
@@ -164,7 +163,6 @@ function Router() {
             <ProtectedRoute path="/" component={HomePage} />
             <ProtectedRoute path="/techniques" component={TechniqueLibrary} />
             <ProtectedRoute path="/community" component={CommunityPage} />
-            <ProtectedRoute path="/training-wizard" component={TrainingWizard} />
             <Route component={NotFound} />
           </Switch>
         </Layout>
