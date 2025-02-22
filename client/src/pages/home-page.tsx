@@ -301,13 +301,16 @@ function HomePage() {
     }
   }
 
-  function groupBy<T>(arr: T[], fn: (item: T) => any) {
-    return arr?.reduce<Record<string, T[]>>((prev, curr) => {
+  function groupBy<T>(arr: T[] | undefined, fn: (item: T) => any) {
+    if (!arr) return {};
+    return arr.reduce<Record<string, T[]>>((prev, curr) => {
       const groupKey = fn(curr);
       const group = prev[groupKey] || [];
       return { ...prev, [groupKey]: [...group, curr] };
-    }, {}) || {};
+    }, {});
   }
+
+  const groupedAchievements = groupBy(achievementsProgress, (achievement) => achievement.category);
 
   return (
     <div className="min-h-screen bg-background p-6">
@@ -1172,14 +1175,14 @@ function HomePage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
-              {Object.entries(groupBy(achievementsProgress || [], a => a.category)).map(([category, achievements]) => (
-                <div key={category} className="space-y-4">
-                  <h3 className="font-semibold capitalize">{category}</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {Object.entries(groupedAchievements).map(([category, achievements]) => (
+                <div key={category}>
+                  <h3 className="text-lg font-semibold mb-4">{category}</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                     {achievements.map((achievement) => (
-                      <div key={achievement.name} className={cn(
-                        "p-4 rounded-lg border bg-card text-card-foreground",
-                        achievement.unlocked && "border-primary"
+                      <Card key={achievement.id} className={cn(
+                        "relative overflow-hidden transition-all",
+                        achievement.unlocked ? "border-primary" : "opacity-75"
                       )}>
                         <div className="flex items-start gap-4">
                           <div className={cn(
@@ -1227,7 +1230,7 @@ function HomePage() {
                             )}
                           </div>
                         </div>
-                      </div>
+                      </Card>
                     ))}
                   </div>
                 </div>
