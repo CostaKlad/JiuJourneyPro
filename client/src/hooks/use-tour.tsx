@@ -30,7 +30,7 @@ const TOURS: Tours = {
   welcome: [
     {
       id: 'welcome',
-      title: 'Welcome to JiuJourneyPro! 🥋',
+      title: 'Welcome to OssRyu! 🥋',
       description: 'Let us show you around and help you get started with your BJJ training journey.',
     },
     {

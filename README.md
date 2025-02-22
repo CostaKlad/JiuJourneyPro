@@ -1,8 +1,8 @@
-# JiuJourneyPro - BJJ Training & Progress Tracking
+# OssRyu - BJJ Training & Progress Tracking
 
-JiuJourneyPro is a comprehensive Brazilian Jiu-Jitsu (BJJ) training and tracking application that empowers martial artists to optimize their learning journey through advanced social and tracking features.
+OssRyu is a comprehensive Brazilian Jiu-Jitsu (BJJ) training and tracking application that empowers martial artists to optimize their learning journey through advanced social and tracking features.
 
-![JiuJourneyPro](./generated-icon.png)
+![OssRyu](./generated-icon.png)
 
 ## Features
 
@@ -48,8 +48,8 @@ JiuJourneyPro is a comprehensive Brazilian Jiu-Jitsu (BJJ) training and tracking
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/JiuJourneyPro.git
-cd JiuJourneyPro
+git clone https://github.com/yourusername/OssRyu.git
+cd OssRyu
 ```
 
 2. Install dependencies:
@@ -79,7 +79,7 @@ The application will be available at `http://localhost:5000`.
 
 ## Contributing
 
-We welcome contributions to JiuJourneyPro! If you'd like to contribute:
+We welcome contributions to OssRyu! If you'd like to contribute:
 
 1. Fork the repository
 2. Create a new branch for your feature
@@ -101,7 +101,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Support
 
 If you encounter any issues or have questions, please:
-1. Check the [Issues](https://github.com/yourusername/JiuJourneyPro/issues) page
+1. Check the [Issues](https://github.com/yourusername/OssRyu/issues) page
 2. Open a new issue if needed
 3. Join our community discussions
 
