@@ -24,12 +24,13 @@ import {
   LogOut,
   Plus,
   Target,
-  Swords // Added import for Swords icon
+  Swords
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import UserProfile from "@/pages/user-profile";
 import AchievementsDashboard from "@/pages/achievements-dashboard";
-import TechniquePassport from "@/pages/technique-passport"; // Added import for TechniquePassport
+import TechniquePassport from "@/pages/technique-passport";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"; // Added Tooltip imports
 
 
 function ErrorFallback({ error }: { error: Error }) {
@@ -50,11 +51,36 @@ function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
 
   const menuItems = [
-    { href: "/", icon: Home, label: "Dashboard" },
-    { href: "/techniques", icon: BookMarked, label: "Technique Library" },
-    { href: "/passport", icon: Swords, label: "Technique Passport" }, // Updated menuItems
-    { href: "/community", icon: Users, label: "Community" },
-    { href: "/achievements", icon: Trophy, label: "Achievements" },
+    { 
+      href: "/", 
+      icon: Home, 
+      label: "Dashboard",
+      tooltip: "View your training overview and recent activity"
+    },
+    { 
+      href: "/techniques", 
+      icon: BookMarked, 
+      label: "Technique Library",
+      tooltip: "Browse and learn BJJ techniques" 
+    },
+    { 
+      href: "/passport", 
+      icon: Swords, 
+      label: "Technique Passport",
+      tooltip: "Track your progress in different techniques" 
+    },
+    { 
+      href: "/community", 
+      icon: Users, 
+      label: "Community",
+      tooltip: "Connect with other practitioners" 
+    },
+    { 
+      href: "/achievements", 
+      icon: Trophy, 
+      label: "Achievements",
+      tooltip: "View your earned achievements and medals" 
+    },
   ];
 
   return (
@@ -95,12 +121,19 @@ function Layout({ children }: { children: React.ReactNode }) {
                   {/* Navigation Links */}
                   <nav className="space-y-2">
                     {menuItems.map((item) => (
-                      <Link key={item.href} href={item.href}>
-                        <a className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${location === item.href ? "bg-primary/10" : "hover:bg-primary/10"}`}>
-                          <item.icon className="h-5 w-5" />
-                          {item.label}
-                        </a>
-                      </Link>
+                      <Tooltip key={item.href}>
+                        <TooltipTrigger asChild>
+                          <Link href={item.href}>
+                            <a className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${location === item.href ? "bg-primary/10" : "hover:bg-primary/10"}`}>
+                              <item.icon className="h-5 w-5" />
+                              {item.label}
+                            </a>
+                          </Link>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>{item.tooltip}</p>
+                        </TooltipContent>
+                      </Tooltip>
                     ))}
                   </nav>
 
@@ -149,14 +182,21 @@ function Layout({ children }: { children: React.ReactNode }) {
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center gap-6">
             {menuItems.map((item) => (
-              <Link key={item.href} href={item.href}>
-                <a className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                  location === item.href ? "bg-primary/10" : "hover:bg-primary/10"
-                }`}>
-                  <item.icon className="h-4 w-4" />
-                  {item.label}
-                </a>
-              </Link>
+              <Tooltip key={item.href}>
+                <TooltipTrigger asChild>
+                  <Link href={item.href}>
+                    <a className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                      location === item.href ? "bg-primary/10" : "hover:bg-primary/10"
+                    }`}>
+                      <item.icon className="h-4 w-4" />
+                      {item.label}
+                    </a>
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{item.tooltip}</p>
+                </TooltipContent>
+              </Tooltip>
             ))}
           </nav>
 
@@ -189,7 +229,7 @@ function App() {
               <Route path="/auth" component={AuthPage} />
               <ProtectedRoute path="/" component={HomePage} />
               <ProtectedRoute path="/techniques" component={TechniqueLibrary} />
-              <ProtectedRoute path="/passport" component={TechniquePassport} />  {/* Added route */}
+              <ProtectedRoute path="/passport" component={TechniquePassport} />
               <ProtectedRoute path="/community" component={CommunityPage} />
               <ProtectedRoute path="/users/:id" component={UserProfile} />
               <ProtectedRoute path="/achievements" component={AchievementsDashboard} />
