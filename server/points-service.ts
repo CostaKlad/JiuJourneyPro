@@ -8,24 +8,96 @@ export class PointsService {
     TRAINING_SESSION: 100,
     STREAK_DAY: 50,
     TECHNIQUE_LOGGED: 25,
+    SUBMISSION_SUCCESSFUL: 40,
+    ESCAPE_SUCCESSFUL: 35,
     COMMENT_MADE: 10,
     RECEIVED_COMMENT: 5,
     FOLLOWER_GAINED: 20,
   };
 
-  // Level thresholds
-  private static readonly LEVEL_THRESHOLDS = [
-    0,      // Level 1
-    1000,   // Level 2
-    2500,   // Level 3
-    5000,   // Level 4
-    10000,  // Level 5
-    20000,  // Level 6
-    35000,  // Level 7
-    50000,  // Level 8
-    75000,  // Level 9
-    100000  // Level 10
-  ];
+  // Level thresholds with belt rank requirements
+  private static readonly LEVEL_SYSTEM = {
+    // White Belt Levels (1-10)
+    WHITE_BELT: {
+      thresholds: [0, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000],
+      titles: [
+        "Novice White Belt",
+        "Dedicated White Belt",
+        "Advancing White Belt",
+        "Experienced White Belt",
+        "Skilled White Belt",
+        "Technical White Belt",
+        "Proficient White Belt",
+        "Advanced White Belt",
+        "Expert White Belt",
+        "Elite White Belt"
+      ]
+    },
+    // Blue Belt Levels (11-20)
+    BLUE_BELT: {
+      thresholds: [10000, 12000, 14000, 16000, 18000, 20000, 22000, 24000, 26000, 28000],
+      titles: [
+        "Novice Blue Belt",
+        "Dedicated Blue Belt",
+        "Advancing Blue Belt",
+        "Experienced Blue Belt",
+        "Skilled Blue Belt",
+        "Technical Blue Belt",
+        "Proficient Blue Belt",
+        "Advanced Blue Belt",
+        "Expert Blue Belt",
+        "Elite Blue Belt"
+      ]
+    },
+    // Purple Belt Levels (21-30)
+    PURPLE_BELT: {
+      thresholds: [30000, 33000, 36000, 39000, 42000, 45000, 48000, 51000, 54000, 57000],
+      titles: [
+        "Novice Purple Belt",
+        "Dedicated Purple Belt",
+        "Advancing Purple Belt",
+        "Experienced Purple Belt",
+        "Skilled Purple Belt",
+        "Technical Purple Belt",
+        "Proficient Purple Belt",
+        "Advanced Purple Belt",
+        "Expert Purple Belt",
+        "Elite Purple Belt"
+      ]
+    },
+    // Brown Belt Levels (31-40)
+    BROWN_BELT: {
+      thresholds: [60000, 64000, 68000, 72000, 76000, 80000, 84000, 88000, 92000, 96000],
+      titles: [
+        "Novice Brown Belt",
+        "Dedicated Brown Belt",
+        "Advancing Brown Belt",
+        "Experienced Brown Belt",
+        "Skilled Brown Belt",
+        "Technical Brown Belt",
+        "Proficient Brown Belt",
+        "Advanced Brown Belt",
+        "Expert Brown Belt",
+        "Elite Brown Belt"
+      ]
+    },
+    // Black Belt Levels (41-50)
+    BLACK_BELT: {
+      thresholds: [100000, 110000, 120000, 130000, 140000, 150000, 160000, 170000, 180000, 190000],
+      titles: [
+        "Novice Black Belt",
+        "Dedicated Black Belt",
+        "Advancing Black Belt",
+        "Experienced Black Belt",
+        "Skilled Black Belt",
+        "Technical Black Belt",
+        "Proficient Black Belt",
+        "Advanced Black Belt",
+        "Expert Black Belt",
+        "Elite Black Belt"
+      ]
+    }
+  };
 
   // Calculate streak bonus (exponential growth)
   private static calculateStreakBonus(streakDays: number): number {
@@ -53,7 +125,7 @@ export class PointsService {
           description: `Training session completed: ${duration} minutes, ${techniquesCount} techniques`
         });
 
-        // Get current user points
+        // Get current user points and belt rank
         const [user] = await tx
           .select()
           .from(users)
@@ -64,16 +136,16 @@ export class PointsService {
         }
 
         const newTotal = (user.totalPoints || 0) + totalPoints;
-        const newLevel = this.calculateLevel(newTotal);
+        const { level, title } = this.calculateLevelAndTitle(newTotal, user.beltRank);
 
-        console.log(`Updating user points - current: ${user.totalPoints}, new total: ${newTotal}, new level: ${newLevel}`);
+        console.log(`Updating user points - current: ${user.totalPoints}, new total: ${newTotal}, new level: ${level}, title: ${title}`);
 
         // Update user's total points and level
         await tx
           .update(users)
           .set({ 
             totalPoints: newTotal,
-            level: newLevel 
+            level: level 
           })
           .where(eq(users.id, userId));
 
@@ -86,6 +158,52 @@ export class PointsService {
       console.error('Error awarding training points:', error);
       throw error;
     }
+  }
+
+  // Calculate user's level and title based on total points and belt rank
+  private calculateLevelAndTitle(points: number, beltRank: string): { level: number; title: string } {
+    const beltSystem = this.getBeltSystem(beltRank);
+    let level = 1;
+    let title = beltSystem.titles[0];
+
+    for (let i = 0; i < beltSystem.thresholds.length; i++) {
+      if (points >= beltSystem.thresholds[i]) {
+        level = i + 1;
+        title = beltSystem.titles[i];
+      } else {
+        break;
+      }
+    }
+
+    return { level, title };
+  }
+
+  private getBeltSystem(beltRank: string) {
+    switch (beltRank.toLowerCase()) {
+      case 'white':
+        return PointsService.LEVEL_SYSTEM.WHITE_BELT;
+      case 'blue':
+        return PointsService.LEVEL_SYSTEM.BLUE_BELT;
+      case 'purple':
+        return PointsService.LEVEL_SYSTEM.PURPLE_BELT;
+      case 'brown':
+        return PointsService.LEVEL_SYSTEM.BROWN_BELT;
+      case 'black':
+        return PointsService.LEVEL_SYSTEM.BLACK_BELT;
+      default:
+        return PointsService.LEVEL_SYSTEM.WHITE_BELT;
+    }
+  }
+
+  // Get next level threshold
+  private getNextLevelThreshold(points: number, beltRank: string): number {
+    const beltSystem = this.getBeltSystem(beltRank);
+    for (const threshold of beltSystem.thresholds) {
+      if (threshold > points) {
+        return threshold;
+      }
+    }
+    return beltSystem.thresholds[beltSystem.thresholds.length - 1];
   }
 
   // Award points for maintaining a streak
@@ -111,20 +229,20 @@ export class PointsService {
         description
       });
 
-      // Update user's total points
+      // Get current user data
       const [user] = await tx
         .select()
         .from(users)
         .where(eq(users.id, userId));
 
       const newTotal = (user.totalPoints || 0) + amount;
-      const newLevel = this.calculateLevel(newTotal);
+      const { level, title } = this.calculateLevelAndTitle(newTotal, user.beltRank);
 
       await tx
         .update(users)
         .set({ 
           totalPoints: newTotal,
-          level: newLevel 
+          level: level 
         })
         .where(eq(users.id, userId));
 
@@ -133,24 +251,13 @@ export class PointsService {
     });
   }
 
-  // Calculate user's level based on total points
-  private calculateLevel(points: number): number {
-    let level = 1;
-    for (let threshold of PointsService.LEVEL_THRESHOLDS) {
-      if (points >= threshold) {
-        level++;
-      } else {
-        break;
-      }
-    }
-    return level;
-  }
-
-  // Get user's points summary
+  // Get user's points summary with enhanced level information
   async getPointsSummary(userId: number): Promise<{
     totalPoints: number;
     level: number;
+    title: string;
     nextLevelPoints: number;
+    pointsToNextLevel: number;
     recentTransactions: any[];
     achievements: any[];
   }> {
@@ -174,12 +281,16 @@ export class PointsService {
       .where(eq(userAchievements.userId, userId))
       .innerJoin(achievements, eq(achievements.id, userAchievements.achievementId));
 
-    const nextLevelThreshold = PointsService.LEVEL_THRESHOLDS[user.level] || Infinity;
+    const { level, title } = this.calculateLevelAndTitle(user.totalPoints, user.beltRank);
+    const nextLevelThreshold = this.getNextLevelThreshold(user.totalPoints, user.beltRank);
+    const pointsToNextLevel = nextLevelThreshold - user.totalPoints;
 
     return {
       totalPoints: user.totalPoints,
-      level: user.level,
+      level,
+      title,
       nextLevelPoints: nextLevelThreshold,
+      pointsToNextLevel,
       recentTransactions: recentTransactions.slice(-10),
       achievements: userAchievementsList
     };

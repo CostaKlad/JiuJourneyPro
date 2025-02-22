@@ -30,7 +30,7 @@ import {
   Shield,
   BookOpen,
   Flame
-  } from "lucide-react";
+} from "lucide-react";
 import {
   LineChart,
   Line,
@@ -109,6 +109,8 @@ type PointsSummary = {
   nextLevelPoints: number;
   recentTransactions: PointTransaction[];
   achievements: UserAchievement[];
+  title?: string; // Added for level title
+  pointsToNextLevel?: number; // Added for points to next level
 };
 
 type PointTransaction = {
@@ -989,7 +991,7 @@ function HomePage() {
           <Card>
             <CardHeader>
               <CardTitle>Training Distribution</CardTitle>
-              <CardDescription>Breakdown of your training types</CardDescription>
+              <CardDescription>Breakdown of your trainingtypes</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="h-[300px]">
@@ -1051,36 +1053,112 @@ function HomePage() {
           <Card>
             <CardHeader>
               <CardTitle>Level Progress</CardTitle>
-              <CardDescription>Your journey to the next level</CardDescription>
+              <CardDescription>Your martial arts journey</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-2xl font-bold">Level {pointsSummary?.level}</p>
+                    <p className="text-3xl font-bold">Level {pointsSummary?.level}</p>
                     <p className="text-sm text-muted-foreground">
-                      {pointsSummary?.totalPoints.toLocaleString()} points
+                      {pointsSummary?.title}
                     </p>
                   </div>
-                  <Trophy className="h-8 w-8 text-yellow-500" />
+                  <div className="flex items-center gap-2">
+                    <Trophy className="h-8 w-8 text-yellow-500" />
+                    <div className="text-right">
+                      <p className="font-bold">{pointsSummary?.totalPoints.toLocaleString()}</p>
+                      <p className="text-xs text-muted-foreground">Total Points</p>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="space-y-2">
-                  <div className="text-sm text-muted-foreground">
-                    {pointsSummary?.nextLevelPoints.toLocaleString() - pointsSummary?.totalPoints.toLocaleString()} points to next level
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Progress to Next Level</span>
+                    <span className="font-medium">
+                      {pointsSummary?.pointsToNextLevel?.toLocaleString()} points needed
+                    </span>
                   </div>
-                  <div className="h-2 rounded-full bg-secondary">
+                  <div className="h-3 rounded-full bg-secondary overflow-hidden">
                     <div
-                      className="h-full rounded-full bg-primary transition-all"
+                      className="h-full rounded-full bg-primary transition-all duration-300"
                       style={{
                         width: `${((pointsSummary?.totalPoints || 0) / (pointsSummary?.nextLevelPoints || 1)) * 100}%`
                       }}
                     />
                   </div>
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>Current: {pointsSummary?.totalPoints.toLocaleString()}</span>
+                    <span>Next: {pointsSummary?.nextLevelPoints.toLocaleString()}</span>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h4 className="text-sm font-medium">Recent Achievements</h4>
+                  <div className="grid gap-2">
+                    {pointsSummary?.recentTransactions.slice(0, 3).map((transaction) => (
+                      <div
+                        key={transaction.id}
+                        className="flex items-center gap-2 p-2 rounded-lg bg-secondary/10"
+                      >
+                        {transaction.type === 'training' && <Medal className="h-4 w-4 text-blue-500" />}
+                        {transaction.type === 'streak' && <Flame className="h-4 w-4 text-orange-500" />}
+                        {transaction.type === 'submission' && <Target className="h-4 w-4 text-green-500" />}
+                        {transaction.type === 'escape' && <Shield className="h-4 w-4 text-purple-500" />}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm truncate">{transaction.description}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {formatDistanceToNow(new Date(transaction.createdAt), { addSuffix: true })}
+                          </p>
+                        </div>
+                        <Badge variant="secondary">+{transaction.amount}</Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <h4 className="text-sm font-medium">Points Breakdown</h4>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div className="flex items-center gap-2 p-2 rounded-lg bg-secondary/10">
+                      <Medal className="h-4 w-4 text-blue-500" />
+                      <div className="flex-1">
+                        <p>Training</p>
+                        <p className="text-xs text-muted-foreground">Per session</p>
+                      </div>
+                      <span className="font-medium">+100</span>
+                    </div>
+                    <div className="flex items-center gap-2 p-2 rounded-lg bg-secondary/10">
+                      <Target className="h-4 w-4 text-green-500" />
+                      <div className="flex-1">
+                        <p>Submissions</p>
+                        <p className="text-xs text-muted-foreground">Per success</p>
+                      </div>
+                      <span className="font-medium">+40</span>
+                    </div>
+                    <div className="flex items-center gap-2 p-2 rounded-lg bg-secondary/10">
+                      <Shield className="h-4 w-4 text-purple-500" />
+                      <div className="flex-1">
+                        <p>Escapes</p>
+                        <p className="text-xs text-muted-foreground">Per success</p>
+                      </div>
+                      <span className="font-medium">+35</span>
+                    </div>
+                    <div className="flex items-center gap-2 p-2 rounded-lg bg-secondary/10">
+                      <Flame className="h-4 w-4 text-orange-500" />
+                      <div className="flex-1">
+                        <p>Streak</p>
+                        <p className="text-xs text-muted-foreground">Per day</p>
+                      </div>
+                      <span className="font-medium">+50</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </CardContent>
           </Card>
+
         </div>
 
         {/* Keep existing achievements section */}
