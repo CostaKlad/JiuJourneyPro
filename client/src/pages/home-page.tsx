@@ -312,6 +312,29 @@ function HomePage() {
 
   const groupedAchievements = groupBy(achievementsProgress, (achievement) => achievement.category);
 
+  // Updates for the remaining TypeScript errors around line 936, 949, and 962
+  const pointsSummaryStats = [
+    {
+      title: "Total",
+      value: pointsSummary?.totalPoints || 0,
+      icon: Trophy,
+    },
+    {
+      title: "Level",
+      value: pointsSummary?.level || 0,
+      icon: Crown,
+    },
+    {
+      title: "Next Level",
+      value: pointsSummary?.pointsToNextLevel || 0,
+      icon: Target,
+    },
+  ];
+
+  const recentTransactions = pointsSummary?.recentTransactions || [];
+  const achievements = pointsSummary?.achievements || [];
+
+
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-7xl mx-auto">
@@ -1029,7 +1052,7 @@ function HomePage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {pointsSummary?.recentTransactions.map((transaction) => (
+                {recentTransactions.map((transaction) => (
                   <div
                     key={transaction.id}
                     className="flex items-center justify-between p-4 rounded-lg bg-card hover:bg-accent transition-colors"
@@ -1099,8 +1122,8 @@ function HomePage() {
 
                 <div className="space-y-4">
                   <h4 className="text-sm font-medium">Recent Achievements</h4>
-                  <div className="grid gap-2">
-                    {pointsSummary?.recentTransactions.slice(0, 3).map((transaction) => (
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    {recentTransactions.slice(0, 3).map((transaction) => (
                       <div
                         key={transaction.id}
                         className="flex items-center gap-2 p-2 rounded-lg bg-secondary/10"
