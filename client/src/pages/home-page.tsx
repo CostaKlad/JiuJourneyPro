@@ -203,14 +203,18 @@ function HomePage() {
   });
 
   const createLogMutation = useMutation({
-    mutationFn: async (data: any) => {
-      console.log("Submitting data:", data);
-      const payload = {
+    mutationFn: async (data: TrainingFormData) => {
+      console.log("Submitting training log:", data);
+      const res = await apiRequest("POST", "/api/training-logs", {
         ...data,
-        duration: parseInt(data.duration),
-        techniques: data.techniquesPracticed || []
-      };
-      const res = await apiRequest("POST", "/api/training-logs", payload);
+        duration: Number(data.duration),
+        techniquesPracticed: data.techniquesPracticed || [],
+        focusAreas: data.focusAreas || [],
+        submissionsAttempted: data.submissionsAttempted || [],
+        submissionsSuccessful: data.submissionsSuccessful || [],
+        escapesAttempted: data.escapesAttempted || [],
+        escapesSuccessful: data.escapesSuccessful || []
+      });
       return res.json();
     },
     onSuccess: () => {
@@ -219,7 +223,7 @@ function HomePage() {
       setShowTrainingForm(false);
     },
     onError: (error: Error) => {
-      console.error("Form submission error:", error);
+      console.error("Failed to log training session:", error);
     }
   });
 
@@ -982,8 +986,7 @@ function HomePage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {trainingLogs?.reduce((acc, log) => acc + (log.techniquesPracticed?.length || 0), 0)}
-              </div>
+                {trainingLogs?.reduce((acc, log) => acc + (log.techniquesPracticed?.length || 0), 0)}              </div>
               <p className="text-xs text-muted-foreground">Total techniques logged</p>
             </CardContent>
           </Card>

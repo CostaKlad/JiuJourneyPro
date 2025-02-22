@@ -89,9 +89,24 @@ export class DatabaseStorage implements IStorage {
 
   async createTrainingLog(log: Omit<TrainingLog, "id">): Promise<TrainingLog> {
     const [trainingLog] = await db.insert(trainingLogs).values({
-      ...log,
-      notes: log.notes || null
+      userId: log.userId,
+      date: log.date,
+      type: log.type,
+      gym: log.gym || null,
+      techniquesPracticed: log.techniquesPracticed || [],
+      rollingSummary: log.rollingSummary || null,
+      submissionsAttempted: log.submissionsAttempted || [],
+      submissionsSuccessful: log.submissionsSuccessful || [],
+      escapesAttempted: log.escapesAttempted || [],
+      escapesSuccessful: log.escapesSuccessful || [],
+      performanceRating: log.performanceRating || null,
+      focusAreas: log.focusAreas || [],
+      energyLevel: log.energyLevel || null,
+      notes: log.notes || null,
+      coachFeedback: log.coachFeedback || null,
+      duration: log.duration
     }).returning();
+
     return trainingLog;
   }
 
@@ -228,8 +243,8 @@ export class DatabaseStorage implements IStorage {
     }));
   }
   async getAllUsers(): Promise<User[]> {
-    const users = await db.select().from(users);
-    return users;
+    const result = await db.select().from(users);
+    return result;
   }
 }
 
