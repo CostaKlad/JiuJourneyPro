@@ -26,8 +26,11 @@ import {
   Star,
   Award,
   Medal,
-  X
-} from "lucide-react";
+  X,
+  Shield,
+  BookOpen,
+  Flame
+  } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -67,6 +70,7 @@ import {
   CommandSeparator,
 } from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
+import { Target } from "lucide-react";
 
 
 type UserAchievement = {
@@ -338,307 +342,13 @@ function HomePage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Current Streak</CardTitle>
-              <FlameIcon className="h-4 w-4 text-orange-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{calculateStreak()} days</div>
-              <p className="text-xs text-muted-foreground">Keep training consistently!</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Training Time</CardTitle>
-              <TimerIcon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalTime} minutes</div>
-              <p className="text-xs text-muted-foreground">
-                Across {totalSessions} sessions
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Average Session</CardTitle>
-              <BarChart3Icon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{avgSessionTime} minutes</div>
-              <p className="text-xs text-muted-foreground">
-                Per training session
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Level {pointsSummary?.level}</CardTitle>
-              <Trophy className="h-4 w-4 text-yellow-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{pointsSummary?.totalPoints.toLocaleString()} points</div>
-              <div className="mt-4 space-y-2">
-                <div className="text-xs text-muted-foreground">
-                  Next level at {pointsSummary?.nextLevelPoints.toLocaleString()} points
-                </div>
-                <div className="h-2 rounded-full bg-secondary">
-                  <div
-                    className="h-full rounded-full bg-primary"
-                    style={{
-                      width: `${((pointsSummary?.totalPoints || 0) / (pointsSummary?.nextLevelPoints || 1)) * 100}%`
-                    }}
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle className="text-sm font-medium">Training Progress</CardTitle>
-              <CardDescription>Your training duration over the last 7 days</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[200px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={last7DaysData}>
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip />
-                    <Line
-                      type="monotone"
-                      dataKey="duration"
-                      stroke="#8884d8"
-                      strokeWidth={2}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm font-medium">Training Types</CardTitle>
-              <CardDescription>Distribution of your training sessions</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[200px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={trainingTypeData}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={80}
-                    >
-                      {trainingTypeData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <Card className="col-span-2">
-          <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-            <CardDescription>Your latest point earnings</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {pointsSummary?.recentTransactions.map((transaction) => (
-                <div
-                  key={transaction.id}
-                  className="flex items-center justify-between p-2 rounded-lg bg-secondary/10"
-                >
-                  <div className="flex items-center gap-2">
-                    {transaction.type === 'training' && <Medal className="h-4 w-4 text-blue-500" />}
-                    {transaction.type === 'streak' && <Star className="h-4 w-4 text-yellow-500" />}
-                    {transaction.type === 'achievement' && <Award className="h-4 w-4 text-purple-500" />}
-                    {transaction.type === 'social' && <Users className="h-4 w-4 text-green-500" />}
-                    <span className="text-sm">{transaction.description}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-primary">
-                      +{transaction.amount}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="lg:col-span-3">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0">
-            <div>
-              <CardTitle>AI Training Insights</CardTitle>
-              <CardDescription>Personalized suggestions based on your progress</CardDescription>
-            </div>
-            <BrainIcon className="h-5 w-5 text-purple-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <h3 className="font-semibold text-sm">Focus Areas</h3>
-                {suggestions?.focusAreas?.map((area, i) => (
-                  <div key={i} className="text-sm p-2 bg-primary/5 rounded-md">{area}</div>
-                ))}
-              </div>
-              <div className="space-y-2">
-                <h3 className="font-semibold text-sm">Suggested Techniques</h3>
-                {suggestions?.suggestedTechniques?.map((tech, i) => (
-                  <div key={i} className="text-sm p-2 bg-primary/5 rounded-md">{tech}</div>
-                ))}
-              </div>
-              <div className="space-y-2">
-                <h3 className="font-semibold text-sm">Training Tips</h3>
-                {suggestions?.trainingTips?.map((tip, i) => (
-                  <div key={i} className="text-sm p-2 bg-primary/5 rounded-md">{tip}</div>
-                ))}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="lg:col-span-3">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle>Following Activity</CardTitle>
-              <CardDescription>Recent training logs from practitioners you follow</CardDescription>
-            </div>
-            <Users className="h-5 w-5 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {trainingLogs?.filter(log => log.userId !== user?.id).map((log) => (
-                <div key={log.id} className="flex items-start gap-4 p-4 rounded-lg border">
-                  <Avatar>
-                    <AvatarFallback>
-                      {log.user?.username.slice(0, 2).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="font-medium">{log.user?.username}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {log.user?.beltRank} Belt
-                        </p>
-                      </div>
-                      <span className="text-sm text-muted-foreground">
-                        {new Date(log.date).toLocaleDateString()}
-                      </span>
-                    </div>
-                    <p className="mt-2">{log.type} - {log.duration} minutes</p>
-                    {log.notes && (
-                      <p className="mt-1 text-sm text-muted-foreground">{log.notes}</p>
-                    )}
-                    <div className="mt-4">
-                      <Button variant="ghost" size="sm" className="h-8">
-                        <MessageSquareIcon className="mr-2 h-4 w-4" />
-                        Comment
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="lg:col-span-3">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle>Achievements</CardTitle>
-              <CardDescription>Your earned badges and accomplishments</CardDescription>
-            </div>
-            <Crown className="h-5 w-5 text-yellow-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              {Object.entries(groupBy(achievementsProgress || [], a => a.category)).map(([category, achievements]) => (
-                <div key={category} className="space-y-4">
-                  <h3 className="font-semibold capitalize">{category}</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {achievements.map((achievement) => (
-                      <div key={achievement.name} className={cn(
-                        "p-4 rounded-lg border bg-card text-card-foreground",
-                        achievement.unlocked && "border-primary"
-                      )}>
-                        <div className="flex items-start gap-4">
-                          <div className={cn(
-                            "p-2 rounded-full",
-                            achievement.unlocked ? "bg-primary/10" : "bg-muted"
-                          )}>
-                            <Award className={cn(
-                              "h-6 w-6",
-                              achievement.unlocked ? "text-primary" : "text-muted-foreground"
-                            )} />
-                          </div>
-                          <div className="space-y-2 flex-1">
-                            <div className="flex items-center justify-between">
-                              <h4 className="font-semibold">
-                                {achievement.name}
-                              </h4>
-                              <span className={cn(
-                                "text-xs px-2 py-1 rounded-full",
-                                getTierColor(achievement.tier)
-                              )}>
-                                {achievement.tier}
-                              </span>
-                            </div>
-                            <p className="text-sm text-muted-foreground">
-                              {achievement.description}
-                            </p>
-                            <div className="space-y-1">
-                              <div className="h-2 rounded-full bg-secondary">
-                                <div
-                                  className="h-full rounded-full bg-primary transition-all duration-300"
-                                  style={{ width: `${achievement.progressPercentage}%` }}
-                                />
-                              </div>
-                              <div className="flex justify-between text-xs text-muted-foreground">
-                                <span>
-                                  {achievement.currentProgress} / {achievement.progressMax}
-                                </span>
-                                <span>{achievement.progressPercentage}%</span>
-                              </div>
-                            </div>
-                            {achievement.unlocked && (
-                              <p className="text-xs text-muted-foreground mt-2">
-                                Earned {formatDistanceToNow(new Date(achievement.unlockedAt!), { addSuffix: true })}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
+        {/* Move Log Training Button to Top */}
         <Button
-          className="mb-8 w-full"
+          className="w-full mb-8"
+          size="lg"
           onClick={() => setShowTrainingForm(!showTrainingForm)}
         >
-          <PlusIcon className="mr-2 h-4 w-4" />
+          <PlusIcon className="mr-2 h-5 w-5" />
           {showTrainingForm ? "Cancel" : "Log New Training Session"}
         </Button>
 
@@ -1198,6 +908,255 @@ function HomePage() {
             </CardContent>
           </Card>
         )}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Training Streak</CardTitle>
+              <FlameIcon className="h-4 w-4 text-orange-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{calculateStreak()} days</div>
+              <p className="text-xs text-muted-foreground">Keep the momentum going!</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Successful Submissions</CardTitle>
+              <Medal className="h-4 w-4 text-green-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {trainingLogs?.reduce((acc, log) => acc + (log.submissionsSuccessful?.length || 0), 0)}
+              </div>
+              <p className="text-xs text-muted-foreground">Total successful submissions</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Successful Escapes</CardTitle>
+              <Shield className="h-4 w-4 text-blue-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {trainingLogs?.reduce((acc, log) => acc + (log.escapesSuccessful?.length || 0), 0)}
+              </div>
+              <p className="text-xs text-muted-foreground">Total successful escapes</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Techniques Practiced</CardTitle>
+              <BookOpen className="h-4 w-4 text-purple-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {trainingLogs?.reduce((acc, log) => acc + (log.techniquesPracticed?.length || 0), 0)}
+              </div>
+              <p className="text-xs text-muted-foreground">Total techniques logged</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>Training Progress</CardTitle>
+              <CardDescription>Your training duration and performance over time</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={last7DaysData}>
+                    <XAxis dataKey="date" />
+                    <YAxis />
+                    <Tooltip />
+                    <Line
+                      type="monotone"
+                      dataKey="duration"
+                      stroke="#8884d8"
+                      strokeWidth={2}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Training Distribution</CardTitle>
+              <CardDescription>Breakdown of your training types</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={trainingTypeData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={100}
+                      label
+                    >
+                      {trainingTypeData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <CardTitle>Recent Activity</CardTitle>
+              <CardDescription>Your latest training achievements</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {pointsSummary?.recentTransactions.map((transaction) => (
+                  <div
+                    key={transaction.id}
+                    className="flex items-center justify-between p-4 rounded-lg bg-card hover:bg-accent transition-colors"
+                  >
+                    <div className="flex items-center gap-4">
+                      {transaction.type === 'submission' && <Target className="h-4 w-4 text-green-500" />}
+                      {transaction.type === 'escape' && <Shield className="h-4 w-4 text-blue-500" />}
+                      {transaction.type === 'technique' && <BookOpen className="h-4 w-4 text-purple-500" />}
+                      {transaction.type === 'streak' && <Flame className="h-4 w-4 text-orange-500" />}
+                      <div>
+                        <p className="font-medium">{transaction.description}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {formatDistanceToNow(new Date(transaction.createdAt), { addSuffix: true })}
+                        </p>
+                      </div>
+                    </div>
+                    <Badge variant="secondary">+{transaction.amount} points</Badge>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Level Progress</CardTitle>
+              <CardDescription>Your journey to the next level</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-2xl font-bold">Level {pointsSummary?.level}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {pointsSummary?.totalPoints.toLocaleString()} points
+                    </p>
+                  </div>
+                  <Trophy className="h-8 w-8 text-yellow-500" />
+                </div>
+
+                <div className="space-y-2">
+                  <div className="text-sm text-muted-foreground">
+                    {pointsSummary?.nextLevelPoints.toLocaleString() - pointsSummary?.totalPoints.toLocaleString()} points to next level
+                  </div>
+                  <div className="h-2 rounded-full bg-secondary">
+                    <div
+                      className="h-full rounded-full bg-primary transition-all"
+                      style={{
+                        width: `${((pointsSummary?.totalPoints || 0) / (pointsSummary?.nextLevelPoints || 1)) * 100}%`
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Keep existing achievements section */}
+        <Card className="lg:col-span-3">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>Achievements</CardTitle>
+              <CardDescription>Your earned badges and accomplishments</CardDescription>
+            </div>
+            <Crown className="h-5 w-5 text-yellow-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              {Object.entries(groupBy(achievementsProgress || [], a => a.category)).map(([category, achievements]) => (
+                <div key={category} className="space-y-4">
+                  <h3 className="font-semibold capitalize">{category}</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {achievements.map((achievement) => (
+                      <div key={achievement.name} className={cn(
+                        "p-4 rounded-lg border bg-card text-card-foreground",
+                        achievement.unlocked && "border-primary"
+                      )}>
+                        <div className="flex items-start gap-4">
+                          <div className={cn(
+                            "p-2 rounded-full",
+                            achievement.unlocked ? "bg-primary/10" : "bg-muted"
+                          )}>
+                            <Award className={cn(
+                              "h-6 w-6",
+                              achievement.unlocked ? "text-primary" : "text-muted-foreground"
+                            )} />
+                          </div>
+                          <div className="space-y-2 flex-1">
+                            <div className="flex items-center justify-between">
+                              <h4 className="font-semibold">
+                                {achievement.name}
+                              </h4>
+                              <span className={cn(
+                                "text-xs px-2 py-1 rounded-full",
+                                getTierColor(achievement.tier)
+                              )}>
+                                {achievement.tier}
+                              </span>
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              {achievement.description}
+                            </p>
+                            <div className="space-y-1">
+                              <div className="h-2 rounded-full bg-secondary">
+                                <div
+                                  className="h-full rounded-full bg-primary transition-all duration-300"
+                                  style={{ width: `${achievement.progressPercentage}%` }}
+                                />
+                              </div>
+                              <div className="flex justify-between text-xs text-muted-foreground">
+                                <span>
+                                  {achievement.currentProgress} / {achievement.progressMax}
+                                </span>
+                                <span>{achievement.progressPercentage}%</span>
+                              </div>
+                            </div>
+                            {achievement.unlocked && (
+                              <p className="text-xs text-muted-foreground mt-2">
+                                Earned {formatDistanceToNow(new Date(achievement.unlockedAt!), { addSuffix: true })}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
