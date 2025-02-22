@@ -6,19 +6,27 @@ export const mockFollowers = [
     id: 1,
     username: "JohnDoe",
     beltRank: "Purple",
-    gym: "Gracie Barra HQ"
+    gym: "Gracie Barra HQ",
+    email: "john@example.com",
+    password: "hashed_password",
+    goals: "Improve guard game",
+    totalPoints: 1200,
+    level: 3,
+    resetPasswordToken: null,
+    resetPasswordExpires: null
   },
   {
     id: 2,
     username: "AliceSmith",
     beltRank: "Blue",
-    gym: "10th Planet"
-  },
-  {
-    id: 3,
-    username: "BobJohnson",
-    beltRank: "Brown",
-    gym: "Alliance BJJ"
+    gym: "10th Planet",
+    email: "alice@example.com",
+    password: "hashed_password",
+    goals: "Competition prep",
+    totalPoints: 800,
+    level: 2,
+    resetPasswordToken: null,
+    resetPasswordExpires: null
   }
 ];
 
@@ -27,13 +35,27 @@ export const mockFollowing = [
     id: 4,
     username: "CarolWhite",
     beltRank: "Black",
-    gym: "Atos Jiu-Jitsu"
+    gym: "Atos Jiu-Jitsu",
+    email: "carol@example.com",
+    password: "hashed_password",
+    goals: "Teaching and competing",
+    totalPoints: 2500,
+    level: 5,
+    resetPasswordToken: null,
+    resetPasswordExpires: null
   },
   {
     id: 5,
     username: "DaveWilson",
     beltRank: "White",
-    gym: "Gracie Academy"
+    gym: "Gracie Academy",
+    email: "dave@example.com",
+    password: "hashed_password",
+    goals: "Learn fundamentals",
+    totalPoints: 300,
+    level: 1,
+    resetPasswordToken: null,
+    resetPasswordExpires: null
   }
 ];
 
@@ -85,19 +107,27 @@ export const mockSuggestedPartners = [
     id: 6,
     username: "EmilyBrown",
     beltRank: "Purple",
-    gym: "Gracie Barra HQ"
+    gym: "Gracie Barra HQ",
+    email: "emily@example.com",
+    password: "hashed_password",
+    goals: "Improve leg locks",
+    totalPoints: 1500,
+    level: 4,
+    resetPasswordToken: null,
+    resetPasswordExpires: null
   },
   {
     id: 7,
     username: "FrankMiller",
     beltRank: "Blue",
-    gym: "10th Planet"
-  },
-  {
-    id: 8,
-    username: "GraceWong",
-    beltRank: "White",
-    gym: "Alliance BJJ"
+    gym: "10th Planet",
+    email: "frank@example.com",
+    password: "hashed_password",
+    goals: "Work on transitions",
+    totalPoints: 900,
+    level: 2,
+    resetPasswordToken: null,
+    resetPasswordExpires: null
   }
 ];
 
@@ -130,15 +160,6 @@ export const mockUserStats = {
       description: "Compete in 5 tournaments",
       unlocked: true,
       level: 1
-    },
-    {
-      id: 4,
-      type: "teaching",
-      name: "Knowledge Sharer",
-      description: "Help teach 10 classes",
-      unlocked: false,
-      progress: 7,
-      required: 10
     }
   ]
 };
