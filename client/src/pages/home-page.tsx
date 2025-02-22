@@ -43,6 +43,21 @@ import { formatDistanceToNow } from 'date-fns'; // Import date-fns function
 import {cn} from "@/lib/utils"; //Assuming cn is imported from a utility file
 
 
+// Update the type definition to match the actual structure
+type UserAchievement = {
+  id: number;
+  name: string;
+  description: string;
+  icon: string;
+  tier: string;
+  progressMax: number;
+  category: string;
+  currentProgress: number;
+  progressPercentage: number;
+  unlocked: boolean;
+  unlockedAt: string | null;
+};
+
 // Update the types section
 type TrainingLogWithComments = TrainingLog & {
   comments: (Comment & { user: User })[];
@@ -74,21 +89,6 @@ type PointTransaction = {
   type: string;
   description: string;
   createdAt: string;
-};
-
-type UserAchievement = {
-  achievement: {
-    name: string;
-    description: string;
-    icon: string;
-    tier: string;
-    progressMax: number;
-  };
-  unlockedAt: string;
-  unlocked: boolean;
-  progressPercentage: number;
-  currentProgress: number;
-  category: string;
 };
 
 
@@ -533,7 +533,7 @@ export default function HomePage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {achievements.map((achievement) => (
                       <div
-                        key={achievement.achievement.name}
+                        key={achievement.name}
                         className={cn(
                           "p-4 rounded-lg border bg-card text-card-foreground",
                           achievement.unlocked && "border-primary"
@@ -552,17 +552,17 @@ export default function HomePage() {
                           <div className="space-y-2 flex-1">
                             <div className="flex items-center justify-between">
                               <h4 className="font-semibold">
-                                {achievement.achievement.name}
+                                {achievement.name}
                               </h4>
                               <span className={cn(
                                 "text-xs px-2 py-1 rounded-full",
-                                getTierColor(achievement.achievement.tier)
+                                getTierColor(achievement.tier)
                               )}>
-                                {achievement.achievement.tier}
+                                {achievement.tier}
                               </span>
                             </div>
                             <p className="text-sm text-muted-foreground">
-                              {achievement.achievement.description}
+                              {achievement.description}
                             </p>
                             {/* Progress bar */}
                             <div className="space-y-1">
@@ -574,14 +574,14 @@ export default function HomePage() {
                               </div>
                               <div className="flex justify-between text-xs text-muted-foreground">
                                 <span>
-                                  {achievement.currentProgress} / {achievement.achievement.progressMax}
+                                  {achievement.currentProgress} / {achievement.progressMax}
                                 </span>
                                 <span>{achievement.progressPercentage}%</span>
                               </div>
                             </div>
                             {achievement.unlocked && (
                               <p className="text-xs text-muted-foreground mt-2">
-                                Earned {formatDistanceToNow(new Date(achievement.unlockedAt), { addSuffix: true })}
+                                Earned {formatDistanceToNow(new Date(achievement.unlockedAt!), { addSuffix: true })}
                               </p>
                             )}
                           </div>
