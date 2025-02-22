@@ -21,6 +21,7 @@ import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { mockFollowers, mockFollowing, mockTrainingLogs, mockSuggestedPartners, mockUserStats } from "@/lib/mock-data";
+import { Link } from "wouter";
 
 type ExtendedUser = Pick<User, 'id' | 'username' | 'beltRank' | 'gym'>;
 
@@ -372,8 +373,8 @@ function CommunityPage() {
 
                   <div className="space-y-2">
                     {suggestedPartners?.map((partner) => (
-                      <div key={partner.id} className="flex items-center gap-4 p-3 rounded-lg hover:bg-primary/5 transition-colors">
-                        <Avatar className="cursor-pointer hover:ring-2 hover:ring-primary/20 transition-all">
+                      <Link href={`/users/${partner.id}`} className="flex items-center gap-4 p-3 rounded-lg hover:bg-primary/5 transition-colors" key={partner.id}>
+                        <Avatar className="hover:ring-2 hover:ring-primary/20 transition-all">
                           <AvatarFallback className="bg-primary/10">
                             {partner.username.slice(0, 2).toUpperCase()}
                           </AvatarFallback>
@@ -396,12 +397,15 @@ function CommunityPage() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => followMutation.mutate(partner.id)}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              followMutation.mutate(partner.id);
+                            }}
                           >
                             <UserPlus className="h-4 w-4" />
                           </Button>
                         </div>
-                      </div>
+                      </Link>
                     ))}
                   </div>
                 </div>
@@ -430,17 +434,21 @@ function CommunityPage() {
                 {activityFeed?.map((log) => (
                   <Card key={log.id}>
                     <CardHeader className="flex flex-row items-start gap-4 pb-2">
-                      <Avatar className="cursor-pointer hover:ring-2 hover:ring-primary/20 transition-all">
-                        <AvatarFallback className="bg-primary/10">
-                          {log.user.username.slice(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
+                      <Link href={`/users/${log.user.id}`} className="cursor-pointer">
+                        <Avatar className="hover:ring-2 hover:ring-primary/20 transition-all">
+                          <AvatarFallback className="bg-primary/10">
+                            {log.user.username.slice(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                      </Link>
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
                           <div>
-                            <CardTitle className="text-lg hover:text-primary cursor-pointer">
-                              {log.user.username}
-                            </CardTitle>
+                            <Link href={`/users/${log.user.id}`}>
+                              <CardTitle className="text-lg hover:text-primary cursor-pointer">
+                                {log.user.username}
+                              </CardTitle>
+                            </Link>
                             <CardDescription>
                               {formatDistanceToNow(new Date(log.date), { addSuffix: true })}
                             </CardDescription>
@@ -578,32 +586,37 @@ function CommunityPage() {
               <TabsContent value="followers" className="mt-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {followers?.map((follower) => (
-                    <Card key={follower.id}>
-                      <CardHeader className="flex flex-row items-center gap-4">
-                        <Avatar>
-                          <AvatarFallback className="bg-primary/10">
-                            {follower.username.slice(0, 2).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <CardTitle className="text-lg">{follower.username}</CardTitle>
-                          <p className="text-sm text-muted-foreground">{follower.beltRank} Belt</p>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        {follower.gym && (
-                          <p className="text-sm mb-4">Trains at: {follower.gym}</p>
-                        )}
-                        <Button
-                          variant="outline"
-                          className="w-full"
-                          onClick={() => followMutation.mutate(follower.id)}
-                        >
-                          <UserPlus className="mr-2 h-4 w-4" />
-                          Follow Back
-                        </Button>
-                      </CardContent>
-                    </Card>
+                    <Link href={`/users/${follower.id}`} className="block" key={follower.id}>
+                      <Card>
+                        <CardHeader className="flex flex-row items-center gap-4">
+                          <Avatar>
+                            <AvatarFallback className="bg-primary/10">
+                              {follower.username.slice(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <CardTitle className="text-lg">{follower.username}</CardTitle>
+                            <p className="text-sm text-muted-foreground">{follower.beltRank} Belt</p>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          {follower.gym && (
+                            <p className="text-sm mb-4">Trains at: {follower.gym}</p>
+                          )}
+                          <Button
+                            variant="outline"
+                            className="w-full"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              followMutation.mutate(follower.id);
+                            }}
+                          >
+                            <UserPlus className="mr-2 h-4 w-4" />
+                            Follow Back
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    </Link>
                   ))}
                 </div>
               </TabsContent>
@@ -611,32 +624,37 @@ function CommunityPage() {
               <TabsContent value="following" className="mt-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {following?.map((followed) => (
-                    <Card key={followed.id}>
-                      <CardHeader className="flex flex-row items-center gap-4">
-                        <Avatar>
-                          <AvatarFallback className="bg-primary/10">
-                            {followed.username.slice(0, 2).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <CardTitle className="text-lg">{followed.username}</CardTitle>
-                          <p className="text-sm text-muted-foreground">{followed.beltRank} Belt</p>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        {followed.gym && (
-                          <p className="text-sm mb-4">Trains at: {followed.gym}</p>
-                        )}
-                        <Button
-                          variant="outline"
-                          className="w-full"
-                          onClick={() => unfollowMutation.mutate(followed.id)}
-                        >
-                          <UserMinus className="mr-2 h-4 w-4" />
-                          Unfollow
-                        </Button>
-                      </CardContent>
-                    </Card>
+                    <Link href={`/users/${followed.id}`} className="block" key={followed.id}>
+                      <Card>
+                        <CardHeader className="flex flex-row items-center gap-4">
+                          <Avatar>
+                            <AvatarFallback className="bg-primary/10">
+                              {followed.username.slice(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <CardTitle className="text-lg">{followed.username}</CardTitle>
+                            <p className="text-sm text-muted-foreground">{followed.beltRank} Belt</p>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          {followed.gym && (
+                            <p className="text-sm mb-4">Trains at: {followed.gym}</p>
+                          )}
+                          <Button
+                            variant="outline"
+                            className="w-full"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              unfollowMutation.mutate(followed.id);
+                            }}
+                          >
+                            <UserMinus className="mr-2 h-4 w-4" />
+                            Unfollow
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    </Link>
                   ))}
                 </div>
               </TabsContent>
