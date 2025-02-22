@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
-import { User, TrainingLog } from "@shared/schema";
+import { User } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -21,13 +21,22 @@ import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-interface ExtendedTrainingLog extends Omit<TrainingLog, 'userId'> {
-  user: User;
+type ExtendedUser = Pick<User, 'id' | 'username' | 'beltRank' | 'gym'>;
+
+interface TrainingLogEntry {
+  id: number;
+  user: ExtendedUser;
+  date: string;
+  type: string;
+  duration: number;
+  energyLevel: number;
+  techniquesPracticed: string[];
+  notes: string;
   likes: number;
   hasLiked: boolean;
   comments: {
     id: number;
-    user: User;
+    user: ExtendedUser;
     content: string;
     createdAt: string;
   }[];
@@ -158,105 +167,20 @@ export default function CommunityPage() {
   const [partnerFilter, setPartnerFilter] = useState("all");
   const [locationFilter, setLocationFilter] = useState("all");
 
-  const { data: followers } = useQuery<User[]>({
+  const { data: followers } = useQuery<ExtendedUser[]>({
     queryKey: ["/api/followers"],
-    queryFn: () => [
-      {
-        id: 1,
-        username: "JohnDoe",
-        beltRank: "Purple",
-        gym: "Alliance BJJ"
-      },
-      {
-        id: 2,
-        username: "SarahSmith",
-        beltRank: "Blue",
-        gym: "Gracie Barra"
-      },
-      {
-        id: 3,
-        username: "MikeBrown",
-        beltRank: "White",
-        gym: "10th Planet"
-      }
-    ]
   });
 
-  const { data: following } = useQuery<User[]>({
+  const { data: following } = useQuery<ExtendedUser[]>({
     queryKey: ["/api/following"],
-    queryFn: () => [
-      {
-        id: 4,
-        username: "AlexLee",
-        beltRank: "Brown",
-        gym: "Atos BJJ"
-      },
-      {
-        id: 5,
-        username: "EmilyWong",
-        beltRank: "Purple",
-        gym: "Checkmat"
-      }
-    ]
   });
 
-  const { data: activityFeed } = useQuery<ExtendedTrainingLog[]>({
+  const { data: activityFeed } = useQuery<TrainingLogEntry[]>({
     queryKey: ["/api/community/feed"],
-    queryFn: () => [
-      {
-        id: 1,
-        user: {
-          id: 4,
-          username: "AlexLee",
-          beltRank: "Brown",
-          gym: "Atos BJJ"
-        },
-        date: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-        type: "Training",
-        duration: 90,
-        energyLevel: 4,
-        techniquesPracticed: ["De la Riva Guard", "Berimbolo", "Back Take"],
-        notes: "Great session working on guard transitions. Finally hitting clean berimbolo entries!",
-        likes: 12,
-        hasLiked: false,
-        comments: [
-          {
-            id: 1,
-            user: {
-              id: 2,
-              username: "SarahSmith",
-              beltRank: "Blue"
-            },
-            content: "Your berimbolo is looking super clean! Any tips?",
-            createdAt: new Date(Date.now() - 1000 * 60 * 15).toISOString()
-          }
-        ]
-      }
-    ]
   });
 
-  const { data: suggestedPartners } = useQuery<User[]>({
+  const { data: suggestedPartners } = useQuery<ExtendedUser[]>({
     queryKey: ["/api/community/suggestions"],
-    queryFn: () => [
-      {
-        id: 6,
-        username: "CarlosRios",
-        beltRank: "Black",
-        gym: "Alliance BJJ"
-      },
-      {
-        id: 7,
-        username: "JennaKim",
-        beltRank: "Blue",
-        gym: "10th Planet"
-      },
-      {
-        id: 8,
-        username: "RyanPark",
-        beltRank: "Purple",
-        gym: "Gracie Barra"
-      }
-    ]
   });
 
   const followMutation = useMutation({
@@ -299,39 +223,14 @@ export default function CommunityPage() {
 
   const { data: userStats } = useQuery<UserStats>({
     queryKey: ["/api/user/stats"],
-    queryFn: () => ({
-      totalSessions: 48,
-      totalHours: 72,
-      techniquesLearned: 25,
-      achievements: [
-        {
-          id: 1,
-          type: "streak",
-          name: "Consistent Warrior",
-          description: "Train 5 days in a row",
-          unlocked: true,
-          level: 2,
-        },
-        {
-          id: 2,
-          type: "technique",
-          name: "Technique Hunter",
-          description: "Learn 25 different techniques",
-          unlocked: true,
-          level: 1,
-        },
-        {
-          id: 3,
-          type: "competition",
-          name: "Competition Ready",
-          description: "Participate in your first competition",
-          unlocked: false,
-          progress: 0,
-          required: 1,
-        },
-      ],
-    }),
   });
+
+  const defaultStats: UserStats = {
+    totalSessions: 0,
+    totalHours: 0,
+    techniquesLearned: 0,
+    achievements: []
+  };
 
   return (
     <div className="p-6">
@@ -356,18 +255,6 @@ export default function CommunityPage() {
               <Plus className="h-4 w-4" />
               Log Training
             </Button>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="outline" size="icon">
-                    <Flame className="h-4 w-4 text-primary" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <div className="text-sm font-medium">Training Streak: 5 days 🔥</div>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
           </div>
         </div>
 
@@ -382,7 +269,7 @@ export default function CommunityPage() {
               <div className="relative px-6 -mt-12">
                 <Avatar className="h-24 w-24 border-4 border-background">
                   <AvatarFallback className="text-2xl bg-primary/10">
-                    {user?.username.slice(0, 2).toUpperCase()}
+                    {user?.username?.slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
               </div>
@@ -411,7 +298,7 @@ export default function CommunityPage() {
                   <BeltProgressIndicator belt={user?.beltRank || 'white'} stripes={2} />
                 </div>
 
-                <QuickStats stats={userStats || { totalSessions: 0, totalHours: 0, techniquesLearned: 0, achievements: [] }} />
+                <QuickStats stats={userStats || defaultStats} />
 
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
@@ -497,24 +384,10 @@ export default function CommunityPage() {
                           </div>
                         </div>
                         <div className="flex gap-2">
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button variant="outline" size="sm" className="gap-2">
-                                  <Target className="h-4 w-4" />
-                                  Roll
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>Send a rolling request</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => followMutation.mutate(partner.id)}
-                            className="hover:bg-primary/20"
                           >
                             <UserPlus className="h-4 w-4" />
                           </Button>
@@ -546,7 +419,7 @@ export default function CommunityPage() {
 
               <TabsContent value="feed" className="space-y-6">
                 {activityFeed?.map((log) => (
-                  <Card key={log.id} className="hover:shadow-md transition-shadow">
+                  <Card key={log.id}>
                     <CardHeader className="flex flex-row items-start gap-4 pb-2">
                       <Avatar className="cursor-pointer hover:ring-2 hover:ring-primary/20 transition-all">
                         <AvatarFallback className="bg-primary/10">
@@ -659,7 +532,7 @@ export default function CommunityPage() {
                         <div className="flex gap-4">
                           <Avatar className="h-8 w-8">
                             <AvatarFallback className="text-xs">
-                              {user?.username.slice(0, 2).toUpperCase()}
+                              {user?.username?.slice(0, 2).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
                           <form
@@ -725,6 +598,7 @@ export default function CommunityPage() {
                   ))}
                 </div>
               </TabsContent>
+
               <TabsContent value="following" className="mt-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {following?.map((followed) => (
