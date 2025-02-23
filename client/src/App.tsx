@@ -164,11 +164,11 @@ function Layout({ children }: { children: React.ReactNode }) {
                 <img 
                   src="/logo.webp" 
                   alt="OssRyu Logo" 
-                  className="h-8 w-8 object-contain hidden md:block"
+                  className="h-8 w-8 object-contain"
                 />
                 <div className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent font-bold flex items-center">
-                  <span className="hidden md:inline">OssRyu</span>
-                  <span className="text-sm md:text-base font-semibold bg-gradient-to-r from-primary/80 to-purple-500/80 bg-clip-text text-transparent ml-2 hidden lg:inline">
+                  <span className="inline">OssRyu</span>
+                  <span className="text-sm md:text-base font-semibold bg-gradient-to-r from-primary/80 to-purple-500/80 bg-clip-text text-transparent ml-2 hidden md:inline">
                     Train. Track. Compete. Level Up.
                   </span>
                 </div>
