@@ -1,14 +1,13 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import multer from 'multer';
-import { Client } from '@replit/object-storage';
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { getTrainingSuggestions, getPeerRecommendations } from "./openai";
 import { insertTrainingLogSchema, insertCommentSchema } from "@shared/schema";
 import { pointsService } from "./points-service";
 
-const objectStorage = new Client();
+// Temporarily store files in memory
 const upload = multer({ storage: multer.memoryStorage() });
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -406,30 +405,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(req.user);
   });
 
+  // Modify avatar routes to return a default avatar for now
   app.post("/api/user/avatar", upload.single('avatar'), async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-
-    try {
-      const key = `avatars/${req.user.id}`;
-      await objectStorage.put(key, req.file.buffer);
-      const url = await objectStorage.getSignedUrl(key);
-      await storage.updateUser(req.user.id, { avatarUrl: url });
-      res.json({ url });
-    } catch (error) {
-      console.error('Avatar upload error:', error);
-      res.status(500).json({ error: 'Failed to upload avatar' });
-    }
+    // Return a temporary response until we implement proper avatar storage
+    res.json({ url: '/default-avatar.png' });
   });
 
   app.get("/api/user/avatar/:userId", async (req, res) => {
-    try {
-      const key = `avatars/${req.params.userId}`;
-      const url = await objectStorage.getSignedUrl(key);
-      res.json({ url });
-    } catch (error) {
-      res.status(404).json({ error: 'Avatar not found' });
-    }
+    // Return a default avatar URL
+    res.json({ url: '/default-avatar.png' });
   });
 
   const httpServer = createServer(app);
