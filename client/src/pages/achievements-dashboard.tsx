@@ -13,19 +13,15 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
   Trophy,
   Star,
   Target,
-  Shield,
   Clock,
   Dumbbell,
   Brain,
-  LucideIcon
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { AchievementCategory, AchievementTier } from "@shared/schema";
 
 interface Achievement {
@@ -37,7 +33,6 @@ interface Achievement {
   progressMax: number;
   currentProgress: number;
   unlocked: boolean;
-  howToEarn: string;
 }
 
 const TIER_COLORS = {
@@ -47,11 +42,11 @@ const TIER_COLORS = {
   DIAMOND: "bg-blue-100 text-blue-800 border-blue-200"
 } as const;
 
-const CATEGORY_ICONS: Record<keyof typeof AchievementCategory, LucideIcon> = {
+const CATEGORY_ICONS: Record<keyof typeof AchievementCategory, typeof Brain> = {
   TECHNIQUE_MASTERY: Brain,
   TRAINING_CONSISTENCY: Clock,
   SUBMISSION_MASTERY: Target,
-  ESCAPE_MASTERY: Shield,
+  ESCAPE_MASTERY: Brain,
   FOCUS_AREA: Dumbbell
 };
 
@@ -132,9 +127,7 @@ function AchievementsDashboard() {
                       >
                         <div className="flex items-center justify-between mb-2">
                           <h3 className="font-semibold">{achievement.name}</h3>
-                          <Badge variant={achievement.unlocked ? "default" : "outline"}>
-                            {achievement.tier}
-                          </Badge>
+                          {/* Removed Badge */}
                         </div>
                         <p className="text-sm text-muted-foreground mb-2">
                           {achievement.description}
@@ -185,38 +178,6 @@ function AchievementsDashboard() {
                       </div>
                     );
                   })}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Next Achievements</CardTitle>
-                <CardDescription>
-                  Achievements close to unlocking
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {Object.values(groupedAchievements || {})
-                    .flat()
-                    .filter(achievement => !achievement.unlocked && achievement.currentProgress > 0)
-                    .sort((a, b) => (b.currentProgress / b.progressMax) - (a.currentProgress / a.progressMax))
-                    .slice(0, 5)
-                    .map(achievement => (
-                      <div key={achievement.id} className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="font-medium">{achievement.name}</span>
-                          <Badge variant="outline">{achievement.tier}</Badge>
-                        </div>
-                        <Progress
-                          value={(achievement.currentProgress / achievement.progressMax) * 100}
-                        />
-                        <p className="text-xs text-right">
-                          {achievement.currentProgress} / {achievement.progressMax}
-                        </p>
-                      </div>
-                    ))}
                 </div>
               </CardContent>
             </Card>
