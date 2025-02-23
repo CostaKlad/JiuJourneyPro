@@ -1,14 +1,7 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
-import { Link } from "wouter";
-import { 
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle 
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -20,21 +13,17 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import {
   ChevronRight,
   ChevronLeft,
   Calendar,
   Target,
-  Dumbbell,
   Brain,
-  ScrollText,
   Trophy,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -83,10 +72,6 @@ export default function TrainingWizard() {
   const recommendationsMutation = useMutation({
     mutationFn: async (data: WizardFormData) => {
       const res = await apiRequest("POST", "/api/wizard/recommendations", data);
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.details || "Failed to get recommendations");
-      }
       return res.json();
     },
     onSuccess: (data) => {
@@ -103,7 +88,7 @@ export default function TrainingWizard() {
         description: error.message,
         variant: "destructive",
       });
-      // Still show the results with default recommendations
+      // Show default recommendations
       setRecommendations({
         focusAreas: ["Fundamentals", "Position Control", "Submissions"],
         suggestedTechniques: ["Guard Passes", "Mount Control", "Basic Submissions"],
@@ -138,6 +123,14 @@ export default function TrainingWizard() {
   const onSubmit = (data: WizardFormData) => {
     recommendationsMutation.mutate(data);
   };
+
+  if (!user) {
+    return (
+      <div className="p-6">
+        <h1>Loading...</h1>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background p-6">
