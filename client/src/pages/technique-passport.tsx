@@ -11,16 +11,9 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  BookOpen,
   Shield,
-  Swords,
   Target,
-  Award,
-  CheckCircle2,
   Lock,
-  Brain,
-  Clock,
-  Dumbbell,
   LucideIcon
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -39,13 +32,6 @@ interface Technique {
   difficulty: string;
   progress: number;
   isUnlocked: boolean;
-  achievements: Achievement[];
-}
-
-interface Achievement {
-  id: number;
-  name: string;
-  completed: boolean;
 }
 
 const mockTechniqueCategories: TechniqueCategory[] = [
@@ -60,11 +46,6 @@ const mockTechniqueCategories: TechniqueCategory[] = [
         difficulty: "Fundamental",
         progress: 75,
         isUnlocked: true,
-        achievements: [
-          { id: 1, name: "First Attempt", completed: true },
-          { id: 2, name: "Perfect Execution", completed: false },
-          { id: 3, name: "Teaching Others", completed: false },
-        ],
       },
       {
         id: 2,
@@ -72,11 +53,6 @@ const mockTechniqueCategories: TechniqueCategory[] = [
         difficulty: "Fundamental",
         progress: 40,
         isUnlocked: true,
-        achievements: [
-          { id: 1, name: "First Attempt", completed: true },
-          { id: 2, name: "Perfect Execution", completed: false },
-          { id: 3, name: "Teaching Others", completed: false },
-        ],
       },
     ],
   },
@@ -91,11 +67,6 @@ const mockTechniqueCategories: TechniqueCategory[] = [
         difficulty: "Fundamental",
         progress: 90,
         isUnlocked: true,
-        achievements: [
-          { id: 1, name: "First Attempt", completed: true },
-          { id: 2, name: "Perfect Execution", completed: true },
-          { id: 3, name: "Teaching Others", completed: false },
-        ],
       },
       {
         id: 4,
@@ -103,11 +74,6 @@ const mockTechniqueCategories: TechniqueCategory[] = [
         difficulty: "Intermediate",
         progress: 0,
         isUnlocked: false,
-        achievements: [
-          { id: 1, name: "First Attempt", completed: false },
-          { id: 2, name: "Perfect Execution", completed: false },
-          { id: 3, name: "Teaching Others", completed: false },
-        ],
       },
     ],
   },
@@ -130,44 +96,6 @@ function TechniquePassport() {
           Track your journey through Brazilian Jiu-Jitsu techniques
         </p>
       </div>
-
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>How to Earn Achievements</CardTitle>
-          <CardDescription>Track your progress and unlock achievements through training</CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Target className="h-5 w-5 text-primary" />
-                <h3 className="font-semibold">Technique Practice</h3>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Record techniques practiced in your training logs to earn technique mastery achievements
-              </p>
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Shield className="h-5 w-5 text-primary" />
-                <h3 className="font-semibold">Submissions & Escapes</h3>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Track successful submissions and escapes during rolling to unlock progression badges
-              </p>
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-primary" />
-                <h3 className="font-semibold">Training Consistency</h3>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Log regular training sessions to earn consistency achievements and track your dedication
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       <Tabs value={selectedCategory} onValueChange={setSelectedCategory}>
         <TabsList className="grid grid-cols-2 lg:grid-cols-4 gap-2">
@@ -192,9 +120,10 @@ function TechniquePassport() {
               {category.techniques.map((technique) => (
                 <Card
                   key={technique.id}
-                  className={`relative ${
+                  className={cn(
+                    "relative",
                     !technique.isUnlocked ? "opacity-75" : ""
-                  }`}
+                  )}
                 >
                   {!technique.isUnlocked && (
                     <div className="absolute inset-0 flex items-center justify-center bg-background/50 backdrop-blur-sm rounded-lg z-10">
@@ -222,34 +151,8 @@ function TechniquePassport() {
                       </Badge>
                     </div>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent>
                     <Progress value={technique.progress} />
-                    <div className="space-y-2">
-                      <h4 className="text-sm font-medium">Achievements</h4>
-                      <div className="grid grid-cols-1 gap-2">
-                        {technique.achievements.map((achievement) => (
-                          <div
-                            key={achievement.id}
-                            className="flex items-center gap-2 p-2 rounded-lg bg-muted/50"
-                          >
-                            {achievement.completed ? (
-                              <CheckCircle2 className="h-4 w-4 text-green-500" />
-                            ) : (
-                              <Award className="h-4 w-4 text-muted-foreground" />
-                            )}
-                            <span
-                              className={
-                                achievement.completed
-                                  ? "text-green-500"
-                                  : "text-muted-foreground"
-                              }
-                            >
-                              {achievement.name}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
                   </CardContent>
                 </Card>
               ))}

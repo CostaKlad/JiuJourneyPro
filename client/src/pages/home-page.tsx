@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { Link } from "wouter";
 import { TrainingLog, insertTrainingLogSchema, TrainingType, FocusArea } from "@shared/schema";
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from "@/components/ui/form";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
@@ -16,16 +16,9 @@ import {
   TimerIcon,
   BookOpenIcon,
   MessageSquareIcon,
-  FlameIcon,
   TrendingUpIcon,
-  BarChart3Icon,
-  BrainIcon,
   Users,
-  Trophy,
-  Crown,
-  Star,
-  Award,
-  Medal,
+  BrainIcon,
   X,
   Shield,
   BookOpen,
@@ -45,7 +38,7 @@ import {
 } from "recharts";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { formatDistanceToNow } from 'date-fns';
-import {cn} from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import {
   Select,
   SelectContent,
@@ -65,22 +58,7 @@ import {
   CommandSeparator,
 } from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
-import { Target } from "lucide-react";
 
-
-type UserAchievement = {
-  id: number;
-  name: string;
-  description: string;
-  icon: string;
-  tier: string;
-  progressMax: number;
-  category: string;
-  currentProgress: number;
-  progressPercentage: number;
-  unlocked: boolean;
-  unlockedAt: string | null;
-};
 
 type TrainingLogWithComments = TrainingLog & {
   comments: (Comment & { user: User })[];
@@ -98,64 +76,6 @@ type User = {
   beltRank: string;
 };
 
-type PointsSummary = {
-  totalPoints: number;
-  level: number;
-  nextLevelPoints: number;
-  recentTransactions: PointTransaction[];
-  achievements: UserAchievement[];
-  title?: string; // Added for level title
-  pointsToNextLevel?: number; // Added for points to next level
-};
-
-type PointTransaction = {
-  id: number;
-  amount: number;
-  type: string;
-  description: string;
-  createdAt: string;
-};
-
-type TrainingSuggestions = {
-  focusAreas: string[];
-  suggestedTechniques: string[];
-  trainingTips: string[];
-};
-
-type TrainingFormData = {
-  type: typeof TrainingType[keyof typeof TrainingType];
-  gym: string;
-  techniquesPracticed: string[];
-  rollingSummary: string;
-  submissionsAttempted: string[];
-  submissionsSuccessful: string[];
-  escapesAttempted: string[];
-  escapesSuccessful: string[];
-  performanceRating: number;
-  focusAreas: (typeof FocusArea)[keyof typeof FocusArea][];
-  energyLevel: number;
-  notes: string;
-  coachFeedback: string;
-  duration: number;
-};
-
-// Add these type definitions near the top of the file, after existing types
-type AchievementCategoryType = 'TRAINING' | 'SUBMISSIONS' | 'ESCAPES' | 'STRATEGY';
-type AchievementTierType = 'BRONZE' | 'SILVER' | 'GOLD' | 'DIAMOND';
-
-interface AchievementRequirement {
-  count: number;
-  description: string;
-}
-
-interface AchievementTierRequirements {
-  [key: string]: AchievementRequirement;
-}
-
-interface AchievementRequirementsType {
-  [key: string]: AchievementTierRequirements;
-}
-
 const BELT_COLORS = {
   white: "#FFFFFF",
   blue: "#0066CC",
@@ -166,7 +86,6 @@ const BELT_COLORS = {
 
 const CHART_COLORS = ["#0066CC", "#660099", "#8B4513", "#FF4444", "#00CC99"];
 
-// Update the BJJTechniques constant with the new comprehensive list
 const BJJTechniques = {
   "POSITIONS_AND_SWEEPS": [
     "Armbar from Closed Guard",
@@ -246,52 +165,27 @@ const BJJTechniques = {
   ]
 };
 
-
-// Update the constant definitions
-const AchievementCategory: Record<AchievementCategoryType, string> = {
-  TRAINING: 'Training',
-  SUBMISSIONS: 'Submissions',
-  ESCAPES: 'Escapes',
-  STRATEGY: 'Strategy'
-} as const;
-
-const AchievementTier: Record<AchievementTierType, string> = {
-  BRONZE: 'Bronze',
-  SILVER: 'Silver',
-  GOLD: 'Gold',
-  DIAMOND: 'Diamond'
-} as const;
-
-const AchievementRequirements: AchievementRequirementsType = {
-  TRAINING: {
-    Bronze: { count: 10, description: 'Complete 10 training sessions' },
-    Silver: { count: 50, description: 'Complete 50 training sessions' },
-    Gold: { count: 100, description: 'Complete 100 training sessions' },
-    Diamond: { count: 250, description: 'Complete 250 training sessions' }
-  },
-  SUBMISSIONS: {
-    Bronze: { count: 5, description: 'Successfully perform 5 submissions' },
-    Silver: { count: 25, description: 'Successfully perform 25 submissions' },
-    Gold: { count: 50, description: 'Successfully perform 50 submissions' },
-    Diamond: { count: 100, description: 'Successfully perform 100 submissions' }
-  },
-  ESCAPES: {
-    Bronze: { count: 5, description: 'Successfully escape 5 times' },
-    Silver: { count: 25, description: 'Successfully escape 25 times' },
-    Gold: { count: 50, description: 'Successfully escape 50 times' },
-    Diamond: { count: 100, description: 'Successfully escape 100 times' }
-  },
-  STRATEGY: {
-    Bronze: { count: 2, description: 'Utilize 2 different guard passing strategies' },
-    Silver: { count: 5, description: 'Utilize 5 different guard passing strategies' },
-    Gold: { count: 10, description: 'Utilize 10 different guard passing strategies' },
-    Diamond: { count: 20, description: 'Utilize 20 different guard passing strategies' }
-  }
-} as const;
+type TrainingFormData = {
+  type: typeof TrainingType[keyof typeof TrainingType];
+  gym: string;
+  techniquesPracticed: string[];
+  rollingSummary: string;
+  submissionsAttempted: string[];
+  submissionsSuccessful: string[];
+  escapesAttempted: string[];
+  escapesSuccessful: string[];
+  performanceRating: number;
+  focusAreas: (typeof FocusArea)[keyof typeof FocusArea][];
+  energyLevel: number;
+  notes: string;
+  coachFeedback: string;
+  duration: number;
+};
 
 function HomePage() {
   const { user, logoutMutation } = useAuth();
   const [showTrainingForm, setShowTrainingForm] = useState(false);
+
   const defaultValues: TrainingFormData = {
     type: TrainingType.GI,
     gym: "",
@@ -308,6 +202,7 @@ function HomePage() {
     coachFeedback: "",
     duration: 60
   };
+
   const form = useForm<TrainingFormData>({
     resolver: zodResolver(insertTrainingLogSchema),
     defaultValues
@@ -319,14 +214,6 @@ function HomePage() {
 
   const { data: suggestions } = useQuery<TrainingSuggestions>({
     queryKey: ["/api/suggestions"]
-  });
-
-  const { data: achievementsProgress } = useQuery<UserAchievement[]>({
-    queryKey: ["/api/achievements/progress"]
-  });
-
-  const { data: pointsSummary } = useQuery<PointsSummary>({
-    queryKey: ["/api/points/summary"]
   });
 
   const createLogMutation = useMutation({
@@ -400,41 +287,6 @@ function HomePage() {
     return acc;
   }, []) || [];
 
-  const calculateStreak = () => {
-    if (!trainingLogs?.length) return 0;
-    let streak = 0;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    for (let i = 0; i < trainingLogs.length; i++) {
-      const logDate = new Date(trainingLogs[i].date);
-      logDate.setHours(0, 0, 0, 0);
-      const dayDiff = Math.floor((today.getTime() - logDate.getTime()) / (1000 * 60 * 60 * 24));
-
-      if (dayDiff === streak) {
-        streak++;
-      } else {
-        break;
-      }
-    }
-    return streak;
-  };
-
-  function getTierColor(tier: string): string {
-    switch (tier.toLowerCase()) {
-      case 'bronze':
-        return 'bg-orange-100 text-orange-800';
-      case 'silver':
-        return 'bg-gray-100 text-gray-800';
-      case 'gold':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'diamond':
-        return 'bg-blue-100 text-blue-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  }
-
   function groupBy<T>(arr: T[] | undefined, fn: (item: T) => any) {
     if (!arr) return {};
     return arr.reduce<Record<string, T[]>>((prev, curr) => {
@@ -444,29 +296,7 @@ function HomePage() {
     }, {});
   }
 
-  const groupedAchievements = groupBy(achievementsProgress, (achievement) => achievement.category);
-
-  const pointsSummaryStats = [
-    {
-      title: "Total",
-      value: pointsSummary?.totalPoints || 0,
-      icon: Trophy,
-    },
-    {
-      title: "Level",
-      value: pointsSummary?.level || 0,
-      icon: Crown,
-    },
-    {
-      title: "Next Level",
-      value: pointsSummary?.pointsToNextLevel || 0,
-      icon: Target,
-    },
-  ];
-
-  const recentTransactions = pointsSummary?.recentTransactions || [];
-  const achievements = pointsSummary?.achievements || [];
-
+  const groupedFocusAreas = groupBy(trainingLogs, (log) => log.focusAreas?.join(',') || '');
 
   return (
     <div className="min-h-screen bg-background p-6">
@@ -954,19 +784,14 @@ function HomePage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {Object.values(FocusArea).map(area => {
-                  const count = trainingLogs?.reduce(
-                    (acc, log) => acc + (log.focusAreas?.includes(area) ? 1 : 0),
-                    0
-                  ) || 0;
-
+                {Object.entries(groupedFocusAreas).map(([key, logs]) => {
                   return (
-                    <div key={area} className="flex items-center justify-between">
+                    <div key={key} className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-primary" />
-                        <span className="capitalize">{area.replace('_', ' ')}</span>
+                        <span>{key.replace(/,/g, ', ')}</span>
                       </div>
-                      <span className="font-medium">{count} sessions</span>
+                      <span className="font-medium">{logs.length} sessions</span>
                     </div>
                   );
                 })}
@@ -990,224 +815,6 @@ function HomePage() {
                     {technique}
                   </Badge>
                 )) || <p className="text-muted-foreground">No recent techniques</p>}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
-              <CardDescription>Your latest training achievements</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {recentTransactions.map((transaction) => (
-                  <div
-                    key={transaction.id}
-                    className="flex items-center justify-between p-4 rounded-lg bg-card hover:bg-accent transition-colors"
-                  >
-                    <div className="flex items-center gap-4">
-                      {transaction.type === 'submission' && <Target className="h-4 w-4 text-green-500" />}
-                      {transaction.type === 'escape' && <Shield className="h-4 w-4 text-blue-500" />}
-                      {transaction.type === 'technique' && <BookOpen className="h-4 w-4 text-purple-500" />}
-                      {transaction.type === 'streak' && <Flame className="h-4 w-4 text-orange-500" />}
-                      <div>
-                        <p className="font-medium">{transaction.description}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {formatDistanceToNow(new Date(transaction.createdAt), { addSuffix: true })}
-                        </p>
-                      </div>
-                    </div>
-                    <Badge variant="secondary">+{transaction.amount} points</Badge>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Level Progress</CardTitle>
-              <CardDescription>Your martial arts journey</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-3xl font-bold">Level {pointsSummary?.level}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {pointsSummary?.title}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Trophy className="h-8 w-8 text-yellow-500" />
-                    <div className="text-right">
-                      <p className="font-bold">{pointsSummary?.totalPoints.toLocaleString()}</p>
-                      <p className="text-xs text-muted-foreground">Total Points</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Progress to Next Level</span>
-                    <span className="font-medium">
-                      {pointsSummary?.pointsToNextLevel?.toLocaleString()} points needed
-                    </span>
-                  </div>
-                  <div className="h-3 rounded-full bg-secondary overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-primary transition-all duration-300"
-                      style={{
-                        width: `${((pointsSummary?.totalPoints || 0) / (pointsSummary?.nextLevelPoints || 1)) * 100}%`
-                      }}
-                    />
-                  </div>
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>Current: {pointsSummary?.totalPoints.toLocaleString()}</span>
-                    <span>Next: {pointsSummary?.nextLevelPoints.toLocaleString()}</span>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <h4 className="text-sm font-medium">Recent Achievements</h4>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    {recentTransactions.slice(0, 3).map((transaction) => (
-                      <div
-                        key={transaction.id}
-                        className="flex items-center gap-2 p-2 rounded-lg bg-secondary/10"
-                      >
-                        {transaction.type === 'training' && <Medal className="h-4 w-4 text-blue-500" />}
-                        {transaction.type === 'streak' && <Flame className="h-4 w-4 text-orange-500" />}
-                        {transaction.type === 'submission' && <Target className="h-4 w-4 text-green-500" />}
-                        {transaction.type === 'escape' && <Shield className="h-4 w-4 text-purple-500" />}
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm truncate">{transaction.description}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {formatDistanceToNow(new Date(transaction.createdAt), { addSuffix: true })}
-                          </p>
-                        </div>
-                        <Badge variant="secondary">+{transaction.amount}</Badge>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle>Achievements</CardTitle>
-              <CardDescription>Your earned badges and accomplishments</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                {Object.entries(groupedAchievements).map(([category, achievements]) => (
-                  <div key={category}>
-                    <h3 className="text-lg font-semibold mb-4">{category}</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                      {achievements.map((achievement) => (
-                        <Card key={achievement.id} className={cn(
-                          "relative overflow-hidden transition-all",
-                          achievement.unlocked ? "border-primary" : "opacity-75"
-                        )}>
-                          <div className="flex items-start gap-4">
-                            <div className={cn(
-                              "p-2 rounded-full",
-                              achievement.unlocked ? "bg-primary/10" : "bg-muted"
-                            )}>
-                              <Award className={cn(
-                                "h-6 w-6",
-                                achievement.unlocked ? "text-primary" : "text-muted-foreground"
-                              )} />
-                            </div>
-                            <div className="space-y-2 flex-1">
-                              <div className="flex items-center justify-between">
-                                <h4 className="font-semibold">
-                                  {achievement.name}
-                                </h4>
-                                <span className={cn(
-                                  "text-xs px-2 py-1 rounded-full",
-                                  getTierColor(achievement.tier)
-                                )}>
-                                  {achievement.tier}
-                                </span>
-                              </div>
-                              <p className="text-sm text-muted-foreground">
-                                {achievement.description}
-                              </p>
-                              <div className="space-y-1">
-                                <div className="h-2 rounded-full bg-secondary">
-                                  <div
-                                    className="h-full rounded-full bg-primary transition-all duration-300"
-                                    style={{ width: `${achievement.progressPercentage}%` }}
-                                  />
-                                </div>
-                                <div className="flex justify-between text-xs text-muted-foreground">
-                                  <span>
-                                    {achievement.currentProgress} / {achievement.progressMax}
-                                  </span>
-                                  <span>{achievement.progressPercentage}%</span>
-                                </div>
-                              </div>
-                              {achievement.unlocked && (
-                                <p className="text-xs text-muted-foreground mt-2">
-                                  Earned {formatDistanceToNow(new Date(achievement.unlockedAt!), { addSuffix: true })}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        </Card>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Achievement Guide</CardTitle>
-              <CardDescription>How to earn achievements and progress in your BJJ journey</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {(Object.entries(AchievementCategory) as [AchievementCategoryType, string][]).map(([key, category]) => (
-                  <div key={category} className="space-y-4">
-                    <h3 className="font-semibold text-lg">{category}</h3>
-                    <div className="space-y-3">
-                      {(Object.entries(AchievementTier) as [AchievementTierType, string][]).map(([tierKey, tier]) => {
-                        const requirement: AchievementRequirement = AchievementRequirements[key][tier];
-                        return (
-                          <div
-                            key={tier}
-                            className={cn(
-                              "p-4 rounded-lg border",
-                              getTierColor(tier)
-                            )}
-                          >
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="font-medium">{tier}</span>
-                              <Badge variant="secondary">
-                                {requirement.count} required
-                              </Badge>
-                            </div>
-                            <p className="text-sm text-muted-foreground">
-                              {requirement.description}
-                            </p>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))}
               </div>
             </CardContent>
           </Card>

@@ -5,19 +5,9 @@ import { storage } from "./storage";
 import { getTrainingSuggestions, getPeerRecommendations } from "./openai";
 import { insertTrainingLogSchema, insertCommentSchema } from "@shared/schema";
 import { pointsService } from "./points-service";
-import { achievementService } from "./achievement-service"; 
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
-
-  // Initialize achievements during server startup
-  try {
-    console.log("Initializing achievements during server startup...");
-    await achievementService.initializeAchievements();
-    console.log("Achievement initialization completed");
-  } catch (error) {
-    console.error("Error initializing achievements during startup:", error);
-  }
 
   // Training logs
   app.post("/api/training-logs", async (req, res) => {
@@ -132,7 +122,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       await storage.followUser(req.user.id, followingId);
-      await pointsService.awardStreakPoints(followingId, 1); // Award points for gaining a follower
+      await pointsService.awardStreakPoints(followingId, 1);
       res.sendStatus(200);
     } catch (error) {
       res.status(400).json({ error: "Failed to follow user" });
@@ -179,13 +169,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const comment = await storage.createComment(req.user.id, logId, content);
 
       // Award points for making a comment
-      await pointsService.awardTrainingPoints(req.user.id, 0, 1); // Small point reward for engagement
+      await pointsService.awardTrainingPoints(req.user.id, 0, 1);
 
       // Award points to the training log owner for receiving a comment
       const logs = await storage.getTrainingLogs(req.user.id);
       const log = logs.find(l => l.id === logId);
       if (log && log.userId !== req.user.id) {
-        await pointsService.awardTrainingPoints(log.userId, 0, 1); // Small point reward for receiving engagement
+        await pointsService.awardTrainingPoints(log.userId, 0, 1);
       }
 
       res.status(201).json(comment);
@@ -232,40 +222,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Achievement routes
-  app.get("/api/achievements/progress", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-
-    try {
-      const progress = await achievementService.getAchievementProgress(req.user.id);
-      res.json(progress);
-    } catch (error) {
-      console.error("Error getting achievement progress:", error);
-      res.status(500).json({ error: "Failed to get achievement progress" });
-    }
-  });
-
-  // Update achievement progress manually (if needed)
-  app.post("/api/achievements/:id/progress", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-
-    try {
-      const achievementId = parseInt(req.params.id);
-      const { progress } = req.body;
-
-      await achievementService.updateProgress(
-        req.user.id,
-        achievementId,
-        progress
-      );
-
-      res.sendStatus(200);
-    } catch (error) {
-      console.error("Error updating achievement progress:", error);
-      res.status(500).json({ error: "Failed to update achievement progress" });
-    }
-  });
-
   // Add this endpoint after the existing community routes
   app.get("/api/peer-recommendations", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
@@ -274,27 +230,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get user's profile and training data
       const user = await storage.getUser(req.user.id);
       const recentLogs = await storage.getTrainingLogs(req.user.id);
-      const potentialPartners = await storage.getPotentialTrainingPartners(req.user.id);
+      const potentialPartners = await storage.getAllUsers();
 
       const userProfile = {
-        beltRank: user.beltRank,
+        beltRank: user?.beltRank || 'white',
         techniques: recentLogs.flatMap(log => log.techniquesPracticed || []),
-        goals: user.trainingGoals || [],
-        trainingFrequency: recentLogs.length, // Simple estimate based on log count
-        gym: user.gym
+        goals: user?.goals?.split(',') || [],
+        trainingFrequency: recentLogs.length,
+        gym: user?.gym
       };
 
       const recommendations = await getPeerRecommendations(
         req.user.id,
         userProfile,
-        potentialPartners.map(partner => ({
-          id: partner.id,
-          beltRank: partner.beltRank,
-          techniques: partner.techniques || [],
-          goals: partner.goals || [],
-          trainingFrequency: partner.trainingFrequency || 3,
-          gym: partner.gym
-        })),
+        potentialPartners
+          .filter(p => p.id !== req.user.id)
+          .map(partner => ({
+            id: partner.id,
+            beltRank: partner.beltRank,
+            techniques: [],
+            goals: partner.goals?.split(',') || [],
+            trainingFrequency: 3,
+            gym: partner.gym
+          })),
         recentLogs
       );
 
@@ -307,7 +265,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
-
 
   // Add these routes to handle community and user stats
   app.get("/api/user/stats", async (req, res) => {
@@ -322,8 +279,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({
         totalSessions,
         totalHours,
-        techniquesLearned,
-        achievements: []
+        techniquesLearned
       });
     } catch (error) {
       console.error("Error getting user stats:", error);

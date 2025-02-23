@@ -1,15 +1,7 @@
 import { db } from "./db";
-import { users, pointTransactions, achievements, userAchievements, type User } from "@shared/schema";
+import { users, pointTransactions, type User } from "@shared/schema";
 import { eq, and, gte, lte } from "drizzle-orm";
-import { trainingLogs } from "@shared/schema"; // Assuming this import is needed for trainingLogs table
-import { userAchievementProgress } from "@shared/schema"; // Assuming this import is needed for userAchievementProgress table
-enum AchievementCategory {
-  TRAINING_CONSISTENCY = 'trainingConsistency',
-  TECHNIQUE_MASTERY = 'techniqueMastery',
-  SUBMISSION_MASTERY = 'submissionMastery',
-  ESCAPE_MASTERY = 'escapeMastery',
-  FOCUS_AREA = 'focusArea'
-}
+import { trainingLogs } from "@shared/schema";
 
 export class PointsService {
   // Point values for different actions
@@ -157,9 +149,6 @@ export class PointsService {
             level: level
           })
           .where(eq(users.id, userId));
-
-        // Check for achievements after points update
-        await this.checkAchievements(userId, tx);
       });
 
       console.log(`Successfully awarded ${totalPoints} points to user ${userId}`);
@@ -254,9 +243,6 @@ export class PointsService {
           level: level
         })
         .where(eq(users.id, userId));
-
-      // Check for new achievements
-      await this.checkAchievements(userId, tx);
     });
   }
 
@@ -268,7 +254,6 @@ export class PointsService {
     nextLevelPoints: number;
     pointsToNextLevel: number;
     recentTransactions: any[];
-    achievements: any[];
   }> {
     const [user] = await db
       .select()
@@ -281,15 +266,6 @@ export class PointsService {
       .where(eq(pointTransactions.userId, userId))
       .orderBy(pointTransactions.createdAt);
 
-    const userAchievementsList = await db
-      .select({
-        achievement: achievements,
-        earnedAt: userAchievements.earnedAt
-      })
-      .from(userAchievements)
-      .where(eq(userAchievements.userId, userId))
-      .innerJoin(achievements, eq(achievements.id, userAchievements.achievementId));
-
     const { level, title } = this.calculateLevelAndTitle(user.totalPoints, user.beltRank);
     const nextLevelThreshold = this.getNextLevelThreshold(user.totalPoints, user.beltRank);
     const pointsToNextLevel = nextLevelThreshold - user.totalPoints;
@@ -300,133 +276,8 @@ export class PointsService {
       title,
       nextLevelPoints: nextLevelThreshold,
       pointsToNextLevel,
-      recentTransactions: recentTransactions.slice(-10),
-      achievements: userAchievementsList
+      recentTransactions: recentTransactions.slice(-10)
     };
-  }
-
-  // Check and award achievements
-  private async checkAchievements(userId: number, tx: any): Promise<void> {
-    try {
-      console.log(`Checking achievements for user ${userId}`);
-
-      // Get user's current data
-      const [user] = await tx
-        .select()
-        .from(users)
-        .where(eq(users.id, userId));
-
-      if (!user) {
-        console.error('User not found when checking achievements');
-        return;
-      }
-
-      // Get all training logs for progress calculation
-      const trainingLogs = await tx
-        .select()
-        .from(trainingLogs)
-        .where(eq(trainingLogs.userId, userId));
-
-      // Get all achievements
-      const allAchievements = await tx
-        .select()
-        .from(achievements);
-
-      // Get user's current achievements
-      const userAchievementIds = (await tx
-        .select()
-        .from(userAchievements)
-        .where(eq(userAchievements.userId, userId)))
-        .map((ua: any) => ua.achievementId);
-
-      // Calculate current progress metrics
-      const metrics = {
-        totalTrainingSessions: trainingLogs.length,
-        uniqueTechniques: new Set(trainingLogs.flatMap(log => log.techniquesPracticed || [])).size,
-        successfulSubmissions: trainingLogs.reduce((acc, log) => acc + (log.submissionsSuccessful?.length || 0), 0),
-        successfulEscapes: trainingLogs.reduce((acc, log) => acc + (log.escapesSuccessful?.length || 0), 0),
-        focusAreas: new Set(trainingLogs.flatMap(log => log.focusAreas || [])).size
-      };
-
-      console.log('Current achievement metrics:', metrics);
-
-      for (const achievement of allAchievements) {
-        if (!userAchievementIds.includes(achievement.id)) {
-          let currentProgress = 0;
-          let progressMax = achievement.progressMax;
-          let earned = false;
-
-          switch (achievement.category) {
-            case AchievementCategory.TRAINING_CONSISTENCY:
-              currentProgress = metrics.totalTrainingSessions;
-              earned = currentProgress >= progressMax;
-              break;
-
-            case AchievementCategory.TECHNIQUE_MASTERY:
-              currentProgress = metrics.uniqueTechniques;
-              earned = currentProgress >= progressMax;
-              break;
-
-            case AchievementCategory.SUBMISSION_MASTERY:
-              currentProgress = metrics.successfulSubmissions;
-              earned = currentProgress >= progressMax;
-              break;
-
-            case AchievementCategory.ESCAPE_MASTERY:
-              currentProgress = metrics.successfulEscapes;
-              earned = currentProgress >= progressMax;
-              break;
-
-            case AchievementCategory.FOCUS_AREA:
-              currentProgress = metrics.focusAreas;
-              earned = currentProgress >= progressMax;
-              break;
-          }
-
-          // Update progress in database
-          await tx
-            .insert(userAchievementProgress)
-            .values({
-              userId,
-              achievementId: achievement.id,
-              currentProgress
-            })
-            .onConflictDoUpdate({
-              target: [userAchievementProgress.userId, userAchievementProgress.achievementId],
-              set: { currentProgress, updatedAt: new Date() }
-            });
-
-          if (earned) {
-            console.log(`User ${userId} earned achievement: ${achievement.name}`);
-
-            // Award the achievement
-            await tx.insert(userAchievements).values({
-              userId,
-              achievementId: achievement.id
-            });
-
-            // Award bonus points
-            await tx.insert(pointTransactions).values({
-              userId,
-              amount: achievement.pointValue,
-              type: 'achievement',
-              description: `Earned achievement: ${achievement.name}`
-            });
-
-            // Update user's total points
-            await tx
-              .update(users)
-              .set({
-                totalPoints: user.totalPoints + achievement.pointValue
-              })
-              .where(eq(users.id, userId));
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Error checking achievements:', error);
-      throw error;
-    }
   }
 
   // Calculate current streak

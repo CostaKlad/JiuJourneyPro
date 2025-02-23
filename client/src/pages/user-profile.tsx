@@ -20,10 +20,12 @@ import {
   Clock,
   Dumbbell,
 } from "lucide-react";
-import { mockTrainingLogs, mockUserStats } from "@/lib/mock-data";
 
-// Add a simple mock storage for follow state
-const mockFollowState = new Map<number, boolean>();
+interface TrainingStats {
+  totalSessions: number;
+  totalHours: number;
+  techniquesLearned: number;
+}
 
 function UserProfile() {
   const { id } = useParams();
@@ -40,26 +42,23 @@ function UserProfile() {
         username: "JohnDoe",
         beltRank: "Purple",
         gym: "Gracie Barra HQ",
-        isFollowing: mockFollowState.get(parseInt(id!)) || false,
+        isFollowing: false,
       };
     },
   });
 
-  const { data: activityFeed = mockTrainingLogs } = useQuery({
+  const { data: activityFeed = [] } = useQuery({
     queryKey: ["/api/users", id, "activity"],
   });
 
-  const { data: userStats = mockUserStats } = useQuery({
+  const { data: userStats } = useQuery<TrainingStats>({
     queryKey: ["/api/users", id, "stats"],
   });
 
   const followMutation = useMutation({
     mutationFn: async () => {
-      // In mock mode, we'll just update the local state
-      mockFollowState.set(parseInt(id!), true);
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      return { success: true };
+      const res = await apiRequest("POST", `/api/follow/${id}`);
+      return await res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users", id] });
@@ -71,11 +70,8 @@ function UserProfile() {
 
   const unfollowMutation = useMutation({
     mutationFn: async () => {
-      // In mock mode, we'll just update the local state
-      mockFollowState.set(parseInt(id!), false);
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      return { success: true };
+      const res = await apiRequest("POST", `/api/unfollow/${id}`);
+      return await res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users", id] });
@@ -151,9 +147,9 @@ function UserProfile() {
 
           <div className="grid grid-cols-3 gap-4 mt-8">
             {[
-              { icon: Calendar, label: "Sessions", value: userStats.totalSessions },
-              { icon: Clock, label: "Hours", value: userStats.totalHours },
-              { icon: Dumbbell, label: "Techniques", value: userStats.techniquesLearned },
+              { icon: Calendar, label: "Sessions", value: userStats?.totalSessions || 0 },
+              { icon: Clock, label: "Hours", value: userStats?.totalHours || 0 },
+              { icon: Dumbbell, label: "Techniques", value: userStats?.techniquesLearned || 0 },
             ].map(({ icon: Icon, label, value }) => (
               <div
                 key={label}
@@ -169,15 +165,14 @@ function UserProfile() {
 
         <CardContent className="mt-8">
           <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-1">
               <TabsTrigger value="activity">Training Activity</TabsTrigger>
-              <TabsTrigger value="achievements">Achievements</TabsTrigger>
             </TabsList>
 
             <TabsContent value="activity" className="mt-6">
               <ScrollArea className="h-[600px]">
                 <div className="space-y-4">
-                  {activityFeed.map((log) => (
+                  {activityFeed.map((log: any) => (
                     <Card key={log.id}>
                       <CardHeader>
                         <div className="flex justify-between items-center">
@@ -212,7 +207,7 @@ function UserProfile() {
                                 Techniques:
                               </h4>
                               <div className="flex flex-wrap gap-2">
-                                {log.techniquesPracticed.map((technique, index) => (
+                                {log.techniquesPracticed.map((technique: string, index: number) => (
                                   <Badge
                                     key={index}
                                     variant="outline"
@@ -236,39 +231,6 @@ function UserProfile() {
                   ))}
                 </div>
               </ScrollArea>
-            </TabsContent>
-
-            <TabsContent value="achievements" className="mt-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {userStats.achievements.map((achievement) => (
-                  <Card key={achievement.id}>
-                    <CardHeader>
-                      <CardTitle className="text-lg">{achievement.name}</CardTitle>
-                      <CardDescription>{achievement.description}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      {achievement.progress !== undefined && (
-                        <div className="space-y-2">
-                          <div className="flex justify-between text-sm">
-                            <span>Progress</span>
-                            <span>
-                              {achievement.progress}/{achievement.required}
-                            </span>
-                          </div>
-                          <div className="h-2 bg-muted rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-primary transition-all"
-                              style={{
-                                width: `${(achievement.progress! / achievement.required!) * 100}%`,
-                              }}
-                            />
-                          </div>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
             </TabsContent>
           </Tabs>
         </CardContent>

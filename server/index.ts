@@ -60,24 +60,10 @@ const PORT = process.env.PORT || "5000";
       serveStatic(app);
     }
 
-    // Start server first to ensure port binding
+    // Start server
     server.listen(parseInt(PORT, 10), "0.0.0.0", () => {
       console.log(`Server is running on port ${PORT}`);
       log(`Server running at http://0.0.0.0:${PORT}`);
-
-      // Initialize achievements after server is running
-      (async () => {
-        try {
-          console.log("Initializing achievements during server startup...");
-          console.log("Starting achievement initialization...");
-          // Add your achievement initialization logic here
-          console.log("Achievement initialization completed successfully");
-          console.log("Achievement initialization completed");
-        } catch (error) {
-          console.error("Achievement initialization failed:", error);
-          // Don't exit the process, just log the error
-        }
-      })();
     });
   } catch (error) {
     console.error('Failed to start server:', error);

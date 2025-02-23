@@ -9,17 +9,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Users, UserPlus, UserMinus, MessageSquare, ThumbsUp,
-  Medal, Trophy, Star, Target, Award, Plus, MapPin,
-  Flame, BookOpen, Calendar, Clock, Dumbbell, Shield, BookMarked
+  MapPin, Plus, Calendar, Clock, Dumbbell
 } from "lucide-react";
 import { formatDistanceToNow } from 'date-fns';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { mockFollowers, mockFollowing, mockTrainingLogs, mockSuggestedPartners, mockUserStats } from "@/lib/mock-data";
+import { mockFollowers, mockFollowing, mockTrainingLogs, mockSuggestedPartners } from "@/lib/mock-data";
 import { Link } from "wouter";
 
 type ExtendedUser = Pick<User, 'id' | 'username' | 'beltRank' | 'gym'>;
@@ -43,20 +41,10 @@ interface TrainingLogEntry {
   }[];
 }
 
-interface UserStats {
+interface TrainingStats {
   totalSessions: number;
   totalHours: number;
   techniquesLearned: number;
-  achievements: {
-    id: number;
-    type: 'streak' | 'technique' | 'competition' | 'teaching' | 'attendance';
-    name: string;
-    description: string;
-    unlocked: boolean;
-    level?: number;
-    progress?: number;
-    required?: number;
-  }[];
 }
 
 const BELT_COLORS: Record<string, string> = {
@@ -90,78 +78,23 @@ function BeltProgressIndicator({ belt, stripes }: { belt: string; stripes: numbe
   );
 }
 
-function QuickStats({ stats, id }: { stats: UserStats; id?: string }) {
+function QuickStats({ stats }: { stats: TrainingStats }) {
   return (
-    <div className="grid grid-cols-3 gap-2 p-2" id={id}>
+    <div className="grid grid-cols-3 gap-2 p-2">
       {[
         { icon: Calendar, label: "Sessions", value: stats.totalSessions },
         { icon: Clock, label: "Hours", value: Math.round(stats.totalHours) },
         { icon: Dumbbell, label: "Techniques", value: stats.techniquesLearned },
       ].map(({ icon: Icon, label, value }) => (
-        <TooltipProvider key={label}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="flex flex-col items-center p-2 rounded-lg bg-primary/5 hover:bg-primary/10 transition-colors cursor-help">
-                <Icon className="h-4 w-4 mb-1 text-primary" />
-                <span className="text-lg font-bold">{value}</span>
-                <span className="text-xs text-muted-foreground">{label}</span>
-              </div>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Your total {label.toLowerCase()}</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <div key={label} className="flex flex-col items-center p-2 rounded-lg bg-primary/5 hover:bg-primary/10 transition-colors">
+          <Icon className="h-4 w-4 mb-1 text-primary" />
+          <span className="text-lg font-bold">{value}</span>
+          <span className="text-xs text-muted-foreground">{label}</span>
+        </div>
       ))}
     </div>
   );
 }
-
-function AchievementBadge({ achievement }: { achievement: UserStats['achievements'][number] }) {
-  const iconMap = {
-    streak: Flame,
-    technique: BookOpen,
-    competition: Trophy,
-    teaching: Star,
-    attendance: Shield,
-  };
-
-  const Icon = iconMap[achievement.type] || Medal;
-
-  return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <div
-            className={`relative inline-flex items-center justify-center w-10 h-10 rounded-full
-              ${achievement.unlocked ? 'bg-primary/20' : 'bg-muted'}`}
-          >
-            <Icon
-              className={`w-5 h-5 ${
-                achievement.unlocked ? 'text-primary' : 'text-muted-foreground'
-              }`}
-            />
-            {achievement.level && achievement.level > 1 && (
-              <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-yellow-400 text-[10px] font-bold flex items-center justify-center">
-                {achievement.level}
-              </div>
-            )}
-          </div>
-        </TooltipTrigger>
-        <TooltipContent>
-          <p className="font-semibold">{achievement.name}</p>
-          <p className="text-sm text-muted-foreground">{achievement.description}</p>
-          {!achievement.unlocked && achievement.progress !== undefined && achievement.required !== undefined && (
-            <p className="text-xs mt-1">
-              Progress: {achievement.progress}/{achievement.required}
-            </p>
-          )}
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
-  );
-}
-
 
 function CommunityPage() {
   const { user } = useAuth();
@@ -169,98 +102,41 @@ function CommunityPage() {
   const [partnerFilter, setPartnerFilter] = useState("all");
   const [locationFilter, setLocationFilter] = useState("all");
 
-  const { data: followers = mockFollowers, error: followersError } = useQuery<ExtendedUser[]>({
+  const { data: followers = mockFollowers } = useQuery<ExtendedUser[]>({
     queryKey: ["/api/followers"],
-    staleTime: 30000, // Consider data fresh for 30 seconds
-    retry: false, // Don't retry on failure
-    queryFn: async () => {
-      try {
-        const response = await fetch("/api/followers");
-        if (!response.ok) throw new Error("Failed to fetch followers");
-        const data = await response.json();
-        return data.length ? data : mockFollowers; // Use mock data if empty response
-      } catch (error) {
-        console.error("Error fetching followers:", error);
-        return mockFollowers;
-      }
-    }
+    staleTime: 30000,
+    retry: false
   });
 
-  const { data: following = mockFollowing, error: followingError } = useQuery<ExtendedUser[]>({
+  const { data: following = mockFollowing } = useQuery<ExtendedUser[]>({
     queryKey: ["/api/following"],
     staleTime: 30000,
-    retry: false,
-    queryFn: async () => {
-      try {
-        const response = await fetch("/api/following");
-        if (!response.ok) throw new Error("Failed to fetch following");
-        const data = await response.json();
-        return data.length ? data : mockFollowing;
-      } catch (error) {
-        console.error("Error fetching following:", error);
-        return mockFollowing;
-      }
-    }
+    retry: false
   });
 
-  const { data: activityFeed = mockTrainingLogs, error: feedError } = useQuery<TrainingLogEntry[]>({
+  const { data: activityFeed = mockTrainingLogs } = useQuery<TrainingLogEntry[]>({
     queryKey: ["/api/community/feed"],
     staleTime: 30000,
-    retry: false,
-    queryFn: async () => {
-      try {
-        const response = await fetch("/api/community/feed");
-        if (!response.ok) throw new Error("Failed to fetch activity feed");
-        const data = await response.json();
-        return data.length ? data : mockTrainingLogs;
-      } catch (error) {
-        console.error("Error fetching activity feed:", error);
-        return mockTrainingLogs;
-      }
-    }
+    retry: false
   });
 
-  const { data: suggestedPartners = mockSuggestedPartners, error: suggestionsError } = useQuery<ExtendedUser[]>({
+  const { data: suggestedPartners = mockSuggestedPartners } = useQuery<ExtendedUser[]>({
     queryKey: ["/api/community/suggestions"],
     staleTime: 30000,
-    retry: false,
-    queryFn: async () => {
-      try {
-        const response = await fetch("/api/community/suggestions");
-        if (!response.ok) throw new Error("Failed to fetch suggestions");
-        const data = await response.json();
-        return data.length ? data : mockSuggestedPartners;
-      } catch (error) {
-        console.error("Error fetching suggestions:", error);
-        return mockSuggestedPartners;
-      }
-    }
+    retry: false
   });
 
-  const { data: userStats = mockUserStats, error: statsError } = useQuery<UserStats>({
-    queryKey: ["/api/user/stats"],
+  const { data: trainingStats = { totalSessions: 0, totalHours: 0, techniquesLearned: 0 } } = useQuery<TrainingStats>({
+    queryKey: ["/api/training/stats"],
     staleTime: 30000,
-    retry: false,
-    queryFn: async () => {
-      try {
-        const response = await fetch("/api/user/stats");
-        if (!response.ok) throw new Error("Failed to fetch user stats");
-        const data = await response.json();
-        return Object.keys(data).length ? data : mockUserStats;
-      } catch (error) {
-        console.error("Error fetching user stats:", error);
-        return mockUserStats;
-      }
-    }
+    retry: false
   });
-
 
   const followMutation = useMutation({
     mutationFn: async (userId: number) => {
       await apiRequest("POST", `/api/follow/${userId}`);
     },
     onSuccess: () => {
-      // Invalidate both followers and following queries to refresh the lists
       queryClient.invalidateQueries({ queryKey: ["/api/followers"] });
       queryClient.invalidateQueries({ queryKey: ["/api/following"] });
       queryClient.invalidateQueries({ queryKey: ["/api/community/suggestions"] });
@@ -272,7 +148,6 @@ function CommunityPage() {
       await apiRequest("POST", `/api/unfollow/${userId}`);
     },
     onSuccess: () => {
-      // Invalidate both followers and following queries to refresh the lists
       queryClient.invalidateQueries({ queryKey: ["/api/followers"] });
       queryClient.invalidateQueries({ queryKey: ["/api/following"] });
       queryClient.invalidateQueries({ queryKey: ["/api/community/suggestions"] });
@@ -297,13 +172,6 @@ function CommunityPage() {
     }
   });
 
-  const defaultStats: UserStats = {
-    totalSessions: 0,
-    totalHours: 0,
-    techniquesLearned: 0,
-    achievements: []
-  };
-
   if (!user) {
     return (
       <div className="p-6">
@@ -317,10 +185,10 @@ function CommunityPage() {
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent" id="community-welcome">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
               Community
             </h1>
-            <p className="text-muted-foreground">Connect and level up with fellow BJJ practitioners</p>
+            <p className="text-muted-foreground">Connect with fellow BJJ practitioners</p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" className="gap-2">
@@ -331,7 +199,7 @@ function CommunityPage() {
               <Users className="h-4 w-4" />
               Find Partners
             </Button>
-            <Button className="gap-2" id="training-log-button">
+            <Button className="gap-2">
               <Plus className="h-4 w-4" />
               Log Training
             </Button>
@@ -340,7 +208,7 @@ function CommunityPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="space-y-6">
-            <Card className="sticky top-6">
+            <Card>
               <div className="relative h-32 rounded-t-lg overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-r from-primary to-purple-600 opacity-20" />
                 <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-background to-transparent" />
@@ -378,48 +246,7 @@ function CommunityPage() {
                   <BeltProgressIndicator belt={user?.beltRank || 'white'} stripes={2} />
                 </div>
 
-                <QuickStats stats={userStats || defaultStats} id="achievements-section" />
-
-                {/* Badges Section */}
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">Recent Achievements</span>
-                    <Link href="/achievements">
-                      <Button variant="ghost" size="sm" className="h-8">
-                        View All
-                      </Button>
-                    </Link>
-                  </div>
-                  <div className="grid grid-cols-6 gap-2">
-                    {(userStats?.achievements || [])
-                      .filter(a => a.unlocked)
-                      .slice(0, 6)
-                      .map((achievement) => (
-                        <TooltipProvider key={achievement.id}>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <div className="relative inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary/20">
-                                {achievement.type === 'streak' && <Flame className="w-5 h-5 text-primary" />}
-                                {achievement.type === 'technique' && <BookOpen className="w-5 h-5 text-primary" />}
-                                {achievement.type === 'competition' && <Trophy className="w-5 h-5 text-primary" />}
-                                {achievement.type === 'teaching' && <Star className="w-5 h-5 text-primary" />}
-                                {achievement.type === 'attendance' && <Shield className="w-5 h-5 text-primary" />}
-                                {achievement.level && achievement.level > 1 && (
-                                  <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-yellow-400 text-[10px] font-bold flex items-center justify-center">
-                                    {achievement.level}
-                                  </div>
-                                )}
-                              </div>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p className="font-semibold">{achievement.name}</p>
-                              <p className="text-sm text-muted-foreground">{achievement.description}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      ))}
-                  </div>
-                </div>
+                <QuickStats stats={trainingStats} />
 
                 <div className="grid grid-cols-2 gap-4 text-center">
                   <div className="p-3 rounded-lg bg-primary/10 hover:bg-primary/20 transition-colors cursor-pointer">
@@ -434,7 +261,7 @@ function CommunityPage() {
               </CardContent>
             </Card>
 
-            <Card id="training-partners-section">
+            <Card>
               <CardHeader>
                 <CardTitle>Discover Training Partners</CardTitle>
                 <CardDescription>Find the perfect training match</CardDescription>
@@ -471,7 +298,7 @@ function CommunityPage() {
                   <div className="space-y-2">
                     {suggestedPartners?.map((partner) => (
                       <Link href={`/users/${partner.id}`} className="flex items-center gap-4 p-3 rounded-lg hover:bg-primary/5 transition-colors" key={partner.id}>
-                        <Avatar className="hover:ring-2 hover:ring-primary/20 transition-all">
+                        <Avatar>
                           <AvatarFallback className="bg-primary/10">
                             {partner.username.slice(0, 2).toUpperCase()}
                           </AvatarFallback>
@@ -490,18 +317,16 @@ function CommunityPage() {
                             )}
                           </div>
                         </div>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              followMutation.mutate(partner.id);
-                            }}
-                          >
-                            <UserPlus className="h-4 w-4" />
-                          </Button>
-                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            followMutation.mutate(partner.id);
+                          }}
+                        >
+                          <UserPlus className="h-4 w-4" />
+                        </Button>
                       </Link>
                     ))}
                   </div>
@@ -513,7 +338,7 @@ function CommunityPage() {
           <div className="lg:col-span-2">
             <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
               <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="feed" className="flex items-center gap-2" id="activity-feed-tab">
+                <TabsTrigger value="feed" className="flex items-center gap-2">
                   <MessageSquare className="h-4 w-4" />
                   Activity Feed
                 </TabsTrigger>
@@ -531,8 +356,8 @@ function CommunityPage() {
                 {activityFeed?.map((log) => (
                   <Card key={log.id}>
                     <CardHeader className="flex flex-row items-start gap-4 pb-2">
-                      <Link href={`/users/${log.user.id}`} className="cursor-pointer">
-                        <Avatar className="hover:ring-2 hover:ring-primary/20 transition-all">
+                      <Link href={`/users/${log.user.id}`}>
+                        <Avatar>
                           <AvatarFallback className="bg-primary/10">
                             {log.user.username.slice(0, 2).toUpperCase()}
                           </AvatarFallback>
@@ -542,7 +367,7 @@ function CommunityPage() {
                         <div className="flex items-center justify-between">
                           <div>
                             <Link href={`/users/${log.user.id}`}>
-                              <CardTitle className="text-lg hover:text-primary cursor-pointer">
+                              <CardTitle className="text-lg hover:text-primary">
                                 {log.user.username}
                               </CardTitle>
                             </Link>
@@ -577,7 +402,7 @@ function CommunityPage() {
                                 <Badge
                                   key={index}
                                   variant="outline"
-                                  className="hover:bg-primary/5 cursor-pointer"
+                                  className="hover:bg-primary/5"
                                 >
                                   {technique}
                                 </Badge>
@@ -616,7 +441,7 @@ function CommunityPage() {
                           <ScrollArea className="h-40 rounded-lg border p-4">
                             <div className="space-y-4">
                               {log.comments.map((comment) => (
-                                <div key={comment.id} className="flex gap-4 group">
+                                <div key={comment.id} className="flex gap-4">
                                   <Avatar className="h-8 w-8">
                                     <AvatarFallback className="text-xs">
                                       {comment.user.username.slice(0, 2).toUpperCase()}
@@ -624,7 +449,7 @@ function CommunityPage() {
                                   </Avatar>
                                   <div className="flex-1">
                                     <div className="flex items-center gap-2">
-                                      <span className="text-sm font-medium hover:text-primary cursor-pointer">
+                                      <span className="text-sm font-medium hover:text-primary">
                                         {comment.user.username}
                                       </span>
                                       <span className="text-xs text-muted-foreground">
