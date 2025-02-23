@@ -7,38 +7,30 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import {
-  Clock,
-  Brain,
-  Target,
-  Dumbbell,
-} from "lucide-react";
-import { AchievementCategory } from "@shared/schema";
+import { Brain, Target, Dumbbell } from "lucide-react";
 
-interface Achievement {
+interface ProgressMetric {
   id: number;
   name: string;
   description: string;
-  category: keyof typeof AchievementCategory;
-  progressMax: number;
-  currentProgress: number;
+  current: number;
+  target: number;
+  category: string;
 }
 
-function AchievementsDashboard() {
-  const { data: achievements } = useQuery<Achievement[]>({
-    queryKey: ["/api/achievements/progress"],
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
+function ProgressDashboard() {
+  const { data: metrics } = useQuery<ProgressMetric[]>({
+    queryKey: ["/api/progress/metrics"],
     staleTime: 1000 * 60,
   });
 
-  const groupedAchievements = achievements?.reduce<Record<string, Achievement[]>>((acc, achievement) => {
-    if (!acc[achievement.category]) {
-      acc[achievement.category] = [];
+  const groupedMetrics = metrics?.reduce<Record<string, ProgressMetric[]>>((acc, metric) => {
+    if (!acc[metric.category]) {
+      acc[metric.category] = [];
     }
-    acc[achievement.category].push(achievement);
+    acc[metric.category].push(metric);
     return acc;
-  }, {});
+  }, {}) || {};
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -52,51 +44,37 @@ function AchievementsDashboard() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {Object.entries(groupedAchievements || {}).map(([category, catAchievements]) => {
-          const IconComponent = {
-            TECHNIQUE_MASTERY: Brain,
-            TRAINING_CONSISTENCY: Clock,
-            SUBMISSION_MASTERY: Target,
-            FOCUS_AREA: Dumbbell
-          }[category as keyof typeof AchievementCategory] || Brain;
-
-          return (
-            <Card key={category}>
-              <CardHeader>
-                <div className="flex items-center gap-2">
-                  <IconComponent className="h-5 w-5" />
-                  <CardTitle className="text-lg capitalize">
-                    {category.toLowerCase().replace('_', ' ')}
-                  </CardTitle>
-                </div>
-                <CardDescription>
-                  Progress tracking
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {catAchievements.map((achievement) => (
-                  <div
-                    key={achievement.id}
-                    className="space-y-2"
-                  >
-                    <div className="text-sm font-medium">
-                      {achievement.name}
-                    </div>
-                    <Progress
-                      value={(achievement.currentProgress / achievement.progressMax) * 100}
-                    />
-                    <p className="text-xs text-right text-muted-foreground">
-                      {achievement.currentProgress} / {achievement.progressMax}
-                    </p>
+        {Object.entries(groupedMetrics).map(([category, metrics]) => (
+          <Card key={category}>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                {category === 'TECHNIQUES' && <Brain className="h-5 w-5" />}
+                {category === 'SUBMISSIONS' && <Target className="h-5 w-5" />}
+                {category === 'TRAINING' && <Dumbbell className="h-5 w-5" />}
+                <CardTitle className="text-lg capitalize">
+                  {category.toLowerCase()}
+                </CardTitle>
+              </div>
+              <CardDescription>Progress tracking</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {metrics.map((metric) => (
+                <div key={metric.id} className="space-y-2">
+                  <div className="text-sm font-medium">
+                    {metric.name}
                   </div>
-                ))}
-              </CardContent>
-            </Card>
-          );
-        })}
+                  <Progress value={(metric.current / metric.target) * 100} />
+                  <p className="text-xs text-right text-muted-foreground">
+                    {metric.current} / {metric.target}
+                  </p>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        ))}
       </div>
     </div>
   );
 }
 
-export default AchievementsDashboard;
+export default ProgressDashboard;
