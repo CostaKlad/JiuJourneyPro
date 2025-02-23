@@ -62,14 +62,19 @@ function Layout({ children }: { children: React.ReactNode }) {
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-14 md:h-16 items-center justify-between px-4">
           <div className="flex items-center gap-2">
+            <div className="hidden md:flex items-center gap-6">
+              <NavigationLink href="/training">Training</NavigationLink>
+              <NavigationLink href="/community">Community</NavigationLink>
+              <NavigationLink href="/profile">Profile</NavigationLink>
+            </div>
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="md:hidden">
                   <Menu className="h-5 w-5" />
-                  <span className="sr-only md:hidden">Toggle menu</span>
+                  <span className="sr-only">Toggle menu</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-[85vw] sm:w-80">
+              <SheetContent side="left" className="w-[85vw] sm:w-80 md:hidden">
                 <SheetHeader>
                   <SheetTitle>
                     <div className="flex items-center gap-2">
