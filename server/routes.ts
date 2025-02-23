@@ -39,6 +39,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         date: new Date(),
         type: validatedData.type,
         gym: validatedData.gym || null,
+        techniques: validatedData.techniquesPracticed || [], // Add techniques field
         techniquesPracticed: validatedData.techniquesPracticed || [],
         rollingSummary: validatedData.rollingSummary || null,
         submissionsAttempted: validatedData.submissionsAttempted || [],
@@ -307,7 +308,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         techniques: recentLogs.flatMap(log => log.techniquesPracticed || []),
         goals: user?.goals?.split(',') || [],
         trainingFrequency: recentLogs.length,
-        gym: user?.gym
+        gym: user?.gym || undefined // Change null to undefined
       };
 
       const recommendations = await getPeerRecommendations(

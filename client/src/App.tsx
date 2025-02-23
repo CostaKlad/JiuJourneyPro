@@ -19,7 +19,7 @@ import SettingsPage from "@/pages/settings-page";
 import NotFound from "@/pages/not-found";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link, useLocation } from "wouter";
 import {
   Menu,
@@ -37,45 +37,6 @@ import {
 import { useAuth } from "@/hooks/use-auth";
 import { ErrorBoundary } from "react-error-boundary";
 
-
-const menuItems = [
-  { 
-    href: "/", 
-    icon: Home, 
-    label: "Dashboard",
-    tooltip: "View your training overview and recent activity"
-  },
-  { 
-    href: "/techniques", 
-    icon: BookMarked, 
-    label: "Technique Library",
-    tooltip: "Browse and learn BJJ techniques" 
-  },
-  { 
-    href: "/passport", 
-    icon: Swords, 
-    label: "Technique Passport",
-    tooltip: "Track your progress in different techniques" 
-  },
-  { 
-    href: "/community", 
-    icon: Users, 
-    label: "Community",
-    tooltip: "Connect with other practitioners" 
-  },
-  { 
-    href: "/achievements", 
-    icon: Trophy, 
-    label: "Achievements",
-    tooltip: "View your earned achievements and medals" 
-  },
-  { 
-    href: "/training-wizard", 
-    icon: Brain, 
-    label: "Training Wizard",
-    tooltip: "Get personalized training recommendations" 
-  },
-];
 
 function ErrorFallback({ error }: { error: Error }) {
   return (
@@ -209,6 +170,45 @@ function Layout({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
+
+const menuItems = [
+  { 
+    href: "/", 
+    icon: Home, 
+    label: "Dashboard",
+    tooltip: "View your training overview and recent activity"
+  },
+  { 
+    href: "/techniques", 
+    icon: BookMarked, 
+    label: "Technique Library",
+    tooltip: "Browse and learn BJJ techniques" 
+  },
+  { 
+    href: "/passport", 
+    icon: Swords, 
+    label: "Technique Passport",
+    tooltip: "Track your progress in different techniques" 
+  },
+  { 
+    href: "/community", 
+    icon: Users, 
+    label: "Community",
+    tooltip: "Connect with other practitioners" 
+  },
+  { 
+    href: "/achievements", 
+    icon: Trophy, 
+    label: "Achievements",
+    tooltip: "View your earned achievements and medals" 
+  },
+  { 
+    href: "/training-wizard", 
+    icon: Brain, 
+    label: "Training Wizard",
+    tooltip: "Get personalized training recommendations" 
+  },
+];
 
 function App() {
   return (
