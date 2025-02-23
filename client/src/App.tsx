@@ -65,7 +65,8 @@ function Layout({ children }: { children: React.ReactNode }) {
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="md:hidden">
-                  <Menu className="h-6 w-6" />
+                  <Menu className="h-5 w-5" />
+                  <span className="sr-only md:hidden">Toggle menu</span>
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="w-[85vw] sm:w-80">
