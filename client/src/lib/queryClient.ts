@@ -1,4 +1,4 @@
-import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import { QueryClient } from "@tanstack/react-query";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
@@ -31,17 +31,14 @@ export async function apiRequest(
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
-export const getQueryFn: <T>(options: {
-  on401: UnauthorizedBehavior;
-}) => QueryFunction<T> =
-  ({ on401: unauthorizedBehavior }) =>
-  async ({ queryKey }) => {
+export const getQueryFn = ({ on401 }: { on401: UnauthorizedBehavior }) => 
+  async ({ queryKey }: { queryKey: readonly unknown[] }) => {
     console.log(`Fetching data for queryKey:`, queryKey);
     const res = await fetch(queryKey[0] as string, {
       credentials: "include",  // Important for session cookies
     });
 
-    if (unauthorizedBehavior === "returnNull" && res.status === 401) {
+    if (on401 === "returnNull" && res.status === 401) {
       console.log("Unauthorized request, returning null as configured");
       return null;
     }
@@ -63,16 +60,10 @@ export const queryClient = new QueryClient({
       refetchInterval: false,
       refetchOnWindowFocus: import.meta.env.DEV ? false : true,
       staleTime: 0,
-      retry: false,
-      onError: (error) => {
-        console.error("Query error:", error);
-      }
+      retry: false
     },
     mutations: {
-      retry: false,
-      onError: (error) => {
-        console.error("Mutation error:", error);
-      }
-    },
-  },
+      retry: false
+    }
+  }
 });
