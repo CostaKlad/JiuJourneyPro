@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { User } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Users, UserPlus, UserMinus, MessageSquare, ThumbsUp,
   MapPin, Plus, Calendar, Clock, Dumbbell
@@ -537,9 +537,13 @@ function CommunityPage() {
                       <Card>
                         <CardHeader className="flex flex-row items-center gap-4">
                           <Avatar>
-                            <AvatarFallback className="bg-primary/10">
-                              {follower.username.slice(0, 2).toUpperCase()}
-                            </AvatarFallback>
+                            {follower.avatarUrl ? (
+                              <AvatarImage src={follower.avatarUrl} alt={follower.username} />
+                            ) : (
+                              <AvatarFallback className="bg-primary/10">
+                                {follower.username.slice(0, 2).toUpperCase()}
+                              </AvatarFallback>
+                            )}
                           </Avatar>
                           <div>
                             <CardTitle className="text-lg">{follower.username}</CardTitle>
@@ -575,9 +579,13 @@ function CommunityPage() {
                       <Card>
                         <CardHeader className="flex flex-row items-center gap-4">
                           <Avatar>
-                            <AvatarFallback className="bg-primary/10">
-                              {followed.username.slice(0, 2).toUpperCase()}
-                            </AvatarFallback>
+                            {followed.avatarUrl ? (
+                              <AvatarImage src={followed.avatarUrl} alt={followed.username} />
+                            ) : (
+                              <AvatarFallback className="bg-primary/10">
+                                {followed.username.slice(0, 2).toUpperCase()}
+                              </AvatarFallback>
+                            )}
                           </Avatar>
                           <div>
                             <CardTitle className="text-lg">{followed.username}</CardTitle>
