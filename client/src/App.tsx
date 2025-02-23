@@ -28,21 +28,12 @@ import {
   Plus,
   Target,
   Swords,
-  User,
   Brain
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import UserProfile from "@/pages/user-profile";
 import AchievementsDashboard from "@/pages/achievements-dashboard";
 import TechniquePassport from "@/pages/technique-passport";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import TrainingWizard from "@/pages/training-wizard";
 
 const menuItems = [
@@ -110,7 +101,6 @@ function Layout({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-14 items-center">
-          {/* Mobile Menu Button and Logo */}
           <div className="flex items-center gap-4 flex-1">
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>
