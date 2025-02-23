@@ -20,8 +20,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (!validationResult.success) {
         console.error("Validation errors:", validationResult.error.format());
-        return res.status(400).json({ 
-          error: "Invalid training log data", 
+        return res.status(400).json({
+          error: "Invalid training log data",
           details: validationResult.error.format()
         });
       }
@@ -62,13 +62,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating training log:", error);
       if (error instanceof Error) {
-        res.status(500).json({ 
-          error: "Failed to create training log", 
+        res.status(500).json({
+          error: "Failed to create training log",
           details: error.message
         });
       } else {
-        res.status(500).json({ 
-          error: "Failed to create training log", 
+        res.status(500).json({
+          error: "Failed to create training log",
           details: "Unknown error occurred"
         });
       }
@@ -112,6 +112,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
         suggestedTechniques: ["Basic guard passes", "Submissions from mount"],
         trainingTips: ["Train consistently", "Stay hydrated"]
       });
+    }
+  });
+
+  // Add these new routes before the existing community routes
+  app.get("/api/users/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const userId = parseInt(req.params.id);
+      const user = await storage.getUser(userId);
+
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Check if the current user is following this user
+      const isFollowing = await storage.isFollowing(req.user.id, userId);
+
+      // Remove sensitive information before sending
+      const { password, resetPasswordToken, resetPasswordExpires, ...safeUser } = user;
+
+      res.json({
+        ...safeUser,
+        isFollowing
+      });
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ error: "Failed to fetch user" });
+    }
+  });
+
+  app.get("/api/users/:id/activity", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const userId = parseInt(req.params.id);
+      const logs = await storage.getTrainingLogs(userId);
+      res.json(logs);
+    } catch (error) {
+      console.error("Error fetching user activity:", error);
+      res.status(500).json({ error: "Failed to fetch user activity" });
+    }
+  });
+
+  app.get("/api/users/:id/stats", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const userId = parseInt(req.params.id);
+      const trainingLogs = await storage.getTrainingLogs(userId);
+
+      const totalSessions = trainingLogs.length;
+      const totalHours = trainingLogs.reduce((acc, log) => acc + (log.duration / 60), 0);
+      const techniquesLearned = new Set(
+        trainingLogs.flatMap(log => log.techniquesPracticed || [])
+      ).size;
+
+      res.json({
+        totalSessions,
+        totalHours,
+        techniquesLearned
+      });
+    } catch (error) {
+      console.error("Error fetching user stats:", error);
+      res.status(500).json({ error: "Failed to fetch user stats" });
     }
   });
 
@@ -215,7 +280,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(recommendations);
     } catch (error) {
       console.error("Error getting recommendations:", error instanceof Error ? error.message : 'Unknown error');
-      res.status(500).json({ 
+      res.status(500).json({
         error: "Failed to get recommendations",
         details: error instanceof Error ? error.message : 'Unknown error'
       });
@@ -259,7 +324,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(recommendations);
     } catch (error) {
       console.error("Error getting peer recommendations:", error);
-      res.status(500).json({ 
+      res.status(500).json({
         error: "Failed to get peer recommendations",
         details: error instanceof Error ? error.message : 'Unknown error'
       });
