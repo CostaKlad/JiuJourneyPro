@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -35,7 +36,6 @@ import { useAuth } from "@/hooks/use-auth";
 import UserProfile from "@/pages/user-profile";
 import AchievementsDashboard from "@/pages/achievements-dashboard";
 import TechniquePassport from "@/pages/technique-passport";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -46,7 +46,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import TrainingWizard from "@/pages/training-wizard";
 
-// Add Training Wizard to menuItems array
 const menuItems = [
   { 
     href: "/", 
@@ -102,6 +101,11 @@ function ErrorFallback({ error }: { error: Error }) {
 function Layout({ children }: { children: React.ReactNode }) {
   const { user, logoutMutation } = useAuth();
   const [location] = useLocation();
+  const [isOpen, setIsOpen] = useState(false);
+
+  const handleNavigate = (href: string) => {
+    setIsOpen(false); // Close the sheet when navigating
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -109,7 +113,7 @@ function Layout({ children }: { children: React.ReactNode }) {
         <div className="container flex h-14 items-center justify-between">
           {/* Mobile Menu Button and Logo */}
           <div className="flex items-center gap-4">
-            <Sheet>
+            <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon">
                   <Menu className="h-6 w-6" />
@@ -142,9 +146,12 @@ function Layout({ children }: { children: React.ReactNode }) {
                   <nav className="space-y-2">
                     {menuItems.map((item) => (
                       <Link key={item.href} href={item.href}>
-                        <a className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                          location === item.href ? "bg-primary/10" : "hover:bg-primary/10"
-                        }`}>
+                        <a 
+                          onClick={() => handleNavigate(item.href)}
+                          className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                            location === item.href ? "bg-primary/10" : "hover:bg-primary/10"
+                          }`}
+                        >
                           <item.icon className="h-5 w-5" />
                           {item.label}
                         </a>
@@ -155,11 +162,11 @@ function Layout({ children }: { children: React.ReactNode }) {
                   {/* Quick Actions */}
                   <div className="space-y-2">
                     <h4 className="px-4 text-sm font-medium">Quick Actions</h4>
-                    <Button className="w-full justify-start gap-2">
+                    <Button className="w-full justify-start gap-2" onClick={() => setIsOpen(false)}>
                       <Plus className="h-4 w-4" />
                       Log Training
                     </Button>
-                    <Button variant="outline" className="w-full justify-start gap-2">
+                    <Button variant="outline" className="w-full justify-start gap-2" onClick={() => setIsOpen(false)}>
                       <Target className="h-4 w-4" />
                       Find Partners
                     </Button>
@@ -168,7 +175,10 @@ function Layout({ children }: { children: React.ReactNode }) {
                   {/* Settings & Logout */}
                   <div className="mt-auto space-y-2">
                     <Link href="/settings">
-                      <a className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/10 transition-colors">
+                      <a 
+                        className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/10 transition-colors"
+                        onClick={() => setIsOpen(false)}
+                      >
                         <Settings className="h-5 w-5" />
                         Settings
                       </a>
@@ -176,7 +186,10 @@ function Layout({ children }: { children: React.ReactNode }) {
                     <Button
                       variant="ghost"
                       className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-100"
-                      onClick={() => logoutMutation.mutate()}
+                      onClick={() => {
+                        setIsOpen(false);
+                        logoutMutation.mutate();
+                      }}
                     >
                       <LogOut className="h-5 w-5 mr-2" />
                       Logout
