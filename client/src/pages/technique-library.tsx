@@ -53,11 +53,18 @@ export default function TechniqueLibrary() {
           {CATEGORIES.map((category) => (
             <TabsContent key={category} value={category}>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {techniques
-                  ?.filter((t) => t.category === category)
-                  .map((technique) => (
-                    <TechniqueCard key={technique.id} technique={technique} />
-                  ))}
+                {!techniques || techniques.length === 0 ? (
+                  <div className="col-span-full text-center py-12">
+                    <h3 className="text-2xl font-semibold text-muted-foreground">Coming Soon</h3>
+                    <p className="text-muted-foreground mt-2">Technique library is under development</p>
+                  </div>
+                ) : (
+                  techniques
+                    .filter((t) => t.category === category)
+                    .map((technique) => (
+                      <TechniqueCard key={technique.id} technique={technique} />
+                    ))
+                )}
               </div>
             </TabsContent>
           ))}
