@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { User } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
   Users, UserPlus, UserMinus, MessageSquare, ThumbsUp,
   MapPin, Plus, Calendar, Clock, Dumbbell
