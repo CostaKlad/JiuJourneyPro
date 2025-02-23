@@ -27,7 +27,9 @@ import {
   Plus,
   Target,
   Swords,
-  User
+  User,
+  BookOpen,
+  Brain
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import UserProfile from "@/pages/user-profile";
@@ -44,6 +46,45 @@ import {
 } from "@/components/ui/dropdown-menu";
 import TrainingWizard from "@/pages/training-wizard";
 
+// Add Training Wizard to menuItems array
+const menuItems = [
+  { 
+    href: "/", 
+    icon: Home, 
+    label: "Dashboard",
+    tooltip: "View your training overview and recent activity"
+  },
+  { 
+    href: "/techniques", 
+    icon: BookMarked, 
+    label: "Technique Library",
+    tooltip: "Browse and learn BJJ techniques" 
+  },
+  { 
+    href: "/passport", 
+    icon: Swords, 
+    label: "Technique Passport",
+    tooltip: "Track your progress in different techniques" 
+  },
+  { 
+    href: "/community", 
+    icon: Users, 
+    label: "Community",
+    tooltip: "Connect with other practitioners" 
+  },
+  { 
+    href: "/achievements", 
+    icon: Trophy, 
+    label: "Achievements",
+    tooltip: "View your earned achievements and medals" 
+  },
+  { 
+    href: "/training-wizard", 
+    icon: Brain, 
+    label: "Training Wizard",
+    tooltip: "Get personalized training recommendations" 
+  },
+];
 
 function ErrorFallback({ error }: { error: Error }) {
   return (
@@ -61,39 +102,6 @@ function ErrorFallback({ error }: { error: Error }) {
 function Layout({ children }: { children: React.ReactNode }) {
   const { user, logoutMutation } = useAuth();
   const [location] = useLocation();
-
-  const menuItems = [
-    { 
-      href: "/", 
-      icon: Home, 
-      label: "Dashboard",
-      tooltip: "View your training overview and recent activity"
-    },
-    { 
-      href: "/techniques", 
-      icon: BookMarked, 
-      label: "Technique Library",
-      tooltip: "Browse and learn BJJ techniques" 
-    },
-    { 
-      href: "/passport", 
-      icon: Swords, 
-      label: "Technique Passport",
-      tooltip: "Track your progress in different techniques" 
-    },
-    { 
-      href: "/community", 
-      icon: Users, 
-      label: "Community",
-      tooltip: "Connect with other practitioners" 
-    },
-    { 
-      href: "/achievements", 
-      icon: Trophy, 
-      label: "Achievements",
-      tooltip: "View your earned achievements and medals" 
-    },
-  ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -278,7 +286,7 @@ function App() {
                 <ProtectedRoute path="/community" component={CommunityPage} />
                 <ProtectedRoute path="/users/:id" component={UserProfile} />
                 <ProtectedRoute path="/achievements" component={AchievementsDashboard} />
-                <ProtectedRoute path="/wizard" component={TrainingWizard} />
+                <ProtectedRoute path="/training-wizard" component={TrainingWizard} />
                 <Route component={NotFound} />
               </Switch>
             </Layout>

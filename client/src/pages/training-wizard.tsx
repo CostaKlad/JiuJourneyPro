@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+// Schema and types remain the same
 const wizardSchema = z.object({
   trainingFrequency: z.number().min(1).max(7),
   focusAreas: z.array(z.string()).min(1),
