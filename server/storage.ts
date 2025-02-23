@@ -38,6 +38,13 @@ export interface IStorage {
   sessionStore: session.Store;
 }
 
+export class StorageError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'StorageError';
+  }
+}
+
 export class DatabaseStorage implements IStorage {
   sessionStore: session.Store;
 
@@ -79,12 +86,25 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateUser(id: number, updates: Partial<User>): Promise<User> {
-    const [user] = await db
-      .update(users)
-      .set(updates)
-      .where(eq(users.id, id))
-      .returning();
-    return user;
+    try {
+      const [user] = await db
+        .update(users)
+        .set(updates)
+        .where(eq(users.id, id))
+        .returning();
+
+      if (!user) {
+        throw new StorageError('User not found');
+      }
+
+      return user;
+    } catch (error) {
+      if (error instanceof StorageError) {
+        throw error;
+      }
+      console.error('Database error updating user:', error);
+      throw new StorageError('Failed to update user');
+    }
   }
 
   async createTrainingLog(log: Omit<TrainingLog, "id">): Promise<TrainingLog> {

@@ -6,6 +6,7 @@ import { storage } from "./storage";
 import { getTrainingSuggestions, getPeerRecommendations } from "./openai";
 import { insertTrainingLogSchema, insertCommentSchema } from "@shared/schema";
 import { pointsService } from "./points-service";
+import { StorageError } from "./storage";
 
 // Temporarily store files in memory
 const upload = multer({ storage: multer.memoryStorage() });
@@ -405,16 +406,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(req.user);
   });
 
-  // Modify avatar routes to return a default avatar for now
+  // Update avatar routes with proper implementation
   app.post("/api/user/avatar", upload.single('avatar'), async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    // Return a temporary response until we implement proper avatar storage
-    res.json({ url: '/default-avatar.png' });
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+    if (!allowedTypes.includes(req.file.mimetype)) {
+      return res.status(400).json({ 
+        error: 'Invalid file type. Only JPG, PNG and GIF images are allowed.' 
+      });
+    }
+
+    // Validate file size (max 5MB)
+    const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+    if (req.file.size > maxSize) {
+      return res.status(400).json({ 
+        error: 'File too large. Maximum size is 5MB.' 
+      });
+    }
+
+    try {
+      // Convert file to base64 for storage
+      const base64Image = req.file.buffer.toString('base64');
+      const avatarUrl = `data:${req.file.mimetype};base64,${base64Image}`;
+
+      // Update user's avatar URL in database
+      const updatedUser = await storage.updateUser(req.user.id, { avatarUrl });
+
+      res.json({ 
+        url: updatedUser.avatarUrl,
+        message: 'Avatar updated successfully' 
+      });
+    } catch (error) {
+      console.error('Avatar upload error:', error);
+      if (error instanceof StorageError) {
+        res.status(400).json({ error: error.message });
+      } else {
+        res.status(500).json({ error: 'Failed to upload avatar' });
+      }
+    }
   });
 
   app.get("/api/user/avatar/:userId", async (req, res) => {
-    // Return a default avatar URL
-    res.json({ url: '/default-avatar.png' });
+    try {
+      const user = await storage.getUser(parseInt(req.params.userId));
+      if (!user || !user.avatarUrl) {
+        return res.json({ url: '/default-avatar.png' });
+      }
+      res.json({ url: user.avatarUrl });
+    } catch (error) {
+      console.error('Error fetching avatar:', error);
+      res.status(500).json({ error: 'Failed to fetch avatar' });
+    }
   });
 
   const httpServer = createServer(app);
