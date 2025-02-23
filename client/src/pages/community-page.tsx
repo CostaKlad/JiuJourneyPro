@@ -202,19 +202,6 @@ function CommunityPage() {
   return (
     <div className="p-6">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8 p-6 bg-card rounded-lg shadow-sm">
-          <div className="flex items-center gap-4">
-            <Avatar className="h-16 w-16">
-              <AvatarImage src={user?.avatarUrl} />
-              <AvatarFallback>{user?.username?.slice(0, 2).toUpperCase()}</AvatarFallback>
-            </Avatar>
-            <div>
-              <h2 className="text-xl font-semibold">{user?.username}</h2>
-              <p className="text-muted-foreground">{user?.beltRank} Belt</p>
-              {user?.gym && <p className="text-sm text-muted-foreground">{user?.gym}</p>}
-            </div>
-          </div>
-        </div>
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
