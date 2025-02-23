@@ -42,6 +42,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import TrainingWizard from "@/pages/training-wizard";
 
 
 function ErrorFallback({ error }: { error: Error }) {
@@ -277,6 +278,7 @@ function App() {
                 <ProtectedRoute path="/community" component={CommunityPage} />
                 <ProtectedRoute path="/users/:id" component={UserProfile} />
                 <ProtectedRoute path="/achievements" component={AchievementsDashboard} />
+                <ProtectedRoute path="/wizard" component={TrainingWizard} />
                 <Route component={NotFound} />
               </Switch>
             </Layout>
