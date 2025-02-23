@@ -107,15 +107,15 @@ function Layout({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-14 items-center justify-between">
-          {/* Mobile Menu Button */}
+          {/* Mobile Menu Button and Logo */}
           <div className="flex items-center gap-4">
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="lg:hidden">
+                <Button variant="ghost" size="icon">
                   <Menu className="h-6 w-6" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-80">
+              <SheetContent side="left" className="w-[85vw] sm:w-80">
                 <SheetHeader className="pb-6">
                   <SheetTitle>
                     <div className="flex items-center gap-2">
@@ -139,25 +139,18 @@ function Layout({ children }: { children: React.ReactNode }) {
                   </div>
 
                   {/* Navigation Links */}
-                  <TooltipProvider>
-                    <nav className="space-y-2">
-                      {menuItems.map((item) => (
-                        <Tooltip key={item.href}>
-                          <TooltipTrigger asChild>
-                            <Link href={item.href}>
-                              <a className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${location === item.href ? "bg-primary/10" : "hover:bg-primary/10"}`}>
-                                <item.icon className="h-5 w-5" />
-                                {item.label}
-                              </a>
-                            </Link>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>{item.tooltip}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      ))}
-                    </nav>
-                  </TooltipProvider>
+                  <nav className="space-y-2">
+                    {menuItems.map((item) => (
+                      <Link key={item.href} href={item.href}>
+                        <a className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                          location === item.href ? "bg-primary/10" : "hover:bg-primary/10"
+                        }`}>
+                          <item.icon className="h-5 w-5" />
+                          {item.label}
+                        </a>
+                      </Link>
+                    ))}
+                  </nav>
 
                   {/* Quick Actions */}
                   <div className="space-y-2">
@@ -173,9 +166,9 @@ function Layout({ children }: { children: React.ReactNode }) {
                   </div>
 
                   {/* Settings & Logout */}
-                  <div className="space-y-2 mt-auto">
+                  <div className="mt-auto space-y-2">
                     <Link href="/settings">
-                      <a className="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-primary/10 transition-colors">
+                      <a className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/10 transition-colors">
                         <Settings className="h-5 w-5" />
                         Settings
                       </a>
@@ -201,70 +194,41 @@ function Layout({ children }: { children: React.ReactNode }) {
             </Link>
           </div>
 
-          {/* Desktop Navigation */}
-          <TooltipProvider>
-            <nav className="hidden lg:flex items-center gap-6">
-              {menuItems.map((item) => (
-                <Tooltip key={item.href}>
-                  <TooltipTrigger asChild>
-                    <Link href={item.href}>
-                      <a className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                        location === item.href ? "bg-primary/10" : "hover:bg-primary/10"
-                      }`}>
-                        <item.icon className="h-4 w-4" />
-                        {item.label}
-                      </a>
-                    </Link>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{item.tooltip}</p>
-                  </TooltipContent>
-                </Tooltip>
-              ))}
-            </nav>
-          </TooltipProvider>
-
           {/* User Menu */}
-          <div className="flex items-center gap-4">
-            <Button variant="outline" size="sm" className="hidden lg:flex gap-2">
-              <Plus className="h-4 w-4" />
-              Log Training
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Avatar className="h-8 w-8 cursor-pointer hover:ring-2 hover:ring-primary/20 transition-all">
-                  <AvatarFallback>{user?.username?.slice(0, 2).toUpperCase()}</AvatarFallback>
-                </Avatar>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <Link href="/profile">
-                  <DropdownMenuItem className="cursor-pointer">
-                    <User className="mr-2 h-4 w-4" />
-                    Profile
-                  </DropdownMenuItem>
-                </Link>
-                <Link href="/settings">
-                  <DropdownMenuItem className="cursor-pointer">
-                    <Settings className="mr-2 h-4 w-4" />
-                    Settings
-                  </DropdownMenuItem>
-                </Link>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  className="cursor-pointer text-red-500 focus:text-red-500"
-                  onClick={() => logoutMutation.mutate()}
-                >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Logout
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Avatar className="h-8 w-8 cursor-pointer hover:ring-2 hover:ring-primary/20 transition-all">
+                <AvatarFallback>{user?.username?.slice(0, 2).toUpperCase()}</AvatarFallback>
+              </Avatar>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <Link href="/profile">
+                <DropdownMenuItem className="cursor-pointer">
+                  <User className="mr-2 h-4 w-4" />
+                  Profile
                 </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+              </Link>
+              <Link href="/settings">
+                <DropdownMenuItem className="cursor-pointer">
+                  <Settings className="mr-2 h-4 w-4" />
+                  Settings
+                </DropdownMenuItem>
+              </Link>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="cursor-pointer text-red-500 focus:text-red-500"
+                onClick={() => logoutMutation.mutate()}
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Logout
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </header>
-      <main className="container mx-auto">
+      <main className="container mx-auto p-4">
         {children}
       </main>
     </div>
