@@ -19,11 +19,7 @@ import {
   Trophy,
   Star,
   Target,
-  Award,
-  Medal,
   Shield,
-  BookOpen,
-  Flame,
   Clock,
   Dumbbell,
   Brain,
@@ -95,7 +91,7 @@ function AchievementsDashboard() {
       </div>
 
       <Tabs value={selectedView} onValueChange={setSelectedView}>
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <Trophy className="h-4 w-4" />
             Overview
@@ -103,10 +99,6 @@ function AchievementsDashboard() {
           <TabsTrigger value="progress" className="flex items-center gap-2">
             <Star className="h-4 w-4" />
             Progress
-          </TabsTrigger>
-          <TabsTrigger value="howto" className="flex items-center gap-2">
-            <Award className="h-4 w-4" />
-            How to Earn
           </TabsTrigger>
         </TabsList>
 
@@ -160,113 +152,6 @@ function AchievementsDashboard() {
               );
             })}
           </div>
-        </TabsContent>
-
-        <TabsContent value="howto" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>How to Earn Achievements</CardTitle>
-              <CardDescription>
-                Guide to unlocking achievements in each category
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <h3 className="font-semibold flex items-center gap-2">
-                  <Brain className="h-5 w-5" />
-                  Technique Mastery
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-4 rounded-lg bg-muted/50">
-                    <h4 className="font-medium mb-2">Technique Explorer</h4>
-                    <p className="text-sm text-muted-foreground">Log and practice 5 different techniques</p>
-                    <Badge variant="outline" className="mt-2">Bronze</Badge>
-                  </div>
-                  <div className="p-4 rounded-lg bg-muted/50">
-                    <h4 className="font-medium mb-2">Technique Master</h4>
-                    <p className="text-sm text-muted-foreground">Successfully practice a technique 15 times</p>
-                    <Badge variant="outline" className="mt-2">Gold</Badge>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <h3 className="font-semibold flex items-center gap-2">
-                  <Target className="h-5 w-5" />
-                  Submission Mastery
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-4 rounded-lg bg-muted/50">
-                    <h4 className="font-medium mb-2">Submission Hunter</h4>
-                    <p className="text-sm text-muted-foreground">Successfully execute 3 submissions</p>
-                    <Badge variant="outline" className="mt-2">Bronze</Badge>
-                  </div>
-                  <div className="p-4 rounded-lg bg-muted/50">
-                    <h4 className="font-medium mb-2">Submission Expert</h4>
-                    <p className="text-sm text-muted-foreground">Successfully execute 40 submissions</p>
-                    <Badge variant="outline" className="mt-2">Diamond</Badge>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <h3 className="font-semibold flex items-center gap-2">
-                  <Shield className="h-5 w-5" />
-                  Escape Mastery
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-4 rounded-lg bg-muted/50">
-                    <h4 className="font-medium mb-2">Escape Artist</h4>
-                    <p className="text-sm text-muted-foreground">Successfully perform 3 escapes</p>
-                    <Badge variant="outline" className="mt-2">Bronze</Badge>
-                  </div>
-                  <div className="p-4 rounded-lg bg-muted/50">
-                    <h4 className="font-medium mb-2">Grand Defender</h4>
-                    <p className="text-sm text-muted-foreground">Successfully perform 40 escapes</p>
-                    <Badge variant="outline" className="mt-2">Diamond</Badge>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <h3 className="font-semibold flex items-center gap-2">
-                  <Clock className="h-5 w-5" />
-                  Training Consistency
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-4 rounded-lg bg-muted/50">
-                    <h4 className="font-medium mb-2">Dedicated Student</h4>
-                    <p className="text-sm text-muted-foreground">Log 5 training sessions</p>
-                    <Badge variant="outline" className="mt-2">Bronze</Badge>
-                  </div>
-                  <div className="p-4 rounded-lg bg-muted/50">
-                    <h4 className="font-medium mb-2">Mat Warrior</h4>
-                    <p className="text-sm text-muted-foreground">Complete 100 training sessions</p>
-                    <Badge variant="outline" className="mt-2">Diamond</Badge>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <h3 className="font-semibold flex items-center gap-2">
-                  <Dumbbell className="h-5 w-5" />
-                  Focus Areas
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-4 rounded-lg bg-muted/50">
-                    <h4 className="font-medium mb-2">Well-Rounded</h4>
-                    <p className="text-sm text-muted-foreground">Train in 3 different focus areas</p>
-                    <Badge variant="outline" className="mt-2">Bronze</Badge>
-                  </div>
-                  <div className="p-4 rounded-lg bg-muted/50">
-                    <h4 className="font-medium mb-2">Area Specialist</h4>
-                    <p className="text-sm text-muted-foreground">Complete 50 sessions in a single focus area</p>
-                    <Badge variant="outline" className="mt-2">Diamond</Badge>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </TabsContent>
 
         <TabsContent value="progress" className="space-y-4">

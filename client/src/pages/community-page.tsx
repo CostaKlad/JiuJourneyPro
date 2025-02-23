@@ -380,17 +380,44 @@ function CommunityPage() {
 
                 <QuickStats stats={userStats || defaultStats} id="achievements-section" />
 
+                {/* Badges Section */}
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium">Achievements</span>
-                    <Button variant="ghost" size="sm" className="h-8">
-                      View All
-                    </Button>
+                    <span className="text-sm font-medium">Recent Achievements</span>
+                    <Link href="/achievements">
+                      <Button variant="ghost" size="sm" className="h-8">
+                        View All
+                      </Button>
+                    </Link>
                   </div>
-                  <div className="flex gap-2">
-                    {(userStats?.achievements || []).map((achievement) => (
-                      <AchievementBadge key={achievement.id} achievement={achievement} />
-                    ))}
+                  <div className="grid grid-cols-6 gap-2">
+                    {(userStats?.achievements || [])
+                      .filter(a => a.unlocked)
+                      .slice(0, 6)
+                      .map((achievement) => (
+                        <TooltipProvider key={achievement.id}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="relative inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary/20">
+                                {achievement.type === 'streak' && <Flame className="w-5 h-5 text-primary" />}
+                                {achievement.type === 'technique' && <BookOpen className="w-5 h-5 text-primary" />}
+                                {achievement.type === 'competition' && <Trophy className="w-5 h-5 text-primary" />}
+                                {achievement.type === 'teaching' && <Star className="w-5 h-5 text-primary" />}
+                                {achievement.type === 'attendance' && <Shield className="w-5 h-5 text-primary" />}
+                                {achievement.level && achievement.level > 1 && (
+                                  <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-yellow-400 text-[10px] font-bold flex items-center justify-center">
+                                    {achievement.level}
+                                  </div>
+                                )}
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="font-semibold">{achievement.name}</p>
+                              <p className="text-sm text-muted-foreground">{achievement.description}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      ))}
                   </div>
                 </div>
 
