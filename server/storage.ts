@@ -3,9 +3,7 @@ import { db } from "./db";
 
 import { Client } from '@replit/object-storage';
 
-const objectStorage = new Client({
-  defaultBucket: process.env.REPL_SLUG || 'default-bucket'
-});
+const objectStorage = new Client();
 
 import { eq, and, desc, sql } from "drizzle-orm";
 import session from "express-session";
