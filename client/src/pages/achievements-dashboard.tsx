@@ -22,33 +22,25 @@ import {
   Dumbbell,
   Brain,
 } from "lucide-react";
-import { AchievementCategory, AchievementTier } from "@shared/schema";
+import { AchievementCategory } from "@shared/schema";
 
 interface Achievement {
   id: number;
   name: string;
   description: string;
   category: keyof typeof AchievementCategory;
-  tier: keyof typeof AchievementTier;
   progressMax: number;
   currentProgress: number;
   unlocked: boolean;
 }
 
-const TIER_COLORS = {
-  BRONZE: "bg-orange-100 text-orange-800 border-orange-200",
-  SILVER: "bg-gray-100 text-gray-800 border-gray-200",
-  GOLD: "bg-yellow-100 text-yellow-800 border-yellow-200",
-  DIAMOND: "bg-blue-100 text-blue-800 border-blue-200"
-} as const;
-
-const CATEGORY_ICONS: Record<keyof typeof AchievementCategory, typeof Brain> = {
+const CATEGORY_ICONS = {
   TECHNIQUE_MASTERY: Brain,
   TRAINING_CONSISTENCY: Clock,
   SUBMISSION_MASTERY: Target,
   ESCAPE_MASTERY: Brain,
   FOCUS_AREA: Dumbbell
-};
+} as const;
 
 function AchievementsDashboard() {
   const [selectedView, setSelectedView] = useState("overview");
@@ -57,7 +49,7 @@ function AchievementsDashboard() {
     queryKey: ["/api/achievements/progress"],
     refetchOnMount: true,
     refetchOnWindowFocus: true,
-    staleTime: 1000 * 60, // Consider data stale after 1 minute
+    staleTime: 1000 * 60,
   });
 
   useEffect(() => {
@@ -80,7 +72,7 @@ function AchievementsDashboard() {
             Achievement Progress
           </h1>
           <p className="text-muted-foreground">
-            Track your BJJ journey and unlock achievements
+            Track your BJJ journey
           </p>
         </div>
       </div>
@@ -118,16 +110,10 @@ function AchievementsDashboard() {
                     {catAchievements.map((achievement) => (
                       <div
                         key={achievement.id}
-                        className={cn(
-                          "p-4 rounded-lg border",
-                          achievement.unlocked
-                            ? TIER_COLORS[achievement.tier]
-                            : "bg-muted/50"
-                        )}
+                        className="p-4 rounded-lg border bg-muted/50"
                       >
                         <div className="flex items-center justify-between mb-2">
                           <h3 className="font-semibold">{achievement.name}</h3>
-                          {/* Removed Badge */}
                         </div>
                         <p className="text-sm text-muted-foreground mb-2">
                           {achievement.description}
