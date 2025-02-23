@@ -7,7 +7,6 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { TourProvider } from "@/hooks/use-tour";
 import { TourGuide } from "@/components/ui/tour-guide";
 import { ProtectedRoute } from "./lib/protected-route";
-import { ErrorBoundary } from "react-error-boundary";
 import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
 import TechniqueLibrary from "@/pages/technique-library";
@@ -16,6 +15,7 @@ import CommunityPage from "@/pages/community-page";
 import UserProfile from "@/pages/user-profile";
 import AchievementsDashboard from "@/pages/achievements-dashboard";
 import TrainingWizard from "@/pages/training-wizard";
+import SettingsPage from "@/pages/settings-page";
 import NotFound from "@/pages/not-found";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -35,6 +35,7 @@ import {
   Brain
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { ErrorBoundary } from "react-error-boundary";
 
 
 const menuItems = [
@@ -218,6 +219,7 @@ function App() {
                 <ProtectedRoute path="/users/:id" component={UserProfile} />
                 <ProtectedRoute path="/achievements" component={AchievementsDashboard} />
                 <ProtectedRoute path="/training-wizard" component={TrainingWizard} />
+                <ProtectedRoute path="/settings" component={SettingsPage} />
                 <Route component={NotFound} />
               </Switch>
             </Layout>
