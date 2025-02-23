@@ -20,26 +20,29 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { mockFollowers, mockFollowing, mockTrainingLogs, mockSuggestedPartners } from "@/lib/mock-data";
 import { Link } from "wouter";
 
-type ExtendedUser = Pick<User, 'id' | 'username' | 'beltRank' | 'gym'>;
-
-interface TrainingLogEntry {
+type TrainingLogComment = {
   id: number;
   user: ExtendedUser;
+  content: string;
+  createdAt: string;
+};
+
+type TrainingLogEntry = {
+  id: number;
+  userId: number;
   date: string;
   type: string;
   duration: number;
-  energyLevel: number;
-  techniquesPracticed: string[];
-  notes: string;
+  energyLevel?: number;
+  techniquesPracticed?: string[];
+  notes?: string;
   likes: number;
   hasLiked: boolean;
-  comments: {
-    id: number;
-    user: ExtendedUser;
-    content: string;
-    createdAt: string;
-  }[];
-}
+  comments: TrainingLogComment[];
+  user?: ExtendedUser; // Make user optional since it might not be populated
+};
+
+type ExtendedUser = Pick<User, 'id' | 'username' | 'beltRank' | 'gym'>;
 
 interface TrainingStats {
   totalSessions: number;
@@ -356,21 +359,25 @@ function CommunityPage() {
                 {activityFeed?.map((log) => (
                   <Card key={log.id}>
                     <CardHeader className="flex flex-row items-start gap-4 pb-2">
-                      <Link href={`/users/${log.user.id}`}>
-                        <Avatar>
-                          <AvatarFallback className="bg-primary/10">
-                            {log.user.username.slice(0, 2).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                      </Link>
+                      {log.user && (
+                        <Link href={`/users/${log.user.id}`}>
+                          <Avatar>
+                            <AvatarFallback className="bg-primary/10">
+                              {log.user.username.slice(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                        </Link>
+                      )}
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
                           <div>
-                            <Link href={`/users/${log.user.id}`}>
-                              <CardTitle className="text-lg hover:text-primary">
-                                {log.user.username}
-                              </CardTitle>
-                            </Link>
+                            {log.user && (
+                              <Link href={`/users/${log.user.id}`}>
+                                <CardTitle className="text-lg hover:text-primary">
+                                  {log.user.username}
+                                </CardTitle>
+                              </Link>
+                            )}
                             <CardDescription>
                               {formatDistanceToNow(new Date(log.date), { addSuffix: true })}
                             </CardDescription>
@@ -388,13 +395,15 @@ function CommunityPage() {
                             <span className="text-muted-foreground">Duration:</span>{" "}
                             <span className="font-medium">{log.duration} minutes</span>
                           </div>
-                          <div>
-                            <span className="text-muted-foreground">Energy Level:</span>{" "}
-                            <span className="font-medium">{log.energyLevel}/5</span>
-                          </div>
+                          {log.energyLevel && (
+                            <div>
+                              <span className="text-muted-foreground">Energy Level:</span>{" "}
+                              <span className="font-medium">{log.energyLevel}/5</span>
+                            </div>
+                          )}
                         </div>
 
-                        {log.techniquesPracticed?.length > 0 && (
+                        {log.techniquesPracticed && log.techniquesPracticed.length > 0 && (
                           <div>
                             <h4 className="text-sm font-medium mb-2">Techniques:</h4>
                             <div className="flex flex-wrap gap-2">
