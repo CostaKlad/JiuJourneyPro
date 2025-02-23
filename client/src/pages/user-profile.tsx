@@ -33,26 +33,31 @@ function UserProfile() {
   const { user: currentUser } = useAuth();
   const [selectedTab, setSelectedTab] = useState("activity");
 
-  const { data: profile, refetch: refetchProfile } = useQuery({
+  const { data: profile, isLoading, refetch: refetchProfile } = useQuery({
     queryKey: ["/api/users", id],
     queryFn: async () => {
-      // For now, return mock data with persistent follow state
-      return {
-        id: parseInt(id!),
-        username: "JohnDoe",
-        beltRank: "Purple",
-        gym: "Gracie Barra HQ",
-        isFollowing: false,
-      };
+      const response = await apiRequest("GET", `/api/users/${id}`);
+      return response.json();
     },
+    enabled: !!id
   });
 
-  const { data: activityFeed = [] } = useQuery({
+  const { data: activityFeed = [], isLoading: isActivityLoading } = useQuery({
     queryKey: ["/api/users", id, "activity"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", `/api/users/${id}/activity`);
+      return response.json();
+    },
+    enabled: !!id
   });
 
-  const { data: userStats } = useQuery<TrainingStats>({
+  const { data: userStats, isLoading: isStatsLoading } = useQuery<TrainingStats>({
     queryKey: ["/api/users", id, "stats"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", `/api/users/${id}/stats`);
+      return response.json();
+    },
+    enabled: !!id
   });
 
   const followMutation = useMutation({
@@ -64,7 +69,7 @@ function UserProfile() {
       queryClient.invalidateQueries({ queryKey: ["/api/following"] });
       queryClient.invalidateQueries({ queryKey: ["/api/followers"] });
       refetchProfile();
-    },
+    }
   });
 
   const unfollowMutation = useMutation({
@@ -76,11 +81,11 @@ function UserProfile() {
       queryClient.invalidateQueries({ queryKey: ["/api/following"] });
       queryClient.invalidateQueries({ queryKey: ["/api/followers"] });
       refetchProfile();
-    },
+    }
   });
 
-  if (!profile) {
-    return <div>Loading...</div>;
+  if (isLoading || isActivityLoading || isStatsLoading || !profile) {
+    return <div className="container mx-auto p-6">Loading...</div>;
   }
 
   return (
@@ -96,14 +101,14 @@ function UserProfile() {
             <div className="flex items-center gap-4">
               <Avatar className="h-32 w-32 border-4 border-background">
                 <AvatarFallback className="text-3xl bg-primary/10">
-                  {profile.username.slice(0, 2).toUpperCase()}
+                  {profile.username?.slice(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <div>
                 <h1 className="text-3xl font-bold">{profile.username}</h1>
                 <p className="text-muted-foreground flex items-center gap-2 mt-1">
                   <MapPin className="h-4 w-4" />
-                  {profile.gym}
+                  {profile.gym || "No gym specified"}
                 </p>
                 <Badge variant="outline" className="mt-2">
                   {profile.beltRank} Belt
