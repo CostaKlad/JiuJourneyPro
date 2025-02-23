@@ -411,22 +411,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
 
-    // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
-    if (!allowedTypes.includes(req.file.mimetype)) {
-      return res.status(400).json({ 
-        error: 'Invalid file type. Only JPG, PNG and GIF images are allowed.' 
-      });
-    }
-
-    // Validate file size (max 5MB)
-    const maxSize = 5 * 1024 * 1024; // 5MB in bytes
-    if (req.file.size > maxSize) {
-      return res.status(400).json({ 
-        error: 'File too large. Maximum size is 5MB.' 
-      });
-    }
-
     try {
       // Convert file to base64 for storage
       const base64Image = req.file.buffer.toString('base64');
@@ -441,11 +425,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       console.error('Avatar upload error:', error);
-      if (error instanceof StorageError) {
-        res.status(400).json({ error: error.message });
-      } else {
-        res.status(500).json({ error: 'Failed to upload avatar' });
-      }
+      res.status(500).json({ error: 'Failed to upload avatar' });
     }
   });
 
