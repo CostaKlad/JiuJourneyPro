@@ -1,14 +1,14 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import multer from 'multer';
-import { ReplitObjectStorage } from '@replit/object-storage';
+import { Client } from '@replit/object-storage';
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { getTrainingSuggestions, getPeerRecommendations } from "./openai";
 import { insertTrainingLogSchema, insertCommentSchema } from "@shared/schema";
 import { pointsService } from "./points-service";
 
-const objectStorage = new ReplitObjectStorage();
+const objectStorage = new Client();
 const upload = multer({ storage: multer.memoryStorage() });
 
 export async function registerRoutes(app: Express): Promise<Server> {
