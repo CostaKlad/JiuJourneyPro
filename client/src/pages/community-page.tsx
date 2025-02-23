@@ -375,7 +375,7 @@ function CommunityPage() {
                         <Link href={`/users/${log.user.id}`}>
                           <Avatar className="h-10 w-10">
                             {log.user.avatarUrl ? (
-                              <AvatarImage src={log.user.avatarUrl} />
+                              <AvatarImage src={log.user.avatarUrl} alt={log.user.username} />
                             ) : (
                               <AvatarFallback className="bg-primary/10">
                                 {log.user.username.slice(0, 2).toUpperCase()}
