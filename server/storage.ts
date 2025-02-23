@@ -95,7 +95,7 @@ export class DatabaseStorage implements IStorage {
         date: log.date,
         type: log.type,
         gym: log.gym || null,
-        techniques: log.techniquesPracticed || [], 
+        // Remove duplicate field, use only techniquesPracticed
         techniquesPracticed: log.techniquesPracticed || [],
         rollingSummary: log.rollingSummary || null,
         submissionsAttempted: log.submissionsAttempted || [],
