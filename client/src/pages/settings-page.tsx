@@ -56,10 +56,18 @@ export default function SettingsPage() {
     mutationFn: async (file: File) => {
       const formData = new FormData();
       formData.append("avatar", file);
-      const response = await apiRequest("POST", "/api/user/avatar", formData, {
-        // Override default JSON content type for multipart/form-data
-        headers: {}
+
+      const response = await fetch("/api/user/avatar", {
+        method: "POST",
+        credentials: "include",
+        body: formData,
       });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to upload avatar');
+      }
+
       return response.json();
     },
     onSuccess: () => {
@@ -70,10 +78,10 @@ export default function SettingsPage() {
       });
       setIsUploading(false);
     },
-    onError: () => {
+    onError: (error: Error) => {
       toast({
         title: "Error",
-        description: "Failed to upload avatar. Please try again.",
+        description: error.message || "Failed to upload avatar. Please try again.",
         variant: "destructive"
       });
       setIsUploading(false);
@@ -136,7 +144,7 @@ export default function SettingsPage() {
             onClick={handleAvatarClick}
           >
             <Avatar className="h-32 w-32">
-              <AvatarImage src={user?.avatarUrl} />
+              <AvatarImage src={user?.avatarUrl || undefined} />
               <AvatarFallback className="text-4xl">
                 {user?.username?.slice(0, 2).toUpperCase()}
               </AvatarFallback>
@@ -216,7 +224,7 @@ export default function SettingsPage() {
                   <FormItem>
                     <FormLabel>Gym</FormLabel>
                     <FormControl>
-                      <Input {...field} />
+                      <Input {...field} value={field.value || ''} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
