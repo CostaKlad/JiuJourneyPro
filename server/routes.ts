@@ -406,6 +406,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(req.user);
   });
 
+  app.patch("/api/user", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const { gym } = req.body;
+      const updatedUser = await storage.updateUser(req.user.id, { gym });
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating user:", error);
+      res.status(500).json({ error: "Failed to update profile" });
+    }
+  });
+
   // Update avatar routes with proper implementation
   app.post("/api/user/avatar", upload.single('avatar'), async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
