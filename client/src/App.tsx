@@ -121,7 +121,14 @@ function Layout({ children }: { children: React.ReactNode }) {
                 {/* User Profile Section */}
                 <div className="flex items-center gap-4 py-6 border-b">
                   <Avatar className="h-10 w-10">
-                    <AvatarFallback>{user?.username?.slice(0, 2).toUpperCase()}</AvatarFallback>
+                    {user?.avatarUrl ? (
+                      <AvatarImage 
+                        src={user.avatarUrl} 
+                        alt={user.username || ''} 
+                      />
+                    ) : (
+                      <AvatarFallback>{user?.username?.slice(0, 2).toUpperCase()}</AvatarFallback>
+                    )}
                   </Avatar>
                   <div>
                     <div className="font-semibold">{user?.username}</div>
