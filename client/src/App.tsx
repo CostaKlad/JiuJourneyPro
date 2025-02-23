@@ -29,7 +29,6 @@ import {
   Target,
   Swords,
   User,
-  BookOpen,
   Brain
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
@@ -110,9 +109,9 @@ function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-14 items-center justify-between">
+        <div className="container flex h-14 items-center">
           {/* Mobile Menu Button and Logo */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 flex-1">
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon">
@@ -207,38 +206,13 @@ function Layout({ children }: { children: React.ReactNode }) {
             </Link>
           </div>
 
-          {/* User Menu */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Avatar className="h-8 w-8 cursor-pointer hover:ring-2 hover:ring-primary/20 transition-all">
-                <AvatarFallback>{user?.username?.slice(0, 2).toUpperCase()}</AvatarFallback>
-              </Avatar>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <Link href="/profile">
-                <DropdownMenuItem className="cursor-pointer">
-                  <User className="mr-2 h-4 w-4" />
-                  Profile
-                </DropdownMenuItem>
-              </Link>
-              <Link href="/settings">
-                <DropdownMenuItem className="cursor-pointer">
-                  <Settings className="mr-2 h-4 w-4" />
-                  Settings
-                </DropdownMenuItem>
-              </Link>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="cursor-pointer text-red-500 focus:text-red-500"
-                onClick={() => logoutMutation.mutate()}
-              >
-                <LogOut className="mr-2 h-4 w-4" />
-                Logout
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {/* Profile Avatar */}
+          <Avatar
+            className="h-8 w-8 cursor-pointer hover:ring-2 hover:ring-primary/20 transition-all"
+            onClick={() => setIsOpen(true)}
+          >
+            <AvatarFallback>{user?.username?.slice(0, 2).toUpperCase()}</AvatarFallback>
+          </Avatar>
         </div>
       </header>
       <main className="container mx-auto p-4">
