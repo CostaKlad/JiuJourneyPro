@@ -79,6 +79,6 @@
   }
 
   .mobile-main-content {
-    @apply pt-16 pb-[var(--mobile-bottom-nav-height)] mt-4;
+    @apply pt-4 md:pt-6 pb-[var(--mobile-bottom-nav-height)] md:pb-8;
   }
 }
