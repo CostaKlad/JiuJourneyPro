@@ -100,7 +100,16 @@ function UserProfile() {
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-4">
               <Avatar className="h-32 w-32 border-4 border-background">
-                <AvatarImage src={profile.avatarUrl} alt={profile.username} />
+                {profile.avatarUrl && (
+                  <AvatarImage 
+                    src={profile.avatarUrl} 
+                    alt={profile.username}
+                    onError={(e) => {
+                      const img = e.target as HTMLImageElement;
+                      img.style.display = 'none';
+                    }}
+                  />
+                )}
                 <AvatarFallback className="text-3xl bg-primary/10">
                   {profile.username?.slice(0, 2).toUpperCase()}
                 </AvatarFallback>

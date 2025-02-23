@@ -231,6 +231,16 @@ function CommunityPage() {
 
               <div className="relative px-6 -mt-12">
                 <Avatar className="h-24 w-24 border-4 border-background">
+                  {user?.avatarUrl && (
+                    <AvatarImage 
+                      src={user.avatarUrl} 
+                      alt={user.username || ''}
+                      onError={(e) => {
+                        const img = e.target as HTMLImageElement;
+                        img.style.display = 'none';
+                      }}
+                    />
+                  )}
                   <AvatarFallback className="text-2xl bg-primary/10">
                     {user?.username?.slice(0, 2).toUpperCase()}
                   </AvatarFallback>
@@ -374,13 +384,20 @@ function CommunityPage() {
                       {log.user && (
                         <Link href={`/users/${log.user.id}`}>
                           <Avatar className="h-10 w-10">
-                            {log.user.avatarUrl ? (
-                              <AvatarImage src={log.user.avatarUrl} alt={log.user.username} />
-                            ) : (
-                              <AvatarFallback className="bg-primary/10">
-                                {log.user.username.slice(0, 2).toUpperCase()}
-                              </AvatarFallback>
+                            {log.user.avatarUrl && (
+                              <AvatarImage
+                                src={log.user.avatarUrl}
+                                alt={log.user.username}
+                                onError={(e) => {
+                                  // If image fails to load, fallback will show
+                                  const img = e.target as HTMLImageElement;
+                                  img.style.display = 'none';
+                                }}
+                              />
                             )}
+                            <AvatarFallback className="bg-primary/10">
+                              {log.user.username.slice(0, 2).toUpperCase()}
+                            </AvatarFallback>
                           </Avatar>
                         </Link>
                       )}
