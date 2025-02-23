@@ -99,110 +99,101 @@ function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Simplified header with only hamburger menu and logo */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-14 items-center">
-          <div className="flex items-center gap-4 flex-1">
-            <Sheet open={isOpen} onOpenChange={setIsOpen}>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Menu className="h-6 w-6" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="w-[85vw] sm:w-80">
-                <SheetHeader className="pb-6">
-                  <SheetTitle>
-                    <div className="flex items-center gap-2">
-                      <div className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-                        OssRyu
-                      </div>
-                    </div>
-                  </SheetTitle>
-                </SheetHeader>
-
-                <div className="flex flex-col gap-6">
-                  {/* User Profile Section */}
-                  <div className="flex items-center gap-4 pb-6 border-b">
-                    <Avatar className="h-10 w-10">
-                      <AvatarFallback>{user?.username?.slice(0, 2).toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <div className="font-semibold">{user?.username}</div>
-                      <div className="text-sm text-muted-foreground">{user?.beltRank} Belt</div>
+          <Sheet open={isOpen} onOpenChange={setIsOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="mr-4">
+                <Menu className="h-6 w-6" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-[85vw] sm:w-80">
+              <SheetHeader className="pb-6">
+                <SheetTitle>
+                  <div className="flex items-center gap-2">
+                    <div className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+                      OssRyu
                     </div>
                   </div>
+                </SheetTitle>
+              </SheetHeader>
 
-                  {/* Navigation Links */}
-                  <nav className="space-y-2">
-                    {menuItems.map((item) => (
-                      <Link key={item.href} href={item.href}>
-                        <a 
-                          onClick={() => handleNavigate(item.href)}
-                          className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                            location === item.href ? "bg-primary/10" : "hover:bg-primary/10"
-                          }`}
-                        >
-                          <item.icon className="h-5 w-5" />
-                          {item.label}
-                        </a>
-                      </Link>
-                    ))}
-                  </nav>
-
-                  {/* Quick Actions */}
-                  <div className="space-y-2">
-                    <h4 className="px-4 text-sm font-medium">Quick Actions</h4>
-                    <Button className="w-full justify-start gap-2" onClick={() => setIsOpen(false)}>
-                      <Plus className="h-4 w-4" />
-                      Log Training
-                    </Button>
-                    <Button variant="outline" className="w-full justify-start gap-2" onClick={() => setIsOpen(false)}>
-                      <Target className="h-4 w-4" />
-                      Find Partners
-                    </Button>
-                  </div>
-
-                  {/* Settings & Logout */}
-                  <div className="mt-auto space-y-2">
-                    <Link href="/settings">
-                      <a 
-                        className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/10 transition-colors"
-                        onClick={() => setIsOpen(false)}
-                      >
-                        <Settings className="h-5 w-5" />
-                        Settings
-                      </a>
-                    </Link>
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-100"
-                      onClick={() => {
-                        setIsOpen(false);
-                        logoutMutation.mutate();
-                      }}
-                    >
-                      <LogOut className="h-5 w-5 mr-2" />
-                      Logout
-                    </Button>
+              <div className="flex flex-col gap-6">
+                {/* User Profile Section */}
+                <div className="flex items-center gap-4 pb-6 border-b">
+                  <Avatar className="h-10 w-10">
+                    <AvatarFallback>{user?.username?.slice(0, 2).toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <div className="font-semibold">{user?.username}</div>
+                    <div className="text-sm text-muted-foreground">{user?.beltRank} Belt</div>
                   </div>
                 </div>
-              </SheetContent>
-            </Sheet>
 
-            {/* Logo */}
-            <Link href="/">
-              <a className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent font-bold">
-                OssRyu
-              </a>
-            </Link>
-          </div>
+                {/* Navigation Links */}
+                <nav className="space-y-2">
+                  {menuItems.map((item) => (
+                    <Link key={item.href} href={item.href}>
+                      <a 
+                        onClick={() => handleNavigate(item.href)}
+                        className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                          location === item.href ? "bg-primary/10" : "hover:bg-primary/10"
+                        }`}
+                      >
+                        <item.icon className="h-5 w-5" />
+                        {item.label}
+                      </a>
+                    </Link>
+                  ))}
+                </nav>
 
-          {/* Profile Avatar */}
-          <Avatar
-            className="h-8 w-8 cursor-pointer hover:ring-2 hover:ring-primary/20 transition-all"
-            onClick={() => setIsOpen(true)}
-          >
-            <AvatarFallback>{user?.username?.slice(0, 2).toUpperCase()}</AvatarFallback>
-          </Avatar>
+                {/* Quick Actions */}
+                <div className="space-y-2">
+                  <h4 className="px-4 text-sm font-medium">Quick Actions</h4>
+                  <Button className="w-full justify-start gap-2" onClick={() => setIsOpen(false)}>
+                    <Plus className="h-4 w-4" />
+                    Log Training
+                  </Button>
+                  <Button variant="outline" className="w-full justify-start gap-2" onClick={() => setIsOpen(false)}>
+                    <Target className="h-4 w-4" />
+                    Find Partners
+                  </Button>
+                </div>
+
+                {/* Settings & Logout */}
+                <div className="mt-auto space-y-2">
+                  <Link href="/settings">
+                    <a 
+                      className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/10 transition-colors"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <Settings className="h-5 w-5" />
+                      Settings
+                    </a>
+                  </Link>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-100"
+                    onClick={() => {
+                      setIsOpen(false);
+                      logoutMutation.mutate();
+                    }}
+                  >
+                    <LogOut className="h-5 w-5 mr-2" />
+                    Logout
+                  </Button>
+                </div>
+              </div>
+            </SheetContent>
+          </Sheet>
+
+          {/* Logo */}
+          <Link href="/">
+            <a className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent font-bold">
+              OssRyu
+            </a>
+          </Link>
         </div>
       </header>
       <main className="container mx-auto p-4">
