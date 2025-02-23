@@ -7,12 +7,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import {
   Trophy,
@@ -34,17 +28,7 @@ interface Achievement {
   unlocked: boolean;
 }
 
-const CATEGORY_ICONS = {
-  TECHNIQUE_MASTERY: Brain,
-  TRAINING_CONSISTENCY: Clock,
-  SUBMISSION_MASTERY: Target,
-  ESCAPE_MASTERY: Brain,
-  FOCUS_AREA: Dumbbell
-} as const;
-
 function AchievementsDashboard() {
-  const [selectedView, setSelectedView] = useState("overview");
-
   const { data: achievements, refetch: refetchAchievements } = useQuery<Achievement[]>({
     queryKey: ["/api/achievements/progress"],
     refetchOnMount: true,
@@ -77,99 +61,54 @@ function AchievementsDashboard() {
         </div>
       </div>
 
-      <Tabs value={selectedView} onValueChange={setSelectedView}>
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="overview" className="flex items-center gap-2">
-            <Trophy className="h-4 w-4" />
-            Overview
-          </TabsTrigger>
-          <TabsTrigger value="progress" className="flex items-center gap-2">
-            <Star className="h-4 w-4" />
-            Progress
-          </TabsTrigger>
-        </TabsList>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {Object.entries(groupedAchievements || {}).map(([category, catAchievements]) => {
+          const IconComponent = {
+            TECHNIQUE_MASTERY: Brain,
+            TRAINING_CONSISTENCY: Clock,
+            SUBMISSION_MASTERY: Target,
+            ESCAPE_MASTERY: Brain,
+            FOCUS_AREA: Dumbbell
+          }[category as keyof typeof AchievementCategory] || Brain;
 
-        <TabsContent value="overview" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {Object.entries(groupedAchievements || {}).map(([category, catAchievements]) => {
-              const IconComponent = CATEGORY_ICONS[category as keyof typeof AchievementCategory];
-              return (
-                <Card key={category}>
-                  <CardHeader>
-                    <div className="flex items-center gap-2">
-                      {IconComponent && <IconComponent className="h-5 w-5" />}
-                      <CardTitle className="text-lg capitalize">
-                        {category.toLowerCase().replace('_', ' ')}
-                      </CardTitle>
-                    </div>
-                    <CardDescription>
-                      {catAchievements.length} achievements available
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {catAchievements.map((achievement) => (
-                      <div
-                        key={achievement.id}
-                        className="p-4 rounded-lg border bg-muted/50"
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <h3 className="font-semibold">{achievement.name}</h3>
-                        </div>
-                        <p className="text-sm text-muted-foreground mb-2">
-                          {achievement.description}
-                        </p>
-                        <Progress
-                          value={(achievement.currentProgress / achievement.progressMax) * 100}
-                        />
-                        <p className="text-xs text-right mt-1">
-                          {achievement.currentProgress} / {achievement.progressMax}
-                        </p>
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="progress" className="space-y-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <Card>
+          return (
+            <Card key={category}>
               <CardHeader>
-                <CardTitle>Achievement Progress</CardTitle>
+                <div className="flex items-center gap-2">
+                  <IconComponent className="h-5 w-5" />
+                  <CardTitle className="text-lg capitalize">
+                    {category.toLowerCase().replace('_', ' ')}
+                  </CardTitle>
+                </div>
                 <CardDescription>
-                  Your journey across all categories
+                  {catAchievements.length} achievements available
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {Object.entries(groupedAchievements || {}).map(([category, achievements]) => {
-                    const unlockedCount = achievements.filter(a => a.unlocked).length;
-                    const totalCount = achievements.length;
-                    const Icon = CATEGORY_ICONS[category as keyof typeof AchievementCategory];
-
-                    return (
-                      <div key={category} className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            {Icon && <Icon className="h-4 w-4" />}
-                            <span className="capitalize">{category.toLowerCase().replace('_', ' ')}</span>
-                          </div>
-                          <span className="text-sm text-muted-foreground">
-                            {unlockedCount} / {totalCount}
-                          </span>
-                        </div>
-                        <Progress value={(unlockedCount / totalCount) * 100} />
-                      </div>
-                    );
-                  })}
-                </div>
+              <CardContent className="space-y-4">
+                {catAchievements.map((achievement) => (
+                  <div
+                    key={achievement.id}
+                    className="p-4 rounded-lg border bg-muted/50"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="font-semibold">{achievement.name}</h3>
+                    </div>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      {achievement.description}
+                    </p>
+                    <Progress
+                      value={(achievement.currentProgress / achievement.progressMax) * 100}
+                    />
+                    <p className="text-xs text-right mt-1">
+                      {achievement.currentProgress} / {achievement.progressMax}
+                    </p>
+                  </div>
+                ))}
               </CardContent>
             </Card>
-          </div>
-        </TabsContent>
-      </Tabs>
+          );
+        })}
+      </div>
     </div>
   );
 }
