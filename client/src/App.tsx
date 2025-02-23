@@ -19,7 +19,6 @@ import SettingsPage from "@/pages/settings-page";
 import NotFound from "@/pages/not-found";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { NavigationLink } from "@/components/navigation-link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link, useLocation } from "wouter";
 import {
@@ -37,7 +36,6 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { ErrorBoundary } from "react-error-boundary";
-
 
 function ErrorFallback({ error }: { error: Error }) {
   return (
@@ -62,20 +60,16 @@ function Layout({ children }: { children: React.ReactNode }) {
       {/* Mobile-optimized header */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-14 md:h-16 items-center justify-between px-4">
-          <div className="flex items-center gap-2">
-            <div className="hidden md:flex items-center gap-6">
-              <NavigationLink href="/training">Training</NavigationLink>
-              <NavigationLink href="/community">Community</NavigationLink>
-              <NavigationLink href="/profile">Profile</NavigationLink>
-            </div>
+          <div className="flex items-center gap-4">
+            {/* Hamburger Menu - Always visible */}
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="md:hidden">
+                <Button variant="ghost" size="icon">
                   <Menu className="h-5 w-5" />
                   <span className="sr-only">Toggle menu</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-[85vw] sm:w-80 md:hidden">
+              <SheetContent side="left" className="w-[85vw] sm:w-80">
                 <SheetHeader>
                   <SheetTitle>
                     <div className="flex items-center gap-2">
@@ -165,7 +159,7 @@ function Layout({ children }: { children: React.ReactNode }) {
               </SheetContent>
             </Sheet>
 
-            {/* Logo for header */}
+            {/* Logo and Title */}
             <Link href="/">
               <a className="flex items-center gap-2">
                 <img 
@@ -173,9 +167,11 @@ function Layout({ children }: { children: React.ReactNode }) {
                   alt="OssRyu Logo" 
                   className="h-8 w-8 object-contain"
                 />
-                <div className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent font-bold flex items-center">
-                  <span className="inline">OssRyu</span>
-                  <span className="text-sm md:text-base font-semibold bg-gradient-to-r from-primary/80 to-purple-500/80 bg-clip-text text-transparent ml-2 hidden md:inline">
+                <div className="flex items-center">
+                  <span className="font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+                    OssRyu
+                  </span>
+                  <span className="text-sm font-medium bg-gradient-to-r from-primary/80 to-purple-500/80 bg-clip-text text-transparent ml-2 hidden md:inline">
                     Train. Track. Compete. Level Up.
                   </span>
                 </div>
