@@ -24,7 +24,7 @@ import {
   BookOpen,
   Flame,
   Loader2,
-  Target // Add Target to the imports
+  Target
 } from "lucide-react";
 import {
   LineChart,
@@ -302,36 +302,11 @@ function HomePage() {
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-              Welcome back, {user?.username}
-            </h1>
-            <p className="text-muted-foreground">Belt Rank: {user?.beltRank}</p>
-          </div>
-          <div className="flex gap-4">
-            <Link href="/techniques">
-              <Button variant="outline">
-                <BookOpenIcon className="mr-2 h-4 w-4" />
-                Technique Library
-              </Button>
-            </Link>
-            <Link href="/community">
-              <Button variant="outline">
-                <Users className="mr-2 h-4 w-4" />
-                Community
-              </Button>
-            </Link>
-            <Link href="/training-wizard">
-              <Button variant="outline">
-                <BrainIcon className="mr-2 h-4 w-4" />
-                Training Wizard
-              </Button>
-            </Link>
-            <Button variant="destructive" onClick={() => logoutMutation.mutate()}>
-              Logout
-            </Button>
-          </div>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+            Welcome back, {user?.username}
+          </h1>
+          <p className="text-muted-foreground">Belt Rank: {user?.beltRank}</p>
         </div>
 
         <Button
