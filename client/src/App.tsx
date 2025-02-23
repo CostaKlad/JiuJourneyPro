@@ -59,8 +59,8 @@ function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-background">
       {/* Mobile-optimized header */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 mobile-safe-area">
-        <div className="container flex h-[var(--mobile-header-height)] items-center justify-between px-4">
+      <header className="fixed top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 mobile-safe-area">
+        <div className="container flex h-[var(--mobile-header-height)] items-center justify-between px-4 w-full">
           <div className="flex items-center gap-2">
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>
