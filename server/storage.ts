@@ -1,5 +1,10 @@
 import { users, trainingLogs, techniques, followers, comments, type User, type TrainingLog, type Technique, type InsertUser, type Comment, type Follower } from "@shared/schema";
 import { db } from "./db";
+
+import { ReplitObjectStorage } from '@replit/object-storage';
+
+const objectStorage = new ReplitObjectStorage();
+
 import { eq, and, desc, sql } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";

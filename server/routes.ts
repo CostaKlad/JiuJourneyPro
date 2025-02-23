@@ -1,10 +1,15 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import multer from 'multer';
+import { ReplitObjectStorage } from '@replit/object-storage';
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { getTrainingSuggestions, getPeerRecommendations } from "./openai";
 import { insertTrainingLogSchema, insertCommentSchema } from "@shared/schema";
 import { pointsService } from "./points-service";
+
+const objectStorage = new ReplitObjectStorage();
+const upload = multer({ storage: multer.memoryStorage() });
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
@@ -393,6 +398,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error getting suggestions:", error);
       res.status(500).json({ error: "Failed to get suggestions" });
+    }
+  });
+
+  app.get("/api/user", (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    res.json(req.user);
+  });
+
+  app.post("/api/user/avatar", upload.single('avatar'), async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+
+    try {
+      const key = `avatars/${req.user.id}`;
+      await objectStorage.put(key, req.file.buffer);
+      const url = await objectStorage.getSignedUrl(key);
+      await storage.updateUser(req.user.id, { avatarUrl: url });
+      res.json({ url });
+    } catch (error) {
+      console.error('Avatar upload error:', error);
+      res.status(500).json({ error: 'Failed to upload avatar' });
+    }
+  });
+
+  app.get("/api/user/avatar/:userId", async (req, res) => {
+    try {
+      const key = `avatars/${req.params.userId}`;
+      const url = await objectStorage.getSignedUrl(key);
+      res.json({ url });
+    } catch (error) {
+      res.status(404).json({ error: 'Avatar not found' });
     }
   });
 

@@ -74,7 +74,8 @@ export const users = pgTable("users", {
   totalPoints: integer("total_points").notNull().default(0),
   level: integer("level").notNull().default(1),
   resetPasswordToken: text("reset_password_token"),
-  resetPasswordExpires: timestamp("reset_password_expires")
+  resetPasswordExpires: timestamp("reset_password_expires"),
+  avatarUrl: text("avatar_url")
 });
 
 // Strong password validation schema
