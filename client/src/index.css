@@ -79,6 +79,6 @@
   }
 
   .mobile-main-content {
-    @apply pt-[var(--mobile-header-height)] pb-[var(--mobile-bottom-nav-height)];
+    @apply pt-16 pb-[var(--mobile-bottom-nav-height)] mt-4;
   }
 }
