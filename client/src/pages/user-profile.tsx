@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useParams, useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/use-auth";
 import { User } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -100,6 +100,7 @@ function UserProfile() {
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-4">
               <Avatar className="h-32 w-32 border-4 border-background">
+                <AvatarImage src={profile.avatarUrl} alt={profile.username} />
                 <AvatarFallback className="text-3xl bg-primary/10">
                   {profile.username?.slice(0, 2).toUpperCase()}
                 </AvatarFallback>

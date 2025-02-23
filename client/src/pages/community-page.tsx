@@ -376,10 +376,10 @@ function CommunityPage() {
               <TabsContent value="feed" className="space-y-6">
                 {activityFeed?.map((log) => (
                   <Card key={log.id}>
-                    <CardHeader className="flex flex-row items-start gap-4 pb-2">
+                    <CardHeader className="flex flex-row items-start gap-4">
                       {log.user && (
                         <Link href={`/users/${log.user.id}`}>
-                          <Avatar>
+                          <Avatar className="h-10 w-10">
                             <AvatarFallback className="bg-primary/10">
                               {log.user.username.slice(0, 2).toUpperCase()}
                             </AvatarFallback>
