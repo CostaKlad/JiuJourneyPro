@@ -218,10 +218,6 @@ function CommunityPage() {
               <Users className="h-4 w-4" />
               Find Partners
             </Button>
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              Log Training
-            </Button>
           </div>
         </div>
 
