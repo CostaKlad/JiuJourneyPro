@@ -23,7 +23,8 @@ import {
   Shield,
   BookOpen,
   Flame,
-  Loader2
+  Loader2,
+  Target // Add Target to the imports
 } from "lucide-react";
 import {
   LineChart,
