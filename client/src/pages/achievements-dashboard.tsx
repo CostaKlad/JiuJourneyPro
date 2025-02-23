@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   Card,
@@ -9,12 +8,10 @@ import {
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import {
-  Trophy,
-  Star,
-  Target,
   Clock,
-  Dumbbell,
   Brain,
+  Target,
+  Dumbbell,
 } from "lucide-react";
 import { AchievementCategory } from "@shared/schema";
 
@@ -25,20 +22,15 @@ interface Achievement {
   category: keyof typeof AchievementCategory;
   progressMax: number;
   currentProgress: number;
-  unlocked: boolean;
 }
 
 function AchievementsDashboard() {
-  const { data: achievements, refetch: refetchAchievements } = useQuery<Achievement[]>({
+  const { data: achievements } = useQuery<Achievement[]>({
     queryKey: ["/api/achievements/progress"],
     refetchOnMount: true,
     refetchOnWindowFocus: true,
     staleTime: 1000 * 60,
   });
-
-  useEffect(() => {
-    refetchAchievements();
-  }, [refetchAchievements]);
 
   const groupedAchievements = achievements?.reduce<Record<string, Achievement[]>>((acc, achievement) => {
     if (!acc[achievement.category]) {
@@ -50,15 +42,13 @@ function AchievementsDashboard() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-            Achievement Progress
-          </h1>
-          <p className="text-muted-foreground">
-            Track your BJJ journey
-          </p>
-        </div>
+      <div>
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+          Progress Tracking
+        </h1>
+        <p className="text-muted-foreground">
+          Track your BJJ journey metrics
+        </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -67,7 +57,6 @@ function AchievementsDashboard() {
             TECHNIQUE_MASTERY: Brain,
             TRAINING_CONSISTENCY: Clock,
             SUBMISSION_MASTERY: Target,
-            ESCAPE_MASTERY: Brain,
             FOCUS_AREA: Dumbbell
           }[category as keyof typeof AchievementCategory] || Brain;
 
@@ -81,25 +70,22 @@ function AchievementsDashboard() {
                   </CardTitle>
                 </div>
                 <CardDescription>
-                  {catAchievements.length} achievements available
+                  Progress tracking
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 {catAchievements.map((achievement) => (
                   <div
                     key={achievement.id}
-                    className="p-4 rounded-lg border bg-muted/50"
+                    className="space-y-2"
                   >
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-semibold">{achievement.name}</h3>
+                    <div className="text-sm font-medium">
+                      {achievement.name}
                     </div>
-                    <p className="text-sm text-muted-foreground mb-2">
-                      {achievement.description}
-                    </p>
                     <Progress
                       value={(achievement.currentProgress / achievement.progressMax) * 100}
                     />
-                    <p className="text-xs text-right mt-1">
+                    <p className="text-xs text-right text-muted-foreground">
                       {achievement.currentProgress} / {achievement.progressMax}
                     </p>
                   </div>
