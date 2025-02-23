@@ -186,8 +186,9 @@ function Layout({ children }: { children: React.ReactNode }) {
 
             {/* Logo */}
             <Link href="/">
-              <a className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent font-bold">
+              <a className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent font-bold flex items-center gap-2">
                 OssRyu
+                <span className="text-sm font-normal text-muted-foreground">Train. Track. Compete. Level Up.</span>
               </a>
             </Link>
           </div>
