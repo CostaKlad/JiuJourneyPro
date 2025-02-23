@@ -7,12 +7,16 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { TourProvider } from "@/hooks/use-tour";
 import { TourGuide } from "@/components/ui/tour-guide";
 import { ProtectedRoute } from "./lib/protected-route";
+import { ErrorBoundary } from "react-error-boundary";
 import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
 import TechniqueLibrary from "@/pages/technique-library";
+import TechniquePassport from "@/pages/technique-passport";
 import CommunityPage from "@/pages/community-page";
+import UserProfile from "@/pages/user-profile";
+import AchievementsDashboard from "@/pages/achievements-dashboard";
+import TrainingWizard from "@/pages/training-wizard";
 import NotFound from "@/pages/not-found";
-import { ErrorBoundary } from "react-error-boundary";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -31,10 +35,7 @@ import {
   Brain
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import UserProfile from "@/pages/user-profile";
-import AchievementsDashboard from "@/pages/achievements-dashboard";
-import TechniquePassport from "@/pages/technique-passport";
-import TrainingWizard from "@/pages/training-wizard";
+
 
 const menuItems = [
   { 
@@ -77,13 +78,9 @@ const menuItems = [
 
 function ErrorFallback({ error }: { error: Error }) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="max-w-md w-full space-y-4">
-        <h2 className="text-2xl font-bold text-red-600">Something went wrong</h2>
-        <pre className="text-sm bg-red-50 p-4 rounded overflow-auto">
-          {error.message}
-        </pre>
-      </div>
+    <div className="error-boundary">
+      <h2>Something went wrong:</h2>
+      <pre>{error.message}</pre>
     </div>
   );
 }
