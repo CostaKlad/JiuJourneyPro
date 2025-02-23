@@ -42,7 +42,7 @@ type TrainingLogEntry = {
   user?: ExtendedUser; // Make user optional since it might not be populated
 };
 
-type ExtendedUser = Pick<User, 'id' | 'username' | 'beltRank' | 'gym'>;
+type ExtendedUser = Pick<User, 'id' | 'username' | 'beltRank' | 'gym' | 'avatarUrl'>;
 
 interface TrainingStats {
   totalSessions: number;
@@ -374,9 +374,13 @@ function CommunityPage() {
                       {log.user && (
                         <Link href={`/users/${log.user.id}`}>
                           <Avatar className="h-10 w-10">
-                            <AvatarFallback className="bg-primary/10">
-                              {log.user.username.slice(0, 2).toUpperCase()}
-                            </AvatarFallback>
+                            {log.user.avatarUrl ? (
+                              <AvatarImage src={log.user.avatarUrl} />
+                            ) : (
+                              <AvatarFallback className="bg-primary/10">
+                                {log.user.username.slice(0, 2).toUpperCase()}
+                              </AvatarFallback>
+                            )}
                           </Avatar>
                         </Link>
                       )}
