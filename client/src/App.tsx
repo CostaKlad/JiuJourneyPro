@@ -58,13 +58,13 @@ function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Minimal header with only hamburger and logo */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-14 items-center justify-between">
-          <div className="flex items-center gap-4">
+      {/* Mobile-optimized header */}
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 mobile-safe-area">
+        <div className="container flex h-[var(--mobile-header-height)] items-center justify-between px-4">
+          <div className="flex items-center gap-2">
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" className="md:hidden">
                   <Menu className="h-6 w-6" />
                 </Button>
               </SheetTrigger>
@@ -72,6 +72,11 @@ function Layout({ children }: { children: React.ReactNode }) {
                 <SheetHeader>
                   <SheetTitle>
                     <div className="flex items-center gap-2">
+                      <img 
+                        src="/logo.webp" 
+                        alt="OssRyu Logo" 
+                        className="h-8 w-8 object-contain"
+                      />
                       <div className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
                         OssRyu
                       </div>
@@ -153,18 +158,27 @@ function Layout({ children }: { children: React.ReactNode }) {
               </SheetContent>
             </Sheet>
 
-            {/* Logo */}
+            {/* Logo for header */}
             <Link href="/">
-              <a className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent font-bold flex items-center gap-2">
-                OssRyu
-                <span className="text-base md:text-lg font-semibold bg-gradient-to-r from-primary/80 to-purple-500/80 bg-clip-text text-transparent ml-2">Train. Track. Compete. Level Up.</span>
+              <a className="flex items-center gap-2">
+                <img 
+                  src="/logo.webp" 
+                  alt="OssRyu Logo" 
+                  className="h-8 w-8 object-contain hidden md:block"
+                />
+                <div className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent font-bold flex items-center">
+                  <span className="hidden md:inline">OssRyu</span>
+                  <span className="text-sm md:text-base font-semibold bg-gradient-to-r from-primary/80 to-purple-500/80 bg-clip-text text-transparent ml-2 hidden lg:inline">
+                    Train. Track. Compete. Level Up.
+                  </span>
+                </div>
               </a>
             </Link>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto p-4">
+      <main className="container mx-auto p-4 mobile-main-content">
         {children}
       </main>
     </div>

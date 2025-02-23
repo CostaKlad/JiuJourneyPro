@@ -16,7 +16,6 @@ export default function AuthPage() {
   const { user, loginMutation, registerMutation, forgotPasswordMutation } = useAuth();
   const [location] = useLocation();
   const [activeTab, setActiveTab] = useState(() => {
-    // Use URLSearchParams to check for token in the URL
     const searchParams = new URLSearchParams(window.location.search);
     return searchParams.has("token") ? "reset" : "login";
   });
@@ -35,7 +34,7 @@ export default function AuthPage() {
       username: "",
       email: "",
       password: "",
-      beltRank: "White" // Set default belt rank for new users
+      beltRank: "White" 
     }
   });
 
@@ -59,15 +58,24 @@ export default function AuthPage() {
   ];
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-8 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="flex flex-col justify-center">
-          <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            Welcome to OssRyu
-          </h1>
-          <p className="text-muted-foreground mb-8 text-lg">
-            Your digital companion for mastering Brazilian Jiu-Jitsu. Track progress, learn techniques, and connect with the community.
-          </p>
+          <div className="text-center md:text-left mb-8">
+            <div className="flex items-center justify-center md:justify-start gap-3 mb-4">
+              <img 
+                src="/logo.webp" 
+                alt="OssRyu Logo" 
+                className="h-12 w-12 object-contain"
+              />
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                OssRyu
+              </h1>
+            </div>
+            <p className="text-muted-foreground text-lg">
+              Your digital companion for mastering Brazilian Jiu-Jitsu. Track progress, learn techniques, and connect with the community.
+            </p>
+          </div>
 
           <TooltipProvider>
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
