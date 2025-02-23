@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { mockFollowers, mockFollowing, mockTrainingLogs, mockSuggestedPartners } from "@/lib/mock-data";
+//import { mockFollowers, mockFollowing, mockTrainingLogs, mockSuggestedPartners } from "@/lib/mock-data";
 import { Link } from "wouter";
 
 type TrainingLogComment = {
@@ -105,32 +105,48 @@ function CommunityPage() {
   const [partnerFilter, setPartnerFilter] = useState("all");
   const [locationFilter, setLocationFilter] = useState("all");
 
-  const { data: followers = mockFollowers } = useQuery<ExtendedUser[]>({
+  const { data: followers } = useQuery<ExtendedUser[]>({
     queryKey: ["/api/followers"],
-    staleTime: 30000,
-    retry: false
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/followers");
+      return response.json();
+    }
   });
 
-  const { data: following = mockFollowing } = useQuery<ExtendedUser[]>({
+  const { data: following } = useQuery<ExtendedUser[]>({
     queryKey: ["/api/following"],
-    staleTime: 30000,
-    retry: false
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/following");
+      return response.json();
+    }
   });
 
-  const { data: activityFeed = mockTrainingLogs } = useQuery<TrainingLogEntry[]>({
+  const { data: activityFeed } = useQuery<TrainingLogEntry[]>({
     queryKey: ["/api/community/feed"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/community/feed");
+      return response.json();
+    },
     staleTime: 30000,
     retry: false
   });
 
-  const { data: suggestedPartners = mockSuggestedPartners } = useQuery<ExtendedUser[]>({
+  const { data: suggestedPartners } = useQuery<ExtendedUser[]>({
     queryKey: ["/api/community/suggestions"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/community/suggestions");
+      return response.json();
+    },
     staleTime: 30000,
     retry: false
   });
 
   const { data: trainingStats = { totalSessions: 0, totalHours: 0, techniquesLearned: 0 } } = useQuery<TrainingStats>({
     queryKey: ["/api/training/stats"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/training/stats");
+      return response.json();
+    },
     staleTime: 30000,
     retry: false
   });

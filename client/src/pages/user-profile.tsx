@@ -57,8 +57,7 @@ function UserProfile() {
 
   const followMutation = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest("POST", `/api/follow/${id}`);
-      return await res.json();
+      await apiRequest("POST", `/api/follow/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users", id] });
@@ -70,8 +69,7 @@ function UserProfile() {
 
   const unfollowMutation = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest("POST", `/api/unfollow/${id}`);
-      return await res.json();
+      await apiRequest("POST", `/api/unfollow/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users", id] });
