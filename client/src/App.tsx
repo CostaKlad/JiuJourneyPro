@@ -9,8 +9,6 @@ import { TourGuide } from "@/components/ui/tour-guide";
 import { ProtectedRoute } from "./lib/protected-route";
 import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
-import TechniqueLibrary from "@/pages/technique-library";
-import TechniquePassport from "@/pages/technique-passport";
 import CommunityPage from "@/pages/community-page";
 import UserProfile from "@/pages/user-profile";
 import AchievementsDashboard from "@/pages/achievements-dashboard";
@@ -24,14 +22,12 @@ import { Link, useLocation } from "wouter";
 import {
   Menu,
   Home,
-  BookMarked,
   Trophy,
   Users,
   Settings,
   LogOut,
   Plus,
   Target,
-  Swords,
   Brain
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
@@ -196,18 +192,6 @@ const menuItems = [
     tooltip: "View your training overview and recent activity"
   },
   { 
-    href: "/techniques", 
-    icon: BookMarked, 
-    label: "Technique Library",
-    tooltip: "Browse and learn BJJ techniques" 
-  },
-  { 
-    href: "/passport", 
-    icon: Swords, 
-    label: "Technique Passport",
-    tooltip: "Track your progress in different techniques" 
-  },
-  { 
     href: "/community", 
     icon: Users, 
     label: "Community",
@@ -237,8 +221,6 @@ function App() {
               <Switch>
                 <Route path="/auth" component={AuthPage} />
                 <ProtectedRoute path="/" component={HomePage} />
-                <ProtectedRoute path="/techniques" component={TechniqueLibrary} />
-                <ProtectedRoute path="/passport" component={TechniquePassport} />
                 <ProtectedRoute path="/community" component={CommunityPage} />
                 <ProtectedRoute path="/users/:id" component={UserProfile} />
                 <ProtectedRoute path="/achievements" component={AchievementsDashboard} />
