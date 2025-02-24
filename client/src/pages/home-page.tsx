@@ -24,7 +24,9 @@ import {
   BookOpen,
   Flame,
   Loader2,
-  Target
+  Target,
+  MessageSquare,
+  Clock
 } from "lucide-react";
 import {
   LineChart,
@@ -59,7 +61,7 @@ import {
   CommandSeparator,
 } from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
-
+import {ScrollArea} from "@/components/ui/scroll-area"
 
 type TrainingLogWithComments = TrainingLog & {
   comments: (Comment & { user: User })[];
@@ -795,6 +797,95 @@ function HomePage() {
             </CardContent>
           </Card>
         </div>
+        <Card className="col-span-full">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <MessageSquare className="h-5 w-5 text-primary" />
+              Training Notes
+            </CardTitle>
+            <CardDescription>Quick access to your training notes and insights</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <Input
+                placeholder="Search notes..."
+                className="w-full max-w-sm mb-4"
+                onChange={(e) => {
+                  // Filter notes based on search input
+                  const searchTerm = e.target.value.toLowerCase();
+                  const filteredLogs = trainingLogs?.filter(log => 
+                    log.notes?.toLowerCase().includes(searchTerm)
+                  );
+                }}
+              />
+
+              <ScrollArea className="h-[400px] md:h-[500px] w-full rounded-md border p-4">
+                <div className="space-y-4">
+                  {trainingLogs?.filter(log => log.notes)
+                    .map((log, index) => (
+                      <div
+                        key={log.id}
+                        className={cn(
+                          "p-4 rounded-lg transition-colors",
+                          index % 2 === 0 ? "bg-muted/50" : "bg-background"
+                        )}
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="space-y-1">
+                            <h4 className="text-sm font-medium">
+                              {new Date(log.date).toLocaleDateString('en-US', {
+                                weekday: 'short',
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric'
+                              })}
+                            </h4>
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className="capitalize">
+                                {log.type.toLowerCase()}
+                              </Badge>
+                              {log.performanceRating && (
+                                <Badge variant="secondary">
+                                  Performance: {log.performanceRating}/5
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Clock className="h-4 w-4" />
+                            {log.duration} min
+                          </div>
+                        </div>
+
+                        <div className="mt-2 text-sm text-muted-foreground">
+                          {log.notes}
+                        </div>
+
+                        {log.techniquesPracticed && log.techniquesPracticed.length > 0 && (
+                          <div className="mt-2">
+                            <div className="text-xs text-muted-foreground mb-1">
+                              Techniques:
+                            </div>
+                            <div className="flex flex-wrap gap-1">
+                              {log.techniquesPracticed.map((technique, idx) => (
+                                <Badge
+                                  key={idx}
+                                  variant="outline"
+                                  className="text-xs"
+                                >
+                                  {technique}
+                                </Badge>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                </div>
+              </ScrollArea>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
