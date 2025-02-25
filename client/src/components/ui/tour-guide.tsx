@@ -23,25 +23,18 @@ export function TourGuide() {
       const rect = element.getBoundingClientRect();
       const tooltipPlacement = (currentTourStep.placement || 'bottom') as TooltipPlacement;
 
-      let top = 0;
-      let left = 0;
+      const OFFSET = 20;
+      let top = rect.top + rect.height / 2;
+      let left = rect.right + OFFSET;
 
+      // Ensure tooltip is always on the right side regardless of placement
       switch (tooltipPlacement) {
         case 'top':
-          top = rect.top - 10;
-          left = rect.right + 20;
-          break;
         case 'bottom':
-          top = rect.bottom + 10;
-          left = rect.right + 20;
-          break;
         case 'left':
-          top = rect.top + rect.height / 2;
-          left = rect.right + 20;
-          break;
         case 'right':
           top = rect.top + rect.height / 2;
-          left = rect.right + 20;
+          left = rect.right + OFFSET;
           break;
       }
 
@@ -63,7 +56,7 @@ export function TourGuide() {
 
   const tooltipStyle: React.CSSProperties = {
     position: 'fixed',
-    transform: 'translate(-50%, -50%)',
+    transform: 'translateY(-50%)',
     zIndex: 50,
     ...position,
   };
