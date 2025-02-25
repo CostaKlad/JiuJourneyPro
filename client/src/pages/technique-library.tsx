@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
-import { Lock, Unlock, Trophy } from "lucide-react";
+import { Lock, Check, Trophy, Star } from "lucide-react";
 import { type Technique } from "@shared/schema";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -18,14 +18,18 @@ function TechniqueCard({ technique, canUnlock, onUnlock }: {
   onUnlock: () => void;
 }) {
   return (
-    <Card className={technique.isUnlocked ? undefined : "opacity-75"}>
+    <Card className={`transition-all duration-200 ${technique.isUnlocked ? "border-primary/50 bg-primary/5" : "opacity-75"}`}>
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             {technique.name}
-            {!technique.isUnlocked && <Lock className="h-4 w-4 text-muted-foreground" />}
+            {technique.isUnlocked ? (
+              <Check className="h-4 w-4 text-primary" />
+            ) : (
+              <Lock className="h-4 w-4 text-muted-foreground" />
+            )}
           </CardTitle>
-          <Badge variant="outline" className="capitalize">
+          <Badge variant={technique.isUnlocked ? "default" : "outline"} className="capitalize">
             {technique.position}
           </Badge>
         </div>
@@ -36,6 +40,12 @@ function TechniqueCard({ technique, canUnlock, onUnlock }: {
           {technique.prerequisites && technique.prerequisites.length > 0 && (
             <Badge variant="outline">
               {technique.prerequisites.length} Prerequisites
+            </Badge>
+          )}
+          {technique.isUnlocked && (
+            <Badge variant="secondary" className="ml-auto">
+              <Star className="h-3 w-3 mr-1" />
+              {technique.points} Points
             </Badge>
           )}
         </CardDescription>
@@ -49,7 +59,7 @@ function TechniqueCard({ technique, canUnlock, onUnlock }: {
             variant="outline"
             className="w-full"
           >
-            <Unlock className="h-4 w-4 mr-2" />
+            <Trophy className="h-4 w-4 mr-2" />
             {canUnlock ? "Unlock Technique" : "Prerequisites Required"}
           </Button>
         )}
@@ -69,6 +79,14 @@ export default function TechniqueLibrary() {
     }
   });
 
+  const { data: pointsSummary } = useQuery({
+    queryKey: ["/api/points/summary"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/points/summary");
+      return res.json();
+    }
+  });
+
   const unlockMutation = useMutation({
     mutationFn: async (techniqueId: number) => {
       const res = await apiRequest("POST", `/api/techniques/${techniqueId}/unlock`);
@@ -80,9 +98,10 @@ export default function TechniqueLibrary() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/techniques/belt"] });
       queryClient.invalidateQueries({ queryKey: ["/api/techniques/progress"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/points/summary"] });
       toast({
         title: "Success!",
-        description: "You've unlocked a new technique!",
+        description: "You've unlocked a new technique and earned points!",
       });
     },
     onError: (error: Error) => {
@@ -99,10 +118,15 @@ export default function TechniqueLibrary() {
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl sm:text-3xl font-bold">Technique Library</h1>
-          <div className="flex items-center gap-2">
-            <Trophy className="h-5 w-5 text-primary" />
-            <span className="text-sm font-medium">Your Progress</span>
-          </div>
+          {pointsSummary && (
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Trophy className="h-5 w-5 text-primary" />
+                <span className="text-sm font-medium">{pointsSummary.totalPoints} Points</span>
+              </div>
+              <Badge variant="outline">Level {pointsSummary.level}</Badge>
+            </div>
+          )}
         </div>
 
         {progress && (
@@ -110,15 +134,18 @@ export default function TechniqueLibrary() {
             {progress.map((belt) => (
               <Card key={belt.beltRank}>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base capitalize">
+                  <CardTitle className="text-base capitalize flex items-center justify-between">
                     {belt.beltRank} Belt
+                    <span className="text-sm font-normal">
+                      {belt.unlocked} / {belt.total}
+                    </span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <Progress value={belt.percentage} className="mb-2" />
-                  <p className="text-sm text-muted-foreground">
-                    {belt.unlocked} / {belt.total} techniques
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <Progress value={belt.percentage} className="flex-1" />
+                    <span className="text-sm font-medium">{Math.round(belt.percentage)}%</span>
+                  </div>
                 </CardContent>
               </Card>
             ))}
