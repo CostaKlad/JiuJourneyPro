@@ -12,8 +12,8 @@ import { useToast } from "@/hooks/use-toast";
 
 const BELT_RANKS = ["white", "blue", "purple", "brown", "black"] as const;
 
-function TechniqueCard({ technique, canUnlock, onUnlock }: { 
-  technique: Technique & { canUnlock?: boolean }; 
+function TechniqueCard({ technique, canUnlock, onUnlock }: {
+  technique: Technique & { canUnlock?: boolean };
   canUnlock: boolean;
   onUnlock: () => void;
 }) {
@@ -58,7 +58,7 @@ function TechniqueCard({ technique, canUnlock, onUnlock }: {
       <CardContent>
         <p className="text-sm mb-4">{technique.description}</p>
         {!technique.isUnlocked && (
-          <Button 
+          <Button
             onClick={onUnlock}
             disabled={!canUnlock}
             variant="outline"
@@ -73,6 +73,69 @@ function TechniqueCard({ technique, canUnlock, onUnlock }: {
   );
 }
 
+function BeltProgressCard({ belt, nextBelt, totalPoints }: {belt: any; nextBelt: any; totalPoints: number}) {
+  const getRequiredPoints = (belt) => {
+    switch (belt) {
+      case "white":
+        return 100;
+      case "blue":
+        return 300;
+      case "purple":
+        return 600;
+      case "brown":
+        return 1000;
+      case "black":
+        return Infinity;
+      default:
+        return 100;
+    }
+  };
+
+  const currentRequired = getRequiredPoints(belt.beltRank);
+  const nextRequired = getRequiredPoints(nextBelt?.beltRank);
+  const progress = (totalPoints / currentRequired) * 100;
+
+  return (
+    <Card key={belt.beltRank}>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base capitalize flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className={`w-3 h-3 rounded-full bg-${belt.beltRank === "white" ? "gray" : belt.beltRank}-600`} />
+            {belt.beltRank} Belt
+          </div>
+          <span className="text-sm font-normal">
+            {belt.unlocked} / {belt.total}
+          </span>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Progress value={belt.percentage} className="flex-1" />
+            <span className="text-sm font-medium">{Math.round(belt.percentage)}%</span>
+          </div>
+          {nextBelt && (
+            <div className="text-sm text-muted-foreground">
+              <div className="flex justify-between mb-1">
+                <span>Progress to {nextBelt.beltRank}</span>
+                <span>{totalPoints} / {nextRequired} points</span>
+              </div>
+              <Progress value={progress} className="h-2" />
+            </div>
+          )}
+          <div className="text-sm space-y-1">
+            <p className="font-medium">Requirements for next rank:</p>
+            <ul className="list-disc list-inside text-muted-foreground">
+              <li>Unlock {Math.max(0, belt.total - belt.unlocked)} more techniques</li>
+              <li>Earn {Math.max(0, nextRequired - totalPoints)} more points</li>
+            </ul>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function TechniqueLibrary() {
   const { toast } = useToast();
 
@@ -81,7 +144,7 @@ export default function TechniqueLibrary() {
     queryFn: async () => {
       const res = await apiRequest("GET", "/api/techniques/progress");
       return res.json();
-    }
+    },
   });
 
   const { data: pointsSummary } = useQuery({
@@ -89,7 +152,7 @@ export default function TechniqueLibrary() {
     queryFn: async () => {
       const res = await apiRequest("GET", "/api/points/summary");
       return res.json();
-    }
+    },
   });
 
   const unlockMutation = useMutation({
@@ -136,23 +199,13 @@ export default function TechniqueLibrary() {
 
         {progress && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-            {progress.map((belt) => (
-              <Card key={belt.beltRank}>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base capitalize flex items-center justify-between">
-                    {belt.beltRank} Belt
-                    <span className="text-sm font-normal">
-                      {belt.unlocked} / {belt.total}
-                    </span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-2">
-                    <Progress value={belt.percentage} className="flex-1" />
-                    <span className="text-sm font-medium">{Math.round(belt.percentage)}%</span>
-                  </div>
-                </CardContent>
-              </Card>
+            {progress.map((belt, index) => (
+              <BeltProgressCard
+                key={belt.beltRank}
+                belt={belt}
+                nextBelt={index < progress.length - 1 ? progress[index + 1] : null}
+                totalPoints={pointsSummary?.totalPoints || 0}
+              />
             ))}
           </div>
         )}
@@ -191,7 +244,7 @@ function TechniqueBeltContent({ rank, onUnlock }: { rank: string; onUnlock: (id:
         throw new Error("Failed to fetch techniques");
       }
       return res.json();
-    }
+    },
   });
 
   if (!techniques || techniques.length === 0) {
