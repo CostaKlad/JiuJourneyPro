@@ -91,16 +91,34 @@ function BeltProgressCard({ belt, nextBelt, totalPoints }: {belt: any; nextBelt:
     }
   };
 
+  const getBeltColor = (beltRank: string) => {
+    switch (beltRank) {
+      case "white":
+        return "bg-gray-200";
+      case "blue":
+        return "bg-blue-600";
+      case "purple":
+        return "bg-purple-600";
+      case "brown":
+        return "bg-amber-800";
+      case "black":
+        return "bg-black";
+      default:
+        return "bg-gray-200";
+    }
+  };
+
   const currentRequired = getRequiredPoints(belt.beltRank);
   const nextRequired = getRequiredPoints(nextBelt?.beltRank);
   const progress = (totalPoints / currentRequired) * 100;
 
   return (
-    <Card key={belt.beltRank}>
+    <Card key={belt.beltRank} className="relative overflow-hidden">
+      <div className={`absolute top-0 left-0 w-1 h-full ${getBeltColor(belt.beltRank)}`} />
       <CardHeader className="pb-2">
         <CardTitle className="text-base capitalize flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className={`w-3 h-3 rounded-full bg-${belt.beltRank === "white" ? "gray" : belt.beltRank}-600`} />
+            <div className={`w-3 h-3 rounded-full ${getBeltColor(belt.beltRank)}`} />
             {belt.beltRank} Belt
           </div>
           <span className="text-sm font-normal">
@@ -111,7 +129,11 @@ function BeltProgressCard({ belt, nextBelt, totalPoints }: {belt: any; nextBelt:
       <CardContent>
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <Progress value={belt.percentage} className="flex-1" />
+            <Progress 
+              value={belt.percentage} 
+              className="flex-1" 
+              indicatorClassName={belt.percentage === 100 ? "bg-green-500" : getBeltColor(belt.beltRank)}
+            />
             <span className="text-sm font-medium">{Math.round(belt.percentage)}%</span>
           </div>
           {nextBelt && (
@@ -120,7 +142,11 @@ function BeltProgressCard({ belt, nextBelt, totalPoints }: {belt: any; nextBelt:
                 <span>Progress to {nextBelt.beltRank}</span>
                 <span>{totalPoints} / {nextRequired} points</span>
               </div>
-              <Progress value={progress} className="h-2" />
+              <Progress 
+                value={progress} 
+                className="h-2" 
+                indicatorClassName={getBeltColor(nextBelt.beltRank)}
+              />
             </div>
           )}
           <div className="text-sm space-y-1">
