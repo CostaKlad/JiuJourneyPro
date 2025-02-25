@@ -23,16 +23,16 @@ export interface IStorage {
   // Techniques
   getTechniques(): Promise<Technique[]>;
   getTechniquesByCategory(category: string): Promise<Technique[]>;
-  getTechniquesByBeltRank(beltRank: string): Promise<Technique[]>; // Added
-  getUnlockedTechniques(userId: number): Promise<Technique[]>;     // Added
-  checkPrerequisites(userId: number, techniqueId: number): Promise<boolean>; // Added
-  unlockTechnique(userId: number, techniqueId: number): Promise<void>;       // Added
+  getTechniquesByBeltRank(beltRank: string): Promise<Technique[]>;
+  getUnlockedTechniques(userId: number): Promise<Technique[]>;
+  checkPrerequisites(userId: number, techniqueId: number): Promise<boolean>;
+  unlockTechnique(userId: number, techniqueId: number): Promise<void>;
   getTechniqueProgress(userId: number): Promise<{
     beltRank: string;
     total: number;
     unlocked: number;
     percentage: number;
-  }[]>; // Added
+  }[]>;
 
   // Community features
   followUser(followerId: number, followingId: number): Promise<void>;
@@ -216,25 +216,54 @@ export class DatabaseStorage implements IStorage {
   }
 
   async unlockTechnique(userId: number, techniqueId: number): Promise<void> {
-    const hasPrerequisites = await this.checkPrerequisites(userId, techniqueId);
-    if (!hasPrerequisites) {
-      throw new StorageError('Prerequisites not met');
-    }
+    try {
+      // First check if the technique exists
+      const [technique] = await db.select()
+        .from(techniques)
+        .where(eq(techniques.id, techniqueId));
 
-    await db.insert(techniqueProgress)
-      .values({
-        userId,
-        techniqueId,
-        status: 'unlocked',
-        completedAt: new Date()
-      })
-      .onConflictDoUpdate({
-        target: [techniqueProgress.userId, techniqueProgress.techniqueId],
-        set: {
+      if (!technique) {
+        throw new StorageError('Technique not found');
+      }
+
+      // Then check prerequisites
+      const hasPrerequisites = await this.checkPrerequisites(userId, techniqueId);
+      if (!hasPrerequisites) {
+        throw new StorageError('Prerequisites not met');
+      }
+
+      // Create or update the technique progress
+      await db.insert(techniqueProgress)
+        .values({
+          userId,
+          techniqueId,
           status: 'unlocked',
-          completedAt: new Date()
-        }
-      });
+          completedAt: new Date(),
+          createdAt: new Date(),
+          notes: null,
+          rating: null
+        })
+        .onConflictDoUpdate({
+          target: [techniqueProgress.userId, techniqueProgress.techniqueId],
+          set: {
+            status: 'unlocked',
+            completedAt: new Date(),
+            updatedAt: new Date()
+          }
+        });
+
+      // Also update the isUnlocked flag in techniques table
+      await db.update(techniques)
+        .set({ isUnlocked: true })
+        .where(eq(techniques.id, techniqueId));
+
+    } catch (error) {
+      console.error('Error in unlockTechnique:', error);
+      if (error instanceof StorageError) {
+        throw error;
+      }
+      throw new StorageError('Failed to unlock technique');
+    }
   }
 
   async getTechniqueProgress(userId: number): Promise<{ beltRank: string; total: number; unlocked: number; percentage: number; }[]> {

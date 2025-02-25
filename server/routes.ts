@@ -132,22 +132,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/techniques/:id/unlock", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    const techniqueId = parseInt(req.params.id);
 
     try {
+      const techniqueId = parseInt(req.params.id);
+      if (isNaN(techniqueId)) {
+        return res.status(400).json({ error: "Invalid technique ID" });
+      }
+
+      console.log(`User ${req.user.id} attempting to unlock technique ${techniqueId}`);
+
       await storage.unlockTechnique(req.user.id, techniqueId);
 
       // Award points for unlocking a new technique
       await pointsService.awardTrainingPoints(req.user.id, 0, 5);
 
+      console.log(`Successfully unlocked technique ${techniqueId} for user ${req.user.id}`);
       res.sendStatus(200);
     } catch (error) {
-      if (error instanceof StorageError && error.message === 'Prerequisites not met') {
-        res.status(400).json({ error: "Prerequisites not met" });
-      } else {
-        console.error("Error unlocking technique:", error);
-        res.status(500).json({ error: "Failed to unlock technique" });
+      console.error("Error unlocking technique:", error);
+
+      if (error instanceof StorageError) {
+        if (error.message === 'Prerequisites not met') {
+          return res.status(400).json({ error: "Prerequisites not met" });
+        } else if (error.message === 'Technique not found') {
+          return res.status(404).json({ error: "Technique not found" });
+        }
       }
+
+      res.status(500).json({ 
+        error: "Failed to unlock technique",
+        details: error instanceof Error ? error.message : "Unknown error"
+      });
     }
   });
 
