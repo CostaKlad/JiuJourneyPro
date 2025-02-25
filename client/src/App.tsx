@@ -169,9 +169,6 @@ function Layout({ children }: { children: React.ReactNode }) {
                   <span className="text-sm font-medium bg-gradient-to-r from-primary/80 to-purple-500/80 bg-clip-text text-transparent ml-2 hidden md:inline">
                     Train. Track. Compete. Level Up.
                   </span>
-                  <div className="flex flex-col items-center md:items-start">
-                    <p className="text-sm text-muted-foreground">Train smarter, not harder</p>
-                  </div>
                 </div>
               </a>
             </Link>
