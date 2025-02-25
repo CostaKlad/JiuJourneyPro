@@ -4,7 +4,6 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/hooks/use-auth";
-// import { TourProvider } from "@/hooks/use-tour"; //Removed
 import { ProtectedRoute } from "./lib/protected-route";
 import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
@@ -14,6 +13,7 @@ import AchievementsDashboard from "@/pages/achievements-dashboard";
 import TrainingWizard from "@/pages/training-wizard";
 import SettingsPage from "@/pages/settings-page";
 import NotFound from "@/pages/not-found";
+import TechniqueLibrary from "@/pages/technique-library";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -27,7 +27,8 @@ import {
   LogOut,
   Plus,
   Target,
-  Brain
+  Brain,
+  BookOpen
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { ErrorBoundary } from "react-error-boundary";
@@ -191,6 +192,12 @@ const menuItems = [
     tooltip: "View your training overview and recent activity"
   },
   { 
+    href: "/techniques", 
+    icon: BookOpen, 
+    label: "Technique Library",
+    tooltip: "Browse and unlock BJJ techniques" 
+  },
+  { 
     href: "/community", 
     icon: Users, 
     label: "Community",
@@ -219,6 +226,7 @@ function App() {
             <Switch>
               <Route path="/auth" component={AuthPage} />
               <ProtectedRoute path="/" component={HomePage} />
+              <ProtectedRoute path="/techniques" component={TechniqueLibrary} />
               <ProtectedRoute path="/community" component={CommunityPage} />
               <ProtectedRoute path="/users/:id" component={UserProfile} />
               <ProtectedRoute path="/achievements" component={AchievementsDashboard} />
