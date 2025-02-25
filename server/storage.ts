@@ -4,6 +4,7 @@ import { eq, and, desc, sql } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { pool } from "./db";
+import { profileComments, type ProfileComment } from "@shared/schema";
 
 const PostgresSessionStore = connectPg(session);
 
@@ -34,6 +35,10 @@ export interface IStorage {
   createComment(userId: number, trainingLogId: number, content: string): Promise<Comment>;
   getComments(trainingLogId: number): Promise<(Comment & { user: User })[]>;
   getAllUsers(): Promise<User[]>;
+
+  // Add profile comments methods
+  createProfileComment(userId: number, commenterId: number, content: string): Promise<ProfileComment>;
+  getProfileComments(userId: number): Promise<(ProfileComment & { commenter: User })[]>;
 
   sessionStore: session.Store;
 }
@@ -273,6 +278,32 @@ export class DatabaseStorage implements IStorage {
   async getAllUsers(): Promise<User[]> {
     const result = await db.select().from(users);
     return result;
+  }
+  async createProfileComment(userId: number, commenterId: number, content: string): Promise<ProfileComment> {
+    const [comment] = await db.insert(profileComments)
+      .values({
+        userId,
+        commenterId,
+        content
+      })
+      .returning();
+    return comment;
+  }
+
+  async getProfileComments(userId: number): Promise<(ProfileComment & { commenter: User })[]> {
+    const results = await db.select({
+      comment: profileComments,
+      commenter: users
+    })
+      .from(profileComments)
+      .where(eq(profileComments.userId, userId))
+      .innerJoin(users, eq(users.id, profileComments.commenterId))
+      .orderBy(desc(profileComments.createdAt));
+
+    return results.map(r => ({
+      ...r.comment,
+      commenter: r.commenter
+    }));
   }
 }
 

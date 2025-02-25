@@ -195,6 +195,24 @@ export const followers = pgTable("followers", {
   createdAt: timestamp("created_at").notNull().defaultNow()
 });
 
+// Add profile comments table
+export const profileComments = pgTable("profile_comments", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(), // User whose profile is being commented on
+  commenterId: integer("commenter_id").notNull(), // User who made the comment
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow()
+});
+
+// Add schema for profile comments
+export const insertProfileCommentSchema = createInsertSchema(profileComments)
+  .pick({
+    content: true
+  });
+
+// Add type for profile comments
+export type ProfileComment = typeof profileComments.$inferSelect;
+
 export const comments = pgTable("comments", {
   id: serial("id").primaryKey(),
   trainingLogId: integer("training_log_id").notNull(),

@@ -4,7 +4,7 @@ import multer from 'multer';
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { getTrainingSuggestions, getPeerRecommendations } from "./openai";
-import { insertTrainingLogSchema, insertCommentSchema } from "@shared/schema";
+import { insertTrainingLogSchema, insertCommentSchema, insertProfileCommentSchema } from "@shared/schema";
 import { pointsService } from "./points-service";
 import { StorageError } from "./storage";
 
@@ -185,6 +185,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Failed to fetch user stats" });
     }
   });
+
+  // Add profile comments routes
+  app.post("/api/users/:id/comments", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const userId = parseInt(req.params.id);
+
+    try {
+      const { content } = insertProfileCommentSchema.parse(req.body);
+      const comment = await storage.createProfileComment(userId, req.user.id, content);
+
+      // Award points for social interaction
+      await pointsService.awardTrainingPoints(req.user.id, 0, 1);
+
+      res.status(201).json(comment);
+    } catch (error) {
+      console.error("Error creating profile comment:", error);
+      res.status(400).json({ error: "Invalid comment data" });
+    }
+  });
+
+  app.get("/api/users/:id/comments", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const userId = parseInt(req.params.id);
+
+    try {
+      const comments = await storage.getProfileComments(userId);
+      res.json(comments);
+    } catch (error) {
+      console.error("Error fetching profile comments:", error);
+      res.status(500).json({ error: "Failed to fetch profile comments" });
+    }
+  });
+
 
   // Community Routes
   app.post("/api/follow/:userId", async (req, res) => {
