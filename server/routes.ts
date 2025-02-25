@@ -100,6 +100,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(techniques);
   });
 
+  // Add these new routes before the existing community routes
+  app.get("/api/techniques/belt/:rank", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const techniques = await storage.getTechniquesByBeltRank(req.params.rank);
+      // For each technique, check if prerequisites are met
+      const techniquesWithStatus = await Promise.all(
+        techniques.map(async (technique) => ({
+          ...technique,
+          canUnlock: await storage.checkPrerequisites(req.user.id, technique.id)
+        }))
+      );
+      res.json(techniquesWithStatus);
+    } catch (error) {
+      console.error("Error fetching techniques:", error);
+      res.status(500).json({ error: "Failed to fetch techniques" });
+    }
+  });
+
+  app.get("/api/techniques/unlocked", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const techniques = await storage.getUnlockedTechniques(req.user.id);
+      res.json(techniques);
+    } catch (error) {
+      console.error("Error fetching unlocked techniques:", error);
+      res.status(500).json({ error: "Failed to fetch unlocked techniques" });
+    }
+  });
+
+  app.post("/api/techniques/:id/unlock", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const techniqueId = parseInt(req.params.id);
+
+    try {
+      await storage.unlockTechnique(req.user.id, techniqueId);
+
+      // Award points for unlocking a new technique
+      await pointsService.awardTrainingPoints(req.user.id, 0, 5);
+
+      res.sendStatus(200);
+    } catch (error) {
+      if (error instanceof StorageError && error.message === 'Prerequisites not met') {
+        res.status(400).json({ error: "Prerequisites not met" });
+      } else {
+        console.error("Error unlocking technique:", error);
+        res.status(500).json({ error: "Failed to unlock technique" });
+      }
+    }
+  });
+
+  app.get("/api/techniques/progress", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    try {
+      const progress = await storage.getTechniqueProgress(req.user.id);
+      res.json(progress);
+    } catch (error) {
+      console.error("Error fetching technique progress:", error);
+      res.status(500).json({ error: "Failed to fetch technique progress" });
+    }
+  });
+
+
   // AI Training Suggestions
   app.get("/api/suggestions", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);

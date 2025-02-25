@@ -1,0 +1,76 @@
+"Create an interactive RPG-style skill tree for my BJJ training app, OssRyu. The skill tree should allow users to unlock techniques as they progress, similar to an RPG game. Here’s what I need:
+
+1️⃣ Data Structure (Backend)
+Store techniques in a structured format with prerequisites.
+Each technique should have:
+id: Unique identifier.
+name: Technique name.
+position: Starting position (e.g., Guard, Mount, Side Control).
+difficulty: White, Blue, Purple, Brown, Black Belt categories.
+description: Brief description of the move.
+video_url: Link to a video tutorial.
+prerequisites: List of techniques required before unlocking this one.
+status: "locked" (default) or "unlocked".
+Example JSON Structure:
+
+json
+Copy
+Edit
+{
+  "techniques": [
+    {
+      "id": 1,
+      "name": "Upa Escape",
+      "position": "Mount",
+      "difficulty": "White Belt",
+      "description": "A fundamental escape from mount using bridging and hip movement.",
+      "video_url": "https://your-video-link.com",
+      "prerequisites": [],
+      "status": "unlocked"
+    },
+    {
+      "id": 2,
+      "name": "Arm Trap & Roll",
+      "position": "Mount",
+      "difficulty": "White Belt",
+      "description": "A powerful mount escape using the opponent’s arm position.",
+      "video_url": "https://your-video-link.com",
+      "prerequisites": [1],
+      "status": "locked"
+    },
+    {
+      "id": 3,
+      "name": "Scissor Sweep",
+      "position": "Guard",
+      "difficulty": "Blue Belt",
+      "description": "A guard sweep using a scissoring leg motion.",
+      "video_url": "https://your-video-link.com",
+      "prerequisites": [1],
+      "status": "locked"
+    }
+  ]
+}
+2️⃣ Backend Functions (Python or Node.js)
+unlock_technique(technique_id) → Unlocks a technique if prerequisites are met.
+get_unlocked_techniques() → Returns a list of unlocked techniques.
+get_locked_techniques() → Returns techniques the user has yet to unlock.
+progression_path() → Shows a tree-like path of what’s been unlocked vs. what remains.
+3️⃣ Frontend UI (React or Web-Based)
+Display the skill tree as a node-based graph.
+Locked techniques should be grayed out.
+Clicking on an unlocked technique should show:
+Name, position, difficulty, description.
+Video tutorial link.
+What techniques it unlocks next.
+Use lines or arrows to visually show dependencies.
+When a user successfully unlocks a move, update the UI dynamically.
+4️⃣ Interactive Features
+✅ Click to Learn → Users can click a technique to see details and video.
+✅ Unlocking System → Users must complete prerequisite moves before advancing.
+✅ Level System → Techniques categorized by White, Blue, Purple, Brown, Black Belt.
+✅ Progress Tracking → Users can see % of techniques unlocked in each category.
+
+5️⃣ Stretch Goals (Future Features)
+🔥 AI Coach → Suggest next moves based on progress.
+🔥 Leaderboard → Compare progress with friends.
+🔥 Game-Like Achievements → Badges for unlocking specific milestones.

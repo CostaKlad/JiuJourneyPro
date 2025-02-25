@@ -24,6 +24,26 @@ export const FocusArea = {
   POSITION_CONTROL: "position_control"
 } as const;
 
+// Enhanced BJJ techniques structure
+export const Positions = {
+  MOUNT: "mount",
+  GUARD: "guard",
+  SIDE_CONTROL: "side-control",
+  BACK: "back",
+  HALF_GUARD: "half-guard",
+  TURTLE: "turtle",
+  KNEE_ON_BELLY: "knee-on-belly",
+  STANDING: "standing"
+} as const;
+
+export const BeltRanks = {
+  WHITE: "white",
+  BLUE: "blue",
+  PURPLE: "purple",
+  BROWN: "brown",
+  BLACK: "black"
+} as const;
+
 // Add predefined BJJ techniques
 export const BJJTechniques = {
   SUBMISSIONS: [
@@ -41,14 +61,51 @@ export const BJJTechniques = {
     "Heel Hook",
     "Straight Ankle Lock",
     "Toe Hold",
-    "Kneebar"
+    "Kneebar",
+    "Ezekiel Choke",
+    "Baseball Bat Choke",
+    "Bow and Arrow Choke",
+    "North-South Choke",
+    "Wrist Lock",
+    "Bicep Slicer",
+    "Calf Slicer",
+    "Gogoplata",
+    "Paper Cutter Choke",
+    "Clock Choke"
   ],
-  POSITIONS_AND_SWEEPS: [
+  SWEEPS: [
+    "Scissor Sweep",
+    "Hip Bump Sweep",
+    "Flower Sweep",
+    "Pendulum Sweep",
+    "Butterfly Sweep",
+    "X-Guard Sweep",
+    "Single Leg X Sweep",
+    "De La Riva Sweep",
+    "Sickle Sweep",
+    "Spider Guard Sweep",
+    "Lasso Sweep",
+    "Tripod Sweep",
+    "Hook Sweep",
+    "Push Sweep",
+    "Overhead Sweep"
+  ],
+  POSITIONS_AND_CONTROLS: [
     "Half Guard Pass",
     "Closed Guard Pass",
     "De La Riva Guard Retention",
-    "Butterfly Guard Sweeps",
-    "X-Guard Sweeps"
+    "Butterfly Guard Control",
+    "X-Guard Entry",
+    "Spider Guard Control",
+    "Lasso Guard Setup",
+    "Knee Shield Position",
+    "Deep Half Guard",
+    "Single Leg X Position",
+    "Reverse De La Riva",
+    "Berimbolo Setup",
+    "50/50 Position",
+    "Quarter Guard",
+    "Turtle Position"
   ],
   ESCAPES: [
     "Side Control Escape",
@@ -59,9 +116,77 @@ export const BJJTechniques = {
     "Kimura Escape",
     "Guillotine Escape",
     "Heel Hook Escape",
-    "Toe Hold Escape"
+    "Toe Hold Escape",
+    "Kneebar Escape",
+    "North-South Escape",
+    "Knee on Belly Escape",
+    "Front Headlock Escape",
+    "Crucifix Escape",
+    "Guard Pass Prevention"
+  ],
+  TAKEDOWNS: [
+    "Double Leg Takedown",
+    "Single Leg Takedown",
+    "Hip Throw",
+    "Ankle Pick",
+    "Snap Down",
+    "Duck Under",
+    "Arm Drag",
+    "Pull Guard",
+    "Sacrifice Throw",
+    "Foot Sweep",
+    "Body Lock Takedown",
+    "Double Ankle Pick",
+    "High Crotch",
+    "Lateral Drop",
+    "Inside Trip"
+  ],
+  DRILLS: [
+    "Forward Roll",
+    "Backward Roll",
+    "Shrimp Drill",
+    "Bridge Drill",
+    "Technical Stand Up",
+    "Hip Switch",
+    "Sprawl Drill",
+    "Guard Retention Drill",
+    "Break Fall",
+    "Side Break Fall",
+    "Back Break Fall",
+    "Forward Break Fall",
+    "Grip Fighting Drill",
+    "Movement Flow Drill",
+    "Balance Drill"
   ]
 } as const;
+
+// Update techniques table schema
+export const techniques = pgTable("techniques", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  position: text("position").notNull(),
+  difficulty: text("difficulty").notNull(),
+  description: text("description").notNull(),
+  prerequisites: json("prerequisites").$type<number[]>().default([]),
+  category: text("category").notNull(),
+  isUnlocked: boolean("is_unlocked").default(false),
+  points: integer("points").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at")
+});
+
+// Create technique progress tracking table
+export const techniqueProgress = pgTable("technique_progress", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  techniqueId: integer("technique_id").notNull(),
+  status: text("status").notNull().default("locked"),
+  completedAt: timestamp("completed_at"),
+  notes: text("notes"),
+  rating: integer("rating"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at")
+});
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -179,14 +304,6 @@ export const insertTrainingLogSchema = createInsertSchema(trainingLogs)
     coachFeedback: z.string().optional().nullable()
   });
 
-export const techniques = pgTable("techniques", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  category: text("category").notNull(),
-  description: text("description").notNull(),
-  videoUrl: text("video_url"),
-  difficulty: text("difficulty").notNull()
-});
 
 export const followers = pgTable("followers", {
   id: serial("id").primaryKey(),

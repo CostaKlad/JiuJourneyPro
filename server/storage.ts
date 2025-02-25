@@ -1,6 +1,6 @@
-import { users, trainingLogs, techniques, followers, comments, type User, type TrainingLog, type Technique, type InsertUser, type Comment, type Follower } from "@shared/schema";
+import { users, trainingLogs, techniques, techniqueProgress, followers, comments, type User, type TrainingLog, type Technique, type InsertUser, type Comment, type Follower } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc, sql, inArray } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { pool } from "./db";
@@ -23,6 +23,16 @@ export interface IStorage {
   // Techniques
   getTechniques(): Promise<Technique[]>;
   getTechniquesByCategory(category: string): Promise<Technique[]>;
+  getTechniquesByBeltRank(beltRank: string): Promise<Technique[]>; // Added
+  getUnlockedTechniques(userId: number): Promise<Technique[]>;     // Added
+  checkPrerequisites(userId: number, techniqueId: number): Promise<boolean>; // Added
+  unlockTechnique(userId: number, techniqueId: number): Promise<void>;       // Added
+  getTechniqueProgress(userId: number): Promise<{
+    beltRank: string;
+    total: number;
+    unlocked: number;
+    percentage: number;
+  }[]>; // Added
 
   // Community features
   followUser(followerId: number, followingId: number): Promise<void>;
@@ -166,6 +176,86 @@ export class DatabaseStorage implements IStorage {
 
   async getTechniquesByCategory(category: string): Promise<Technique[]> {
     return await db.select().from(techniques).where(eq(techniques.category, category));
+  }
+
+  async getTechniquesByBeltRank(beltRank: string): Promise<Technique[]> {
+    return await db.select()
+      .from(techniques)
+      .where(eq(techniques.difficulty, beltRank));
+  }
+
+  async getUnlockedTechniques(userId: number): Promise<Technique[]> {
+    const progress = await db.select()
+      .from(techniqueProgress)
+      .where(eq(techniqueProgress.userId, userId))
+      .where(eq(techniqueProgress.status, 'unlocked'));
+
+    const techniqueIds = progress.map(p => p.techniqueId);
+    if (techniqueIds.length === 0) return [];
+
+    return await db.select()
+      .from(techniques)
+      .where(inArray(techniques.id, techniqueIds));
+  }
+
+  async checkPrerequisites(userId: number, techniqueId: number): Promise<boolean> {
+    const technique = await db.select()
+      .from(techniques)
+      .where(eq(techniques.id, techniqueId))
+      .limit(1);
+
+    if (!technique[0]) return false;
+
+    const prerequisites = technique[0].prerequisites;
+    if (!prerequisites || prerequisites.length === 0) return true;
+
+    const unlockedTechniques = await this.getUnlockedTechniques(userId);
+    const unlockedIds = unlockedTechniques.map(t => t.id);
+
+    return prerequisites.every(prereqId => unlockedIds.includes(prereqId));
+  }
+
+  async unlockTechnique(userId: number, techniqueId: number): Promise<void> {
+    const hasPrerequisites = await this.checkPrerequisites(userId, techniqueId);
+    if (!hasPrerequisites) {
+      throw new StorageError('Prerequisites not met');
+    }
+
+    await db.insert(techniqueProgress)
+      .values({
+        userId,
+        techniqueId,
+        status: 'unlocked',
+        completedAt: new Date()
+      })
+      .onConflictDoUpdate({
+        target: [techniqueProgress.userId, techniqueProgress.techniqueId],
+        set: {
+          status: 'unlocked',
+          completedAt: new Date()
+        }
+      });
+  }
+
+  async getTechniqueProgress(userId: number): Promise<{ beltRank: string; total: number; unlocked: number; percentage: number; }[]> {
+    const allTechniques = await db.select()
+      .from(techniques)
+      .groupBy(techniques.difficulty)
+      .execute();
+
+    const unlockedTechniques = await this.getUnlockedTechniques(userId);
+
+    const beltRanks = ['white', 'blue', 'purple', 'brown', 'black'];
+    return beltRanks.map(belt => {
+      const totalForBelt = allTechniques.filter(t => t.difficulty === belt).length;
+      const unlockedForBelt = unlockedTechniques.filter(t => t.difficulty === belt).length;
+      return {
+        beltRank: belt,
+        total: totalForBelt,
+        unlocked: unlockedForBelt,
+        percentage: totalForBelt > 0 ? (unlockedForBelt / totalForBelt) * 100 : 0
+      };
+    });
   }
 
   async followUser(followerId: number, followingId: number): Promise<void> {
