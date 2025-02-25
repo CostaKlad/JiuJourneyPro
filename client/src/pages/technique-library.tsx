@@ -18,7 +18,7 @@ function TechniqueCard({ technique, canUnlock, onUnlock }: {
   onUnlock: () => void;
 }) {
   return (
-    <Card className={!technique.isUnlocked ? "opacity-75" : undefined}>
+    <Card className={technique.isUnlocked ? undefined : "opacity-75"}>
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
@@ -33,7 +33,7 @@ function TechniqueCard({ technique, canUnlock, onUnlock }: {
           <Badge variant="secondary" className="capitalize">
             {technique.difficulty} Belt
           </Badge>
-          {technique.prerequisites?.length > 0 && (
+          {technique.prerequisites && technique.prerequisites.length > 0 && (
             <Badge variant="outline">
               {technique.prerequisites.length} Prerequisites
             </Badge>
@@ -71,14 +71,18 @@ export default function TechniqueLibrary() {
 
   const unlockMutation = useMutation({
     mutationFn: async (techniqueId: number) => {
-      await apiRequest("POST", `/api/techniques/${techniqueId}/unlock`);
+      const res = await apiRequest("POST", `/api/techniques/${techniqueId}/unlock`);
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to unlock technique");
+      }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/techniques"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/techniques/belt"] });
       queryClient.invalidateQueries({ queryKey: ["/api/techniques/progress"] });
       toast({
-        title: "Technique Unlocked!",
-        description: "You've unlocked a new technique.",
+        title: "Success!",
+        description: "You've unlocked a new technique!",
       });
     },
     onError: (error: Error) => {
@@ -151,6 +155,9 @@ function TechniqueBeltContent({ rank, onUnlock }: { rank: string; onUnlock: (id:
     queryKey: ["/api/techniques/belt", rank],
     queryFn: async () => {
       const res = await apiRequest("GET", `/api/techniques/belt/${rank}`);
+      if (!res.ok) {
+        throw new Error("Failed to fetch techniques");
+      }
       return res.json();
     }
   });
@@ -164,7 +171,7 @@ function TechniqueBeltContent({ rank, onUnlock }: { rank: string; onUnlock: (id:
     );
   }
 
-  return techniques.map((technique) => (
+  return techniques.map((technique: any) => (
     <TechniqueCard
       key={technique.id}
       technique={technique}
