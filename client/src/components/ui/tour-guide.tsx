@@ -26,19 +26,18 @@ export function TourGuide() {
       let top = 0;
       let left = 0;
 
-      // Default to right side placement to avoid overlapping with hamburger menu
       switch (tooltipPlacement) {
         case 'top':
           top = rect.top - 10;
-          left = rect.right + rect.width / 2;
+          left = rect.right + 20;
           break;
         case 'bottom':
           top = rect.bottom + 10;
-          left = rect.right + rect.width / 2;
+          left = rect.right + 20;
           break;
         case 'left':
           top = rect.top + rect.height / 2;
-          left = rect.right + 10;
+          left = rect.right + 20;
           break;
         case 'right':
           top = rect.top + rect.height / 2;
