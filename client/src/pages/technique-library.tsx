@@ -38,7 +38,12 @@ function TechniqueCard({ technique, canUnlock, onUnlock }: {
             {technique.difficulty} Belt
           </Badge>
           {technique.prerequisites && technique.prerequisites.length > 0 && (
-            <Badge variant="outline">
+            <Badge variant={canUnlock ? "outline" : "destructive"} className="flex items-center gap-1">
+              {canUnlock ? (
+                <Check className="h-3 w-3" />
+              ) : (
+                <Lock className="h-3 w-3" />
+              )}
               {technique.prerequisites.length} Prerequisites
             </Badge>
           )}

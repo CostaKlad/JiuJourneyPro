@@ -229,7 +229,21 @@ export class DatabaseStorage implements IStorage {
       // Then check prerequisites
       const hasPrerequisites = await this.checkPrerequisites(userId, techniqueId);
       if (!hasPrerequisites) {
-        throw new StorageError('Prerequisites not met');
+        // Get the prerequisite technique names for better error message
+        const prerequisites = technique.prerequisites || [];
+        const prerequisiteTechniques = prerequisites.length > 0 
+          ? await db.select()
+              .from(techniques)
+              .where(inArray(techniques.id, prerequisites))
+          : [];
+
+        const missingPrereqs = prerequisiteTechniques
+          .map(t => t.name)
+          .join(", ");
+
+        throw new StorageError(
+          `Prerequisites not met. You need to unlock: ${missingPrereqs}`
+        );
       }
 
       // Create or update the technique progress
