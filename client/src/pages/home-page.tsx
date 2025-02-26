@@ -35,9 +35,6 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell
 } from "recharts";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { formatDistanceToNow } from 'date-fns';
@@ -648,7 +645,7 @@ function HomePage() {
           <Card>
             <CardHeader>
               <CardTitle>Training Progress</CardTitle>
-              <CardDescription>Your training duration and performance over time</CardDescription>
+              <CardDescription>Your training duration over time</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="h-[300px]">
@@ -664,59 +661,7 @@ function HomePage() {
                       strokeWidth={2}
                     />
                   </LineChart>
-                </ResponsiveContainer>              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Training Type Distribution</CardTitle>
-              <CardDescription>Breakdown of your training sessions</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={trainingTypeData}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={100}
-                      label
-                    >
-                      {trainingTypeData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
                 </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle>Focus Areas</CardTitle>
-              <CardDescription>Your training priorities</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {Object.entries(groupedFocusAreas).map(([key, logs]) => {
-                  return (
-                    <div key={key} className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-primary" />
-                        <span>{key.replace(/,/g, ', ')}</span>
-                      </div>
-                      <span className="font-medium">{logs.length} sessions</span>
-                    </div>
-                  );
-                })}
               </div>
             </CardContent>
           </Card>
@@ -724,7 +669,7 @@ function HomePage() {
           <Card>
             <CardHeader>
               <CardTitle>Recent Techniques</CardTitle>
-              <CardDescription>Latest techniques practiced</CardDescription>
+              <CardDescription>Latest techniques you've practiced</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
@@ -741,6 +686,7 @@ function HomePage() {
             </CardContent>
           </Card>
         </div>
+
         <Card className="col-span-full">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
