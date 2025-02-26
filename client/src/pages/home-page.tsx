@@ -168,10 +168,10 @@ const BJJTechniques = {
 };
 
 const BELT_MILESTONES = {
-  blue: { months: 12, label: "Blue Belt (avg. 1 year)" },
-  purple: { months: 24, label: "Purple Belt (avg. 2 years)" },
-  brown: { months: 42, label: "Brown Belt (avg. 3.5 years)" },
-  black: { months: 60, label: "Black Belt (avg. 5 years)" }
+  blue: { months: 12, label: "Blue Belt", description: "~1 year" },
+  purple: { months: 24, label: "Purple Belt", description: "~2 years" },
+  brown: { months: 42, label: "Brown Belt", description: "~3.5 years" },
+  black: { months: 60, label: "Black Belt", description: "~5 years" }
 };
 
 const getBeltColor = (belt: string) => {
@@ -667,6 +667,24 @@ function HomePage() {
               <CardDescription>Your training duration compared to typical belt progression</CardDescription>
             </CardHeader>
             <CardContent>
+              {/* Belt Milestone Legend */}
+              <div className="mb-4 grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {Object.entries(BELT_MILESTONES).map(([belt, { label, description }]) => (
+                  <div key={belt} className="flex items-center gap-2">
+                    <div 
+                      className="w-6 h-0.5" 
+                      style={{ backgroundColor: getBeltColor(belt) }}
+                    />
+                    <span className="text-sm">
+                      {label}
+                      <span className="text-muted-foreground ml-1">
+                        ({description})
+                      </span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+
               <div className="h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={last7DaysData}>
@@ -678,12 +696,14 @@ function HomePage() {
                         key={belt}
                         y={months * 30 * 2} // Approximate days of training
                         stroke={getBeltColor(belt)}
-                        strokeDasharray="3 3"
+                        strokeWidth={1.5}
+                        strokeDasharray="5 5"
                         label={{
                           value: label,
                           position: 'right',
                           fill: getBeltColor(belt),
-                          fontSize: 12
+                          fontSize: 12,
+                          fontWeight: 500
                         }}
                       />
                     ))}
@@ -697,7 +717,7 @@ function HomePage() {
                 </ResponsiveContainer>
               </div>
               <div className="mt-4 text-sm text-muted-foreground">
-                <p>Milestone lines show typical progression timelines. Individual progress may vary based on training frequency and dedication.</p>
+                <p>The horizontal lines represent typical belt progression timelines. Your actual progress may vary based on training frequency and dedication.</p>
               </div>
             </CardContent>
           </Card>
