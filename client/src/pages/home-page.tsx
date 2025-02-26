@@ -35,6 +35,8 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
+  ReferenceLine,
+  ReferenceArea,
 } from "recharts";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { formatDistanceToNow } from 'date-fns';
@@ -163,6 +165,23 @@ const BJJTechniques = {
     "Harai Goshi (Sweeping Hip Throw)",
     "Osoto Gari (Outer Reap)"
   ]
+};
+
+const BELT_MILESTONES = {
+  blue: { months: 12, label: "Blue Belt (avg. 1 year)" },
+  purple: { months: 24, label: "Purple Belt (avg. 2 years)" },
+  brown: { months: 42, label: "Brown Belt (avg. 3.5 years)" },
+  black: { months: 60, label: "Black Belt (avg. 5 years)" }
+};
+
+const getBeltColor = (belt: string) => {
+  switch (belt) {
+    case "blue": return "#0066CC";
+    case "purple": return "#660099";
+    case "brown": return "#8B4513";
+    case "black": return "#000000";
+    default: return "#CCCCCC";
+  }
 };
 
 type TrainingFormData = {
@@ -645,7 +664,7 @@ function HomePage() {
           <Card>
             <CardHeader>
               <CardTitle>Training Progress</CardTitle>
-              <CardDescription>Your training duration over time</CardDescription>
+              <CardDescription>Your training duration compared to typical belt progression</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="h-[300px]">
@@ -654,6 +673,20 @@ function HomePage() {
                     <XAxis dataKey="date" />
                     <YAxis />
                     <Tooltip />
+                    {Object.entries(BELT_MILESTONES).map(([belt, { months, label }]) => (
+                      <ReferenceLine
+                        key={belt}
+                        y={months * 30 * 2} // Approximate days of training
+                        stroke={getBeltColor(belt)}
+                        strokeDasharray="3 3"
+                        label={{
+                          value: label,
+                          position: 'right',
+                          fill: getBeltColor(belt),
+                          fontSize: 12
+                        }}
+                      />
+                    ))}
                     <Line
                       type="monotone"
                       dataKey="duration"
@@ -662,6 +695,9 @@ function HomePage() {
                     />
                   </LineChart>
                 </ResponsiveContainer>
+              </div>
+              <div className="mt-4 text-sm text-muted-foreground">
+                <p>Milestone lines show typical progression timelines. Individual progress may vary based on training frequency and dedication.</p>
               </div>
             </CardContent>
           </Card>
