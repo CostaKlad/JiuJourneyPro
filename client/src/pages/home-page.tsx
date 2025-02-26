@@ -587,118 +587,62 @@ function HomePage() {
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Training Sessions</CardTitle>
-              <BookOpenIcon className="h-4 w-4 text-purple-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalSessions}</div>
-              <p className="text-xs text-muted-foreground">Lifetime training sessions</p>
-            </CardContent>
-          </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Training Sessions</CardTitle>
+                <BookOpenIcon className="h-4 w-4 text-purple-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{totalSessions}</div>
+                <p className="text-xs text-muted-foreground">Lifetime training sessions</p>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Training Hours</CardTitle>
-              <TimerIcon className="h-4 w-4 text-blue-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{Math.round(totalTime / 60)}</div>
-              <p className="text-xs text-muted-foreground">Total mat time</p>
-            </CardContent>
-          </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Techniques Practiced</CardTitle>
+                <BookOpen className="h-4 w-4 text-green-500" />
+              </CardHeader>
+              <CardContent>
+                {trainingLogs && trainingLogs.length > 0 && (
+                  <div className="text-2xl font-bold">
+                    {trainingLogs.reduce((acc, log) => acc + (Array.isArray(log.techniquesPracticed) ? log.techniquesPracticed.length : 0), 0)}
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground">Total techniques logged</p>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Techniques Practiced</CardTitle>
-              <BookOpen className="h-4 w-4 text-green-500" />
-            </CardHeader>
-            <CardContent>
-              {trainingLogs && trainingLogs.length > 0 && (
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Average Performance</CardTitle>
+                <TrendingUpIcon className="h-4 w-4 text-orange-500" />
+              </CardHeader>
+              <CardContent>
                 <div className="text-2xl font-bold">
-                  {trainingLogs.reduce((acc, log) => acc + (Array.isArray(log.techniquesPracticed) ? log.techniquesPracticed.length : 0), 0)}
+                  {trainingLogs && trainingLogs.length > 0
+                    ? (trainingLogs.reduce((acc, log) => acc + (log.performanceRating || 0), 0) / trainingLogs.length).toFixed(1)
+                    : "N/A"}
                 </div>
-              )}
-              <p className="text-xs text-muted-foreground">Total techniques logged</p>
-            </CardContent>
-          </Card>
+                <p className="text-xs text-muted-foreground">Average performance rating</p>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Average Performance</CardTitle>
-              <TrendingUpIcon className="h-4 w-4 text-orange-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {trainingLogs && trainingLogs.length > 0
-                  ? (trainingLogs.reduce((acc, log) => acc + (log.performanceRating || 0), 0) / trainingLogs.length).toFixed(1)
-                  : "N/A"}
-              </div>
-              <p className="text-xs text-muted-foreground">Average performance rating</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Submissions Success</CardTitle>
-              <Target className="h-4 w-4 text-green-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {trainingLogs && trainingLogs.length > 0
-                  ? `${trainingLogs.reduce((acc, log) => acc + (Array.isArray(log.submissionsSuccessful) ? log.submissionsSuccessful.length : 0), 0)} / 
-                     ${trainingLogs.reduce((acc, log) => acc + (Array.isArray(log.submissionsAttempted) ? log.submissionsAttempted.length : 0), 0)}`
-                  : "0 / 0"}
-              </div>
-              <p className="text-xs text-muted-foreground">Successful vs Attempted</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Escape Success</CardTitle>
-              <Shield className="h-4 w-4 text-blue-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {trainingLogs && trainingLogs.length > 0
-                  ? `${trainingLogs.reduce((acc, log) => acc + (Array.isArray(log.escapesSuccessful) ? log.escapesSuccessful.length : 0), 0)} / 
-                     ${trainingLogs.reduce((acc, log) => acc + (Array.isArray(log.escapesAttempted) ? log.escapesAttempted.length : 0), 0)}`
-                  : "0 / 0"}
-              </div>
-              <p className="text-xs text-muted-foreground">Successful vs Attempted</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Average Energy</CardTitle>
-              <Flame className="h-4 w-4 text-orange-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {trainingLogs && trainingLogs.length > 0
-                  ? (trainingLogs.reduce((acc, log) => acc + (log.energyLevel || 0), 0) / trainingLogs.length).toFixed(1)
-                  : "N/A"}
-              </div>
-              <p className="text-xs text-muted-foreground">Average energy level</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Hours</CardTitle>
-              <TimerIcon className="h-4 w-4 text-purple-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{Math.round(totalTime / 60)}</div>
-              <p className="text-xs text-muted-foreground">Mat time (hours)</p>
-            </CardContent>
-          </Card>
-        </div>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Average Energy</CardTitle>
+                <Flame className="h-4 w-4 text-orange-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {trainingLogs && trainingLogs.length > 0
+                    ? (trainingLogs.reduce((acc, log) => acc + (log.energyLevel || 0), 0) / trainingLogs.length).toFixed(1)
+                    : "N/A"}
+                </div>
+                <p className="text-xs text-muted-foreground">Average energy level</p>
+              </CardContent>
+            </Card>
+          </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-8">
           <Card>
