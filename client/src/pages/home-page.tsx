@@ -328,6 +328,19 @@ function HomePage() {
 
   const groupedFocusAreas = groupBy(trainingLogs, (log) => log.focusAreas?.join(',') || '');
 
+  // Get current belt target hours
+  const getCurrentBeltTarget = (currentHours: number) => {
+    const beltHours = Object.entries(BELT_MILESTONES).map(([belt, { months }]) => ({
+      belt,
+      hours: months * 30 * 2 // Approximate training hours needed
+    }));
+
+    // Find next belt target
+    const nextBelt = beltHours.find(b => b.hours > currentHours);
+    return nextBelt || beltHours[beltHours.length - 1];
+  };
+
+
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-7xl mx-auto">
@@ -702,42 +715,49 @@ function HomePage() {
                     <XAxis dataKey="date" />
                     <YAxis 
                       label={{ 
-                        value: 'Training Hours', 
+                        value: 'Hours Trained', 
                         angle: -90, 
                         position: 'insideLeft' 
                       }}
                     />
                     <Tooltip 
-                      formatter={(value: number) => [`${value} hours`, 'Total Training']}
+                      formatter={(value: number) => {
+                        const target = getCurrentBeltTarget(value);
+                        const remaining = target.hours - value;
+                        return [`${value} hours trained (${remaining} hours to ${target.belt})`, 'Progress'];
+                      }}
                     />
-                    {Object.entries(BELT_MILESTONES).map(([belt, { months, label }]) => (
-                      <ReferenceLine
-                        key={belt}
-                        y={months * 4} // Approximate hours per month
-                        stroke={getBeltColor(belt)}
-                        strokeWidth={1.5}
-                        strokeDasharray="5 5"
-                        label={{
-                          value: label,
-                          position: 'right',
-                          fill: getBeltColor(belt),
-                          fontSize: 12,
-                          fontWeight: 500
-                        }}
-                      />
-                    ))}
+                    {Object.entries(BELT_MILESTONES).map(([belt, { months, label }]) => {
+                      const hours = months * 30 * 2;
+                      return (
+                        <ReferenceLine
+                          key={belt}
+                          y={hours}
+                          stroke={getBeltColor(belt)}
+                          strokeWidth={2}
+                          strokeDasharray="5 5"
+                          label={{
+                            value: `${label} (${hours} hours)`,
+                            position: 'right',
+                            fill: getBeltColor(belt),
+                            fontSize: 12,
+                            fontWeight: 500
+                          }}
+                        />
+                      );
+                    })}
                     <Line
                       type="monotone"
                       dataKey="cumulativeHours"
                       stroke="#8884d8"
-                      strokeWidth={2}
+                      strokeWidth={3}
                       dot={false}
                     />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
               <div className="mt-4 text-sm text-muted-foreground">
-                <p>The horizontal lines represent typical belt progression timelines. Your actual progress may vary based on training frequency and dedication.</p>
+                <p>The chart shows your accumulated training hours against typical belt progression milestones. The horizontal lines indicate approximate hours needed for each belt rank.</p>
               </div>
             </CardContent>
           </Card>
