@@ -23,19 +23,17 @@ export function TourGuide() {
       const rect = element.getBoundingClientRect();
       const tooltipPlacement = (currentTourStep.placement || 'bottom') as TooltipPlacement;
 
-      const OFFSET = 20;
+      const OFFSET = 16;
       let top = rect.top + rect.height / 2;
       let left = rect.right + OFFSET;
 
-      // Ensure tooltip is always on the right side regardless of placement
-      switch (tooltipPlacement) {
-        case 'top':
-        case 'bottom':
-        case 'left':
-        case 'right':
-          top = rect.top + rect.height / 2;
-          left = rect.right + OFFSET;
-          break;
+      // Ensure tooltip stays within viewport
+      if (left + 320 > window.innerWidth) {
+        left = rect.left - 320 - OFFSET;
+      }
+
+      if (top + 200 > window.innerHeight) {
+        top = window.innerHeight - 200 - OFFSET;
       }
 
       setPosition({ top, left });
@@ -64,36 +62,42 @@ export function TourGuide() {
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.9 }}
+        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: -10 }}
+        transition={{ duration: 0.2, ease: 'easeOut' }}
         style={tooltipStyle}
       >
-        <Card className="w-80">
+        <Card className="w-80 shadow-lg backdrop-blur-sm bg-background/95 border-primary/10">
           <CardHeader className="relative pb-2">
             <Button
               variant="ghost"
               size="icon"
-              className="absolute right-2 top-2"
+              className="absolute right-2 top-2 text-muted-foreground hover:text-foreground"
               onClick={endTour}
             >
               <X className="h-4 w-4" />
             </Button>
-            <CardTitle className="text-lg pr-8">{currentTourStep.title}</CardTitle>
+            <CardTitle className="text-lg pr-8 leading-tight">{currentTourStep.title}</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground">{currentTourStep.description}</p>
+            <p className="text-sm text-muted-foreground leading-relaxed">{currentTourStep.description}</p>
           </CardContent>
-          <CardFooter className="flex justify-between">
+          <CardFooter className="flex justify-between pt-2">
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
               onClick={previousStep}
               disabled={currentStep === 0}
+              className="hover:bg-primary/5"
             >
               Previous
             </Button>
-            <Button size="sm" onClick={nextStep}>
+            <Button 
+              size="sm" 
+              onClick={nextStep}
+              className="bg-primary/10 hover:bg-primary/20 text-primary"
+            >
               {currentStep === 0 ? "Let's Start!" : "Next"}
             </Button>
           </CardFooter>
