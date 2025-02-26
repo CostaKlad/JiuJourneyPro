@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -26,7 +26,6 @@ import {
   Settings,
   LogOut,
   Plus,
-  Target,
   Brain,
   BookOpen
 } from "lucide-react";
@@ -48,6 +47,11 @@ function Layout({ children }: { children: React.ReactNode }) {
   const { user, logoutMutation } = useAuth();
   const [location] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleNavigate = () => setIsOpen(false);
 
@@ -85,14 +89,13 @@ function Layout({ children }: { children: React.ReactNode }) {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Mobile-optimized header */}
+    <div className={`min-h-screen bg-background transition-opacity duration-300 ${mounted ? 'opacity-100' : 'opacity-0'}`}>
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-14 items-center justify-between px-4">
+        <div className="container flex h-14 items-center">
           <div className="flex items-center gap-4">
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="lg:hidden">
+                <Button variant="ghost" size="icon" className="lg:hidden btn">
                   <Menu className="h-5 w-5" />
                   <span className="sr-only">Menu</span>
                 </Button>
@@ -177,8 +180,8 @@ function Layout({ children }: { children: React.ReactNode }) {
             </Sheet>
 
             <Link href="/">
-              <a className="flex items-center gap-2">
-                <img src="/logo.webp" alt="OssRyu" className="h-8 w-8" />
+              <a className="flex items-center gap-2 nav-link">
+                <img src="/logo.webp" alt="OssRyu" className="h-8 w-8 transition-transform duration-200 hover:scale-110" />
                 <span className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text font-bold text-transparent">
                   OssRyu
                 </span>
@@ -186,12 +189,11 @@ function Layout({ children }: { children: React.ReactNode }) {
             </Link>
           </div>
 
-          {/* Quick Actions */}
-          <div className="flex items-center gap-2">
+          <div className="ml-auto flex items-center gap-2">
             <Button
               variant="outline"
               size="sm"
-              className="hidden sm:flex"
+              className="hidden sm:flex btn"
               onClick={() => window.location.href = '/training-wizard'}
             >
               <Plus className="mr-2 h-4 w-4" />
@@ -201,9 +203,8 @@ function Layout({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      {/* Desktop Navigation */}
       <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-72 lg:flex-col">
-        <div className="flex grow flex-col gap-y-5 overflow-y-auto border-r bg-background/95 px-6 pb-4">
+        <div className="flex grow flex-col gap-y-5 overflow-y-auto border-r bg-background/95 px-6 pb-4 backdrop-blur">
           <div className="flex h-16 shrink-0 items-center">
             <Link href="/">
               <a className="flex items-center gap-2">
@@ -250,8 +251,10 @@ function Layout({ children }: { children: React.ReactNode }) {
       </div>
 
       <main className="lg:pl-72">
-        <div className="px-4 py-8 sm:px-6 lg:px-8">
-          {children}
+        <div className="container py-8">
+          <div className={`page-transition ${mounted ? 'page-enter-active' : 'page-enter'}`}>
+            {children}
+          </div>
         </div>
       </main>
     </div>
