@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -288,13 +288,24 @@ function HomePage() {
   const totalSessions = trainingLogs?.length || 0;
   const avgSessionTime = totalSessions > 0 ? Math.round(totalTime / totalSessions) : 0;
 
-  const last7DaysData = trainingLogs
-    ?.slice(0, 7)
-    .map(log => ({
-      date: new Date(log.date).toLocaleDateString(),
-      duration: log.duration
-    }))
-    .reverse();
+  const last7DaysData = useMemo(() => {
+    if (!trainingLogs) return [];
+
+    // Sort logs by date, oldest first
+    const sortedLogs = [...trainingLogs].sort((a, b) => 
+      new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+
+    // Calculate cumulative hours
+    let cumulativeHours = 0;
+    return sortedLogs.map(log => {
+      cumulativeHours += log.duration / 60; // Convert minutes to hours
+      return {
+        date: new Date(log.date).toLocaleDateString(),
+        cumulativeHours: Math.round(cumulativeHours)
+      };
+    });
+  }, [trainingLogs]);
 
   const trainingTypeData = trainingLogs?.reduce((acc: { name: string, value: number }[], log) => {
     const existingType = acc.find(item => item.name === log.type);
@@ -689,12 +700,20 @@ function HomePage() {
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={last7DaysData}>
                     <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip />
+                    <YAxis 
+                      label={{ 
+                        value: 'Training Hours', 
+                        angle: -90, 
+                        position: 'insideLeft' 
+                      }}
+                    />
+                    <Tooltip 
+                      formatter={(value: number) => [`${value} hours`, 'Total Training']}
+                    />
                     {Object.entries(BELT_MILESTONES).map(([belt, { months, label }]) => (
                       <ReferenceLine
                         key={belt}
-                        y={months * 30 * 2} // Approximate days of training
+                        y={months * 4} // Approximate hours per month
                         stroke={getBeltColor(belt)}
                         strokeWidth={1.5}
                         strokeDasharray="5 5"
@@ -709,9 +728,10 @@ function HomePage() {
                     ))}
                     <Line
                       type="monotone"
-                      dataKey="duration"
+                      dataKey="cumulativeHours"
                       stroke="#8884d8"
                       strokeWidth={2}
+                      dot={false}
                     />
                   </LineChart>
                 </ResponsiveContainer>
