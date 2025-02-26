@@ -168,10 +168,10 @@ const BJJTechniques = {
 };
 
 const BELT_MILESTONES = {
-  blue: { months: 12, label: "Blue Belt", description: "~1 year" },
-  purple: { months: 24, label: "Purple Belt", description: "~2 years" },
-  brown: { months: 42, label: "Brown Belt", description: "~3.5 years" },
-  black: { months: 60, label: "Black Belt", description: "~5 years" }
+  blue: { months: 24, label: "Blue Belt", description: "~2 years" },
+  purple: { months: 48, label: "Purple Belt", description: "~4 years" },
+  brown: { months: 84, label: "Brown Belt", description: "~7 years" },
+  black: { months: 120, label: "Black Belt", description: "~10 years" }
 };
 
 const getBeltColor = (belt: string) => {
