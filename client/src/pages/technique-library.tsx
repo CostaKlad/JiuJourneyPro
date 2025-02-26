@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
 import { Lock, Check, Trophy, Star } from "lucide-react";
 import { type Technique } from "@shared/schema";
@@ -18,93 +17,83 @@ function TechniqueCard({ technique, canUnlock, onUnlock }: {
   onUnlock: () => void;
 }) {
   return (
-    <Card className={`transition-all duration-200 ${technique.isUnlocked ? "border-primary/50 bg-primary/5" : "opacity-75"}`}>
+    <Card className={`group relative overflow-hidden transition-all duration-200 hover:border-primary/50 ${
+      technique.isUnlocked ? "bg-primary/5" : ""
+    }`}>
+      <div className="absolute right-4 top-4">
+        {technique.isUnlocked ? (
+          <div className="flex items-center gap-1 rounded-full bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
+            <Check className="h-3 w-3" />
+            Unlocked
+          </div>
+        ) : (
+          <div className="flex items-center gap-1 rounded-full bg-muted px-2 py-1 text-xs font-medium">
+            <Lock className="h-3 w-3" />
+            Locked
+          </div>
+        )}
+      </div>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            {technique.name}
-            {technique.isUnlocked ? (
-              <Check className="h-4 w-4 text-primary" />
-            ) : (
-              <Lock className="h-4 w-4 text-muted-foreground" />
-            )}
-          </CardTitle>
-          <Badge variant={technique.isUnlocked ? "default" : "outline"} className="capitalize">
-            {technique.position}
-          </Badge>
+        <div className="space-y-1">
+          <CardTitle>{technique.name}</CardTitle>
+          <CardDescription className="flex flex-wrap items-center gap-2">
+            <Badge variant="outline" className="capitalize">
+              {technique.position}
+            </Badge>
+            <Badge variant="secondary" className="capitalize">
+              {technique.difficulty} Belt
+            </Badge>
+          </CardDescription>
         </div>
-        <CardDescription className="flex items-center gap-2">
-          <Badge variant="secondary" className="capitalize">
-            {technique.difficulty} Belt
-          </Badge>
-          {technique.prerequisites && technique.prerequisites.length > 0 && (
-            <Badge variant={canUnlock ? "outline" : "destructive"} className="flex items-center gap-1">
-              {canUnlock ? (
-                <Check className="h-3 w-3" />
-              ) : (
-                <Lock className="h-3 w-3" />
-              )}
-              {technique.prerequisites.length} Prerequisites
-            </Badge>
-          )}
-          {technique.isUnlocked && (
-            <Badge variant="secondary" className="ml-auto">
-              <Star className="h-3 w-3 mr-1" />
-              {technique.points} Points
-            </Badge>
-          )}
-        </CardDescription>
       </CardHeader>
       <CardContent>
-        <p className="text-sm mb-4">{technique.description}</p>
+        <p className="mb-4 text-sm text-muted-foreground">{technique.description}</p>
         {!technique.isUnlocked && (
-          <Button
-            onClick={onUnlock}
-            disabled={!canUnlock}
-            variant="outline"
-            className="w-full"
-          >
-            <Trophy className="h-4 w-4 mr-2" />
-            {canUnlock ? "Unlock Technique" : "Prerequisites Required"}
-          </Button>
+          <div className="space-y-3">
+            {technique.prerequisites && technique.prerequisites.length > 0 && (
+              <div className="rounded-lg bg-muted p-3 text-sm">
+                <div className="font-medium">Prerequisites:</div>
+                <div className="mt-1 text-muted-foreground">
+                  Unlock required techniques first
+                </div>
+              </div>
+            )}
+            <Button
+              onClick={onUnlock}
+              disabled={!canUnlock}
+              className="w-full"
+              variant={canUnlock ? "default" : "outline"}
+            >
+              <Trophy className="mr-2 h-4 w-4" />
+              {canUnlock ? "Unlock Technique" : "Prerequisites Required"}
+            </Button>
+          </div>
         )}
       </CardContent>
     </Card>
   );
 }
 
-function BeltProgressCard({ belt, nextBelt, totalPoints }: {belt: any; nextBelt: any; totalPoints: number}) {
-  const getRequiredPoints = (belt) => {
-    switch (belt) {
-      case "white":
-        return 100;
-      case "blue":
-        return 300;
-      case "purple":
-        return 600;
-      case "brown":
-        return 1000;
-      case "black":
-        return Infinity;
-      default:
-        return 100;
+function BeltProgressCard({ belt, nextBelt, totalPoints }: { belt: any; nextBelt: any; totalPoints: number }) {
+  const getBeltColor = (beltRank: string) => {
+    switch (beltRank) {
+      case "white": return "bg-gray-200";
+      case "blue": return "bg-blue-600";
+      case "purple": return "bg-purple-600";
+      case "brown": return "bg-amber-800";
+      case "black": return "bg-black";
+      default: return "bg-gray-200";
     }
   };
 
-  const getBeltColor = (beltRank: string) => {
-    switch (beltRank) {
-      case "white":
-        return "bg-gray-200";
-      case "blue":
-        return "bg-blue-600";
-      case "purple":
-        return "bg-purple-600";
-      case "brown":
-        return "bg-amber-800";
-      case "black":
-        return "bg-black";
-      default:
-        return "bg-gray-200";
+  const getRequiredPoints = (belt: string) => {
+    switch (belt) {
+      case "white": return 100;
+      case "blue": return 300;
+      case "purple": return 600;
+      case "brown": return 1000;
+      case "black": return Infinity;
+      default: return 100;
     }
   };
 
@@ -113,49 +102,52 @@ function BeltProgressCard({ belt, nextBelt, totalPoints }: {belt: any; nextBelt:
   const progress = (totalPoints / currentRequired) * 100;
 
   return (
-    <Card key={belt.beltRank} className="relative overflow-hidden">
-      <div className={`absolute top-0 left-0 w-1 h-full ${getBeltColor(belt.beltRank)}`} />
+    <Card className="relative overflow-hidden transition-all duration-200 hover:border-primary/50">
+      <div className={`absolute inset-y-0 left-0 w-1 ${getBeltColor(belt.beltRank)}`} />
       <CardHeader className="pb-2">
-        <CardTitle className="text-base capitalize flex items-center justify-between">
+        <CardTitle className="flex items-center justify-between text-base">
           <div className="flex items-center gap-2">
-            <div className={`w-3 h-3 rounded-full ${getBeltColor(belt.beltRank)}`} />
-            {belt.beltRank} Belt
+            <div className={`h-3 w-3 rounded-full ${getBeltColor(belt.beltRank)}`} />
+            <span className="capitalize">{belt.beltRank} Belt</span>
           </div>
-          <span className="text-sm font-normal">
+          <span className="text-sm font-normal text-muted-foreground">
             {belt.unlocked} / {belt.total}
           </span>
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <Progress 
-              value={belt.percentage} 
-              className="flex-1" 
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <span>Techniques Progress</span>
+              <span>{Math.round(belt.percentage)}%</span>
+            </div>
+            <Progress
+              value={belt.percentage}
+              className="h-2"
               indicatorClassName={belt.percentage === 100 ? "bg-green-500" : getBeltColor(belt.beltRank)}
             />
-            <span className="text-sm font-medium">{Math.round(belt.percentage)}%</span>
           </div>
           {nextBelt && (
-            <div className="text-sm text-muted-foreground">
-              <div className="flex justify-between mb-1">
-                <span>Progress to {nextBelt.beltRank}</span>
-                <span>{totalPoints} / {nextRequired} points</span>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span>Next Rank: {nextBelt.beltRank}</span>
+                <span>{totalPoints} / {nextRequired}</span>
               </div>
-              <Progress 
-                value={progress} 
-                className="h-2" 
+              <Progress
+                value={progress}
+                className="h-2"
                 indicatorClassName={getBeltColor(nextBelt.beltRank)}
               />
+              <div className="mt-2 text-sm text-muted-foreground">
+                <div>Requirements:</div>
+                <ul className="ml-4 list-disc">
+                  <li>Unlock {Math.max(0, belt.total - belt.unlocked)} more techniques</li>
+                  <li>Earn {Math.max(0, nextRequired - totalPoints)} more points</li>
+                </ul>
+              </div>
             </div>
           )}
-          <div className="text-sm space-y-1">
-            <p className="font-medium">Requirements for next rank:</p>
-            <ul className="list-disc list-inside text-muted-foreground">
-              <li>Unlock {Math.max(0, belt.total - belt.unlocked)} more techniques</li>
-              <li>Earn {Math.max(0, nextRequired - totalPoints)} more points</li>
-            </ul>
-          </div>
         </div>
       </CardContent>
     </Card>
@@ -208,55 +200,58 @@ export default function TechniqueLibrary() {
   });
 
   return (
-    <div className="min-h-screen bg-background p-4 sm:p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl sm:text-3xl font-bold">Technique Library</h1>
-          {pointsSummary && (
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <Trophy className="h-5 w-5 text-primary" />
-                <span className="text-sm font-medium">{pointsSummary.totalPoints} Points</span>
-              </div>
-              <Badge variant="outline">Level {pointsSummary.level}</Badge>
-            </div>
-          )}
+    <div className="space-y-8">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold sm:text-3xl">Technique Library</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Master techniques and track your progress through the ranks
+          </p>
         </div>
-
-        {progress && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-            {progress.map((belt, index) => (
-              <BeltProgressCard
-                key={belt.beltRank}
-                belt={belt}
-                nextBelt={index < progress.length - 1 ? progress[index + 1] : null}
-                totalPoints={pointsSummary?.totalPoints || 0}
-              />
-            ))}
+        {pointsSummary && (
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Trophy className="h-5 w-5 text-primary" />
+              <span className="text-sm font-medium">{pointsSummary.totalPoints} Points</span>
+            </div>
+            <Badge variant="outline">Level {pointsSummary.level}</Badge>
           </div>
         )}
-
-        <Tabs defaultValue="white" className="w-full">
-          <TabsList className="mb-8">
-            {BELT_RANKS.map((rank) => (
-              <TabsTrigger key={rank} value={rank} className="capitalize">
-                {rank}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-
-          {BELT_RANKS.map((rank) => (
-            <TabsContent key={rank} value={rank}>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <TechniqueBeltContent
-                  rank={rank}
-                  onUnlock={(id) => unlockMutation.mutate(id)}
-                />
-              </div>
-            </TabsContent>
-          ))}
-        </Tabs>
       </div>
+
+      {progress && (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          {progress.map((belt, index) => (
+            <BeltProgressCard
+              key={belt.beltRank}
+              belt={belt}
+              nextBelt={index < progress.length - 1 ? progress[index + 1] : null}
+              totalPoints={pointsSummary?.totalPoints || 0}
+            />
+          ))}
+        </div>
+      )}
+
+      <Tabs defaultValue="white" className="w-full">
+        <TabsList>
+          {BELT_RANKS.map((rank) => (
+            <TabsTrigger key={rank} value={rank} className="capitalize">
+              {rank}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+
+        {BELT_RANKS.map((rank) => (
+          <TabsContent key={rank} value={rank}>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <TechniqueBeltContent
+                rank={rank}
+                onUnlock={(id) => unlockMutation.mutate(id)}
+              />
+            </div>
+          </TabsContent>
+        ))}
+      </Tabs>
     </div>
   );
 }
@@ -275,9 +270,9 @@ function TechniqueBeltContent({ rank, onUnlock }: { rank: string; onUnlock: (id:
 
   if (!techniques || techniques.length === 0) {
     return (
-      <div className="col-span-full text-center py-12">
+      <div className="col-span-full py-12 text-center">
         <h3 className="text-xl font-semibold text-muted-foreground">No Techniques Yet</h3>
-        <p className="text-muted-foreground mt-2">Check back later for new techniques</p>
+        <p className="mt-2 text-muted-foreground">Check back later for new techniques</p>
       </div>
     );
   }

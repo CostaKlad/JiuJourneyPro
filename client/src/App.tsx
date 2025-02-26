@@ -35,9 +35,11 @@ import { ErrorBoundary } from "react-error-boundary";
 
 function ErrorFallback({ error }: { error: Error }) {
   return (
-    <div className="error-boundary">
-      <h2>Something went wrong:</h2>
-      <pre>{error.message}</pre>
+    <div className="flex min-h-screen items-center justify-center">
+      <div className="rounded-lg bg-destructive/10 p-6 text-center">
+        <h2 className="mb-2 text-lg font-semibold">Something went wrong:</h2>
+        <pre className="text-sm text-destructive">{error.message}</pre>
+      </div>
     </div>
   );
 }
@@ -47,175 +49,214 @@ function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
 
-  const handleNavigate = (href: string) => {
-    setIsOpen(false);
-  };
+  const handleNavigate = () => setIsOpen(false);
+
+  const menuItems = [
+    { 
+      href: "/", 
+      icon: Home, 
+      label: "Dashboard",
+      description: "Overview of your training journey"
+    },
+    { 
+      href: "/techniques", 
+      icon: BookOpen, 
+      label: "Techniques",
+      description: "Learn and track BJJ techniques"
+    },
+    { 
+      href: "/community", 
+      icon: Users, 
+      label: "Community",
+      description: "Connect with fellow practitioners"
+    },
+    { 
+      href: "/achievements", 
+      icon: Trophy, 
+      label: "Achievements",
+      description: "Track your progress and milestones"
+    },
+    { 
+      href: "/training-wizard", 
+      icon: Brain, 
+      label: "Training Wizard",
+      description: "Get personalized training plans"
+    }
+  ];
 
   return (
     <div className="min-h-screen bg-background">
       {/* Mobile-optimized header */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-14 md:h-16 items-center justify-between px-4">
+        <div className="container flex h-14 items-center justify-between px-4">
           <div className="flex items-center gap-4">
-            {/* Hamburger Menu - Always visible */}
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" className="lg:hidden">
                   <Menu className="h-5 w-5" />
-                  <span className="sr-only">Toggle menu</span>
+                  <span className="sr-only">Menu</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-[85vw] sm:w-80">
-                <SheetHeader>
+              <SheetContent side="left" className="flex w-[300px] flex-col p-0">
+                <SheetHeader className="border-b p-4">
                   <SheetTitle>
-                    <div className="flex items-center gap-2">
-                      <img 
-                        src="/logo.webp" 
-                        alt="OssRyu Logo" 
-                        className="h-8 w-8 object-contain"
-                      />
-                      <div className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+                    <Link href="/" onClick={handleNavigate} className="flex items-center gap-2">
+                      <img src="/logo.webp" alt="OssRyu" className="h-8 w-8" />
+                      <span className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-xl font-bold text-transparent">
                         OssRyu
-                      </div>
-                    </div>
+                      </span>
+                    </Link>
                   </SheetTitle>
                 </SheetHeader>
 
-                {/* User Profile Section */}
-                <div className="flex items-center gap-4 py-6 border-b">
-                  <Avatar className="h-10 w-10">
-                    {user?.avatarUrl ? (
-                      <AvatarImage 
-                        src={user.avatarUrl} 
-                        alt={user.username || ''} 
-                      />
-                    ) : (
-                      <AvatarFallback>{user?.username?.slice(0, 2).toUpperCase()}</AvatarFallback>
-                    )}
-                  </Avatar>
-                  <div>
-                    <div className="font-semibold">{user?.username}</div>
-                    <div className="text-sm text-muted-foreground">{user?.beltRank} Belt</div>
+                <div className="flex-1 overflow-auto">
+                  <div className="flex flex-col gap-2 p-4">
+                    {menuItems.map((item) => (
+                      <Link key={item.href} href={item.href}>
+                        <a
+                          onClick={handleNavigate}
+                          className={`flex items-start gap-3 rounded-lg p-3 transition-colors ${
+                            location === item.href 
+                              ? "bg-primary/10 text-primary" 
+                              : "hover:bg-muted"
+                          }`}
+                        >
+                          <item.icon className="h-5 w-5 shrink-0" />
+                          <div>
+                            <div className="font-medium">{item.label}</div>
+                            <div className="text-sm text-muted-foreground">
+                              {item.description}
+                            </div>
+                          </div>
+                        </a>
+                      </Link>
+                    ))}
                   </div>
                 </div>
 
-                {/* Navigation Links */}
-                <nav className="space-y-2 py-6">
-                  {menuItems.map((item) => (
-                    <Link key={item.href} href={item.href}>
-                      <a 
-                        onClick={() => handleNavigate(item.href)}
-                        className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                          location === item.href ? "bg-primary/10" : "hover:bg-primary/10"
-                        }`}
+                <div className="border-t p-4">
+                  <div className="mb-4 flex items-center gap-4">
+                    <Avatar>
+                      {user?.avatarUrl ? (
+                        <AvatarImage src={user.avatarUrl} alt={user.username || ''} />
+                      ) : (
+                        <AvatarFallback>{user?.username?.slice(0, 2).toUpperCase()}</AvatarFallback>
+                      )}
+                    </Avatar>
+                    <div>
+                      <div className="font-medium">{user?.username}</div>
+                      <div className="text-sm text-muted-foreground capitalize">
+                        {user?.beltRank} Belt
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Link href="/settings">
+                      <a
+                        onClick={handleNavigate}
+                        className="flex w-full items-center gap-2 rounded-lg bg-muted px-3 py-2 text-sm"
                       >
-                        <item.icon className="h-5 w-5" />
-                        {item.label}
+                        <Settings className="h-4 w-4" />
+                        Settings
                       </a>
                     </Link>
-                  ))}
-                </nav>
-
-                {/* Quick Actions */}
-                <div className="space-y-2 py-6 border-t">
-                  <h4 className="px-4 text-sm font-medium">Quick Actions</h4>
-                  <Button className="w-full justify-start gap-2" onClick={() => setIsOpen(false)}>
-                    <Plus className="h-4 w-4" />
-                    Log Training
-                  </Button>
-                  <Button variant="outline" className="w-full justify-start gap-2" onClick={() => setIsOpen(false)}>
-                    <Target className="h-4 w-4" />
-                    Find Partners
-                  </Button>
-                </div>
-
-                {/* Settings & Logout */}
-                <div className="mt-auto space-y-2 border-t pt-6">
-                  <Link href="/settings">
-                    <a 
-                      className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-primary/10 transition-colors"
-                      onClick={() => setIsOpen(false)}
+                    <Button
+                      variant="destructive"
+                      className="w-full justify-start"
+                      onClick={() => {
+                        handleNavigate();
+                        logoutMutation.mutate();
+                      }}
                     >
-                      <Settings className="h-5 w-5" />
-                      Settings
-                    </a>
-                  </Link>
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-100"
-                    onClick={() => {
-                      setIsOpen(false);
-                      logoutMutation.mutate();
-                    }}
-                  >
-                    <LogOut className="h-5 w-5 mr-2" />
-                    Logout
-                  </Button>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Logout
+                    </Button>
+                  </div>
                 </div>
               </SheetContent>
             </Sheet>
 
-            {/* Logo and Title */}
             <Link href="/">
               <a className="flex items-center gap-2">
-                <img 
-                  src="/logo.webp" 
-                  alt="OssRyu Logo" 
-                  className="h-8 w-8 object-contain"
-                />
-                <div className="flex items-center">
-                  <span className="font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-                    OssRyu
-                  </span>
-                  <span className="text-sm font-medium bg-gradient-to-r from-primary/80 to-purple-500/80 bg-clip-text text-transparent ml-2 hidden md:inline">
-                    Train. Track. Compete. Level Up.
-                  </span>
-                </div>
+                <img src="/logo.webp" alt="OssRyu" className="h-8 w-8" />
+                <span className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text font-bold text-transparent">
+                  OssRyu
+                </span>
               </a>
             </Link>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="hidden sm:flex"
+              onClick={() => window.location.href = '/training-wizard'}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Log Training
+            </Button>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto p-4 mobile-main-content">
-        {children}
+      {/* Desktop Navigation */}
+      <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-72 lg:flex-col">
+        <div className="flex grow flex-col gap-y-5 overflow-y-auto border-r bg-background/95 px-6 pb-4">
+          <div className="flex h-16 shrink-0 items-center">
+            <Link href="/">
+              <a className="flex items-center gap-2">
+                <img src="/logo.webp" alt="OssRyu" className="h-8 w-8" />
+                <span className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-xl font-bold text-transparent">
+                  OssRyu
+                </span>
+              </a>
+            </Link>
+          </div>
+          <nav className="flex flex-1 flex-col">
+            <ul role="list" className="flex flex-1 flex-col gap-y-7">
+              <li>
+                <ul role="list" className="-mx-2 space-y-1">
+                  {menuItems.map((item) => (
+                    <li key={item.href}>
+                      <Link href={item.href}>
+                        <a
+                          className={`group flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 ${
+                            location === item.href
+                              ? "bg-primary/10 text-primary"
+                              : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                          }`}
+                        >
+                          <item.icon className="h-6 w-6 shrink-0" />
+                          {item.label}
+                        </a>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </li>
+              <li className="mt-auto">
+                <Link href="/settings">
+                  <a className="group -mx-2 flex gap-x-3 rounded-md p-2 text-sm font-semibold leading-6 text-muted-foreground hover:bg-muted hover:text-foreground">
+                    <Settings className="h-6 w-6 shrink-0" />
+                    Settings
+                  </a>
+                </Link>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </div>
+
+      <main className="lg:pl-72">
+        <div className="px-4 py-8 sm:px-6 lg:px-8">
+          {children}
+        </div>
       </main>
     </div>
   );
 }
-
-const menuItems = [
-  { 
-    href: "/", 
-    icon: Home, 
-    label: "Dashboard",
-    tooltip: "View your training overview and recent activity"
-  },
-  { 
-    href: "/techniques", 
-    icon: BookOpen, 
-    label: "Technique Library",
-    tooltip: "Browse and unlock BJJ techniques" 
-  },
-  { 
-    href: "/community", 
-    icon: Users, 
-    label: "Community",
-    tooltip: "Connect with other practitioners" 
-  },
-  { 
-    href: "/achievements", 
-    icon: Trophy, 
-    label: "Achievements",
-    tooltip: "View your earned achievements and medals" 
-  },
-  { 
-    href: "/training-wizard", 
-    icon: Brain, 
-    label: "Training Wizard",
-    tooltip: "Get personalized training recommendations" 
-  },
-];
 
 function App() {
   return (
