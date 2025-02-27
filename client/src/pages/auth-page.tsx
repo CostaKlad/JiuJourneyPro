@@ -1,4 +1,5 @@
 import { useAuth } from "@/hooks/use-auth";
+import { useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertUserSchema, forgotPasswordSchema, resetPasswordSchema, type InsertUser, type ForgotPassword } from "@shared/schema";
@@ -11,6 +12,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Redirect, useLocation } from "wouter";
 import { useState } from "react";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function AuthPage() {
   const { user, loginMutation, registerMutation, forgotPasswordMutation } = useAuth();
@@ -18,6 +20,15 @@ export default function AuthPage() {
   const [activeTab, setActiveTab] = useState(() => {
     const searchParams = new URLSearchParams(window.location.search);
     return searchParams.has("token") ? "reset" : "login";
+  });
+
+  // Fetch total user count
+  const { data: userCount } = useQuery({
+    queryKey: ["/api/users/count"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/users/count");
+      return response.json();
+    }
   });
 
   const loginForm = useForm<InsertUser>({
@@ -75,6 +86,11 @@ export default function AuthPage() {
             <p className="text-muted-foreground text-lg">
               Your digital companion for mastering Brazilian Jiu-Jitsu. Track progress, learn techniques, and connect with the community.
             </p>
+            {userCount && (
+              <p className="text-sm text-muted-foreground mt-4">
+                Join our growing community of {userCount.total} BJJ practitioners
+              </p>
+            )}
           </div>
 
           <TooltipProvider>

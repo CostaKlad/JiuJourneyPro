@@ -159,7 +159,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      res.status(500).json({ 
+      res.status(500).json({
         error: "Failed to unlock technique",
         details: error instanceof Error ? error.message : "Unknown error"
       });
@@ -513,6 +513,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/users/count", async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      res.json({ total: users.length });
+    } catch (error) {
+      console.error("Error getting user count:", error);
+      res.status(500).json({ error: "Failed to get user count" });
+    }
+  });
+
+  // App user routes
   app.get("/api/user", (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     res.json(req.user);
@@ -555,9 +566,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update user's avatar URL in database
       const updatedUser = await storage.updateUser(req.user.id, { avatarUrl });
 
-      res.json({ 
+      res.json({
         url: updatedUser.avatarUrl,
-        message: 'Avatar updated successfully' 
+        message: 'Avatar updated successfully'
       });
     } catch (error) {
       console.error('Avatar upload error:', error);
