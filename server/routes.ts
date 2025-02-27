@@ -12,6 +12,32 @@ import { StorageError } from "./storage";
 const upload = multer({ storage: multer.memoryStorage() });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Public routes that don't require authentication should be registered first
+  app.get("/api/users/count", async (req, res) => {
+    try {
+      // Count only users with training logs
+      const users = await storage.getAllUsers();
+      const activeUsers = await Promise.all(
+        users.map(async (user) => {
+          const logs = await storage.getTrainingLogs(user.id);
+          return logs.length > 0;
+        })
+      );
+      const activeCount = activeUsers.filter(Boolean).length;
+
+      console.log("Active practitioners count:", activeCount);
+
+      res.json({ 
+        total: activeCount || 1, // Ensure we show at least 1 user
+        message: "Active practitioners"
+      });
+    } catch (error) {
+      console.error("Error getting active user count:", error);
+      res.status(500).json({ error: "Failed to get active user count" });
+    }
+  });
+
+  // Setup authentication after public routes
   setupAuth(app);
 
   // Training logs
@@ -511,29 +537,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/users/count", async (req, res) => {
-    try {
-      // Count only users with training logs
-      const users = await storage.getAllUsers();
-      const activeUsers = await Promise.all(
-        users.map(async (user) => {
-          const logs = await storage.getTrainingLogs(user.id);
-          return logs.length > 0;
-        })
-      );
-      const activeCount = activeUsers.filter(Boolean).length;
-
-      console.log("Active practitioners count:", activeCount);
-
-      res.json({ 
-        total: activeCount || 1, // Ensure we show at least 1 user
-        message: "Active practitioners"
-      });
-    } catch (error) {
-      console.error("Error getting active user count:", error);
-      res.status(500).json({ error: "Failed to get active user count" });
-    }
-  });
 
   // App user routes
   app.get("/api/user", (req, res) => {
