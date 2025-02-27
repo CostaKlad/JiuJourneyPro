@@ -525,6 +525,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
       const activeCount = activeUsers.filter(Boolean).length;
 
+      console.log("Active practitioners count:", activeCount);
+
       res.json({ 
         total: activeCount,
         message: "Active practitioners"

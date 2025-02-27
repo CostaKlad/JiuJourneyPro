@@ -26,8 +26,11 @@ export default function AuthPage() {
   const { data: userCount } = useQuery({
     queryKey: ["/api/users/count"],
     queryFn: async () => {
+      console.log("Fetching user count...");
       const response = await apiRequest("GET", "/api/users/count");
-      return response.json();
+      const data = await response.json();
+      console.log("User count data:", data);
+      return data;
     }
   });
 
@@ -83,19 +86,25 @@ export default function AuthPage() {
                 OssRyu
               </h1>
             </div>
-            <p className="text-muted-foreground text-lg">
-              Your digital companion for mastering Brazilian Jiu-Jitsu. Track progress, learn techniques, and connect with the community.
-            </p>
+
+            {/* User Count Display */}
             {userCount && (
-              <div className="mt-6 p-4 bg-muted/50 rounded-lg">
-                <p className="text-lg font-semibold">
-                  Join {userCount.total.toLocaleString()} Active BJJ Practitioners
+              <div className="bg-primary/10 p-4 rounded-lg mb-4">
+                <h2 className="text-2xl font-bold text-primary">
+                  {userCount.total.toLocaleString()}
+                </h2>
+                <p className="text-lg font-medium">
+                  Active BJJ Practitioners
                 </p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Training, tracking progress, and growing together
+                <p className="text-sm text-muted-foreground">
+                  Training and tracking progress together
                 </p>
               </div>
             )}
+
+            <p className="text-muted-foreground text-lg">
+              Your digital companion for mastering Brazilian Jiu-Jitsu. Track progress, learn techniques, and connect with the community.
+            </p>
           </div>
 
           <TooltipProvider>
