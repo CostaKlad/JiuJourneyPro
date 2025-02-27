@@ -528,7 +528,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Active practitioners count:", activeCount);
 
       res.json({ 
-        total: activeCount,
+        total: activeCount || 1, // Ensure we show at least 1 user
         message: "Active practitioners"
       });
     } catch (error) {

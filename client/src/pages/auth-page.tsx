@@ -23,16 +23,21 @@ export default function AuthPage() {
   });
 
   // Fetch total user count
-  const { data: userCount } = useQuery({
+  const { data: userCount, isLoading: isCountLoading, error: countError } = useQuery({
     queryKey: ["/api/users/count"],
     queryFn: async () => {
       console.log("Fetching user count...");
-      const response = await apiRequest("GET", "/api/users/count");
+      const response = await fetch("/api/users/count");
       const data = await response.json();
       console.log("User count data:", data);
       return data;
+    },
+    meta: {
+      requiresAuth: false
     }
   });
+
+  console.log("Query state:", { userCount, isCountLoading, countError });
 
   const loginForm = useForm<InsertUser>({
     resolver: zodResolver(insertUserSchema.pick({ username: true, password: true })),
@@ -73,21 +78,6 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      {/* Fixed Position User Count Display */}
-      {userCount && (
-        <div className="fixed top-4 right-4 z-50 bg-gradient-to-r from-blue-600/90 to-purple-600/90 p-6 rounded-lg shadow-xl border border-white/30 max-w-xs text-white">
-          <h2 className="text-3xl font-bold text-center">
-            {userCount.total.toLocaleString()}
-          </h2>
-          <p className="text-xl font-medium text-center">
-            Active BJJ Practitioners
-          </p>
-          <p className="text-sm text-white/80 text-center mt-2">
-            Training and tracking progress together
-          </p>
-        </div>
-      )}
-
       <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="flex flex-col justify-center">
           <div className="text-center md:text-left mb-8">
@@ -102,7 +92,23 @@ export default function AuthPage() {
               </h1>
             </div>
 
-            <p className="text-muted-foreground text-lg">
+            {/* User Count Display */}
+            {isCountLoading ? (
+              <div className="mt-4 text-muted-foreground">Loading community stats...</div>
+            ) : countError ? (
+              <div className="mt-4 text-red-500">Error loading community stats</div>
+            ) : userCount ? (
+              <div className="mt-4 bg-gradient-to-r from-blue-600/90 to-purple-600/90 p-4 rounded-lg text-white">
+                <div className="text-3xl font-bold">
+                  {userCount.total.toLocaleString()}
+                </div>
+                <div className="text-sm opacity-90">
+                  Active BJJ Practitioners
+                </div>
+              </div>
+            ) : null}
+
+            <p className="text-muted-foreground text-lg mt-4">
               Your digital companion for mastering Brazilian Jiu-Jitsu. Track progress, learn techniques, and connect with the community.
             </p>
           </div>
