@@ -87,16 +87,16 @@ export default function AuthPage() {
               </h1>
             </div>
 
-            {/* User Count Display */}
+            {/* User Count Display - Fixed Position */}
             {userCount && (
-              <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 p-6 rounded-lg mb-8 mt-8 mx-auto md:absolute md:top-4 md:right-4 shadow-lg border border-primary/20 max-w-xs">
-                <h2 className="text-3xl font-bold text-primary text-center">
+              <div className="fixed top-4 right-4 z-50 bg-gradient-to-r from-blue-600/90 to-purple-600/90 p-6 rounded-lg shadow-xl border border-white/30 max-w-xs text-white">
+                <h2 className="text-3xl font-bold text-center">
                   {userCount.total.toLocaleString()}
                 </h2>
                 <p className="text-xl font-medium text-center">
                   Active BJJ Practitioners
                 </p>
-                <p className="text-sm text-muted-foreground text-center mt-2">
+                <p className="text-sm text-white/80 text-center mt-2">
                   Training and tracking progress together
                 </p>
               </div>
