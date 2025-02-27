@@ -709,23 +709,44 @@ function HomePage() {
                 ))}
               </div>
 
+              {/* Current Progress Summary */}
+              {last7DaysData.length > 0 && (
+                <div className="mb-4 p-4 bg-muted/50 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Current Progress:</span>
+                    <span className="text-sm">
+                      {last7DaysData[last7DaysData.length - 1].cumulativeHours} hours trained
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between mt-2">
+                    <span className="text-sm font-medium">Next Belt:</span>
+                    <span className="text-sm">
+                      {(() => {
+                        const currentHours = last7DaysData[last7DaysData.length - 1].cumulativeHours;
+                        const target = getCurrentBeltTarget(currentHours);
+                        return `${target.belt} (${target.hours - currentHours} hours remaining)`;
+                      })()}
+                    </span>
+                  </div>
+                </div>
+              )}
+
               <div className="h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={last7DaysData}>
-                    <XAxis dataKey="date" />
+                    <XAxis 
+                      dataKey="date"
+                      tick={{ fontSize: 12 }}
+                      interval="preserveStartEnd"
+                    />
                     <YAxis 
                       label={{ 
                         value: 'Hours Trained', 
                         angle: -90, 
-                        position: 'insideLeft' 
+                        position: 'insideLeft',
+                        fontSize: 12 
                       }}
-                    />
-                    <Tooltip 
-                      formatter={(value: number) => {
-                        const target = getCurrentBeltTarget(value);
-                        const remaining = target.hours - value;
-                        return [`${value} hours trained (${remaining} hours to ${target.belt})`, 'Progress'];
-                      }}
+                      tick={{ fontSize: 12 }}
                     />
                     {Object.entries(BELT_MILESTONES).map(([belt, { months, label }]) => {
                       const hours = months * 30 * 2;
@@ -737,7 +758,7 @@ function HomePage() {
                           strokeWidth={2}
                           strokeDasharray="5 5"
                           label={{
-                            value: `${label} (${hours} hours)`,
+                            value: `${label} (${hours}h)`,
                             position: 'right',
                             fill: getBeltColor(belt),
                             fontSize: 12,
