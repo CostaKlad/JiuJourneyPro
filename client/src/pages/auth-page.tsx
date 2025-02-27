@@ -46,9 +46,8 @@ export default function AuthPage() {
     resolver: zodResolver(insertUserSchema),
     defaultValues: {
       username: "",
-      email: "",
       password: "",
-      beltRank: "White" 
+      email: ""
     }
   });
 
@@ -59,20 +58,36 @@ export default function AuthPage() {
     }
   });
 
+  const resetPasswordForm = useForm<InsertUser>({
+    resolver: zodResolver(resetPasswordSchema),
+    defaultValues: {
+      password: "",
+      confirmPassword: ""
+    }
+  });
+
+
   if (user) {
     return <Redirect to="/" />;
   }
 
-  const passwordRequirements = [
-    "At least 8 characters long",
-    "Must contain at least one uppercase letter",
-    "Must contain at least one lowercase letter",
-    "Must contain at least one number",
-    "Must contain at least one special character"
-  ];
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      {/* Fixed Position User Count Display */}
+      {userCount && (
+        <div className="fixed top-4 right-4 z-50 bg-gradient-to-r from-blue-600/90 to-purple-600/90 p-6 rounded-lg shadow-xl border border-white/30 max-w-xs text-white">
+          <h2 className="text-3xl font-bold text-center">
+            {userCount.total.toLocaleString()}
+          </h2>
+          <p className="text-xl font-medium text-center">
+            Active BJJ Practitioners
+          </p>
+          <p className="text-sm text-white/80 text-center mt-2">
+            Training and tracking progress together
+          </p>
+        </div>
+      )}
+
       <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="flex flex-col justify-center">
           <div className="text-center md:text-left mb-8">
@@ -87,241 +102,223 @@ export default function AuthPage() {
               </h1>
             </div>
 
-            {/* User Count Display - Fixed Position */}
-            {userCount && (
-              <div className="fixed top-4 right-4 z-50 bg-gradient-to-r from-blue-600/90 to-purple-600/90 p-6 rounded-lg shadow-xl border border-white/30 max-w-xs text-white">
-                <h2 className="text-3xl font-bold text-center">
-                  {userCount.total.toLocaleString()}
-                </h2>
-                <p className="text-xl font-medium text-center">
-                  Active BJJ Practitioners
-                </p>
-                <p className="text-sm text-white/80 text-center mt-2">
-                  Training and tracking progress together
-                </p>
-              </div>
-            )}
-
             <p className="text-muted-foreground text-lg">
               Your digital companion for mastering Brazilian Jiu-Jitsu. Track progress, learn techniques, and connect with the community.
             </p>
           </div>
-
-          <TooltipProvider>
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="login">Sign In</TabsTrigger>
-                <TabsTrigger value="register">Create Account</TabsTrigger>
-                <TabsTrigger value="forgot">Reset Password</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="login">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Welcome Back</CardTitle>
-                    <CardDescription>
-                      Continue your BJJ journey with OssRyu
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Form {...loginForm}>
-                      <form onSubmit={loginForm.handleSubmit(data => loginMutation.mutate(data))} className="space-y-4">
-                        <FormField
-                          control={loginForm.control}
-                          name="username"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Username</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Enter your username" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={loginForm.control}
-                          name="password"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Password</FormLabel>
-                              <FormControl>
-                                <Input type="password" placeholder="Enter your password" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
-                          {loginMutation.isPending ? "Signing in..." : "Sign In"}
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="link"
-                          className="w-full"
-                          onClick={() => setActiveTab("forgot")}
-                        >
-                          Forgot your password?
-                        </Button>
-                      </form>
-                    </Form>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="register">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Start Your Journey</CardTitle>
-                    <CardDescription>
-                      Join our BJJ community and track your progress
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Form {...registerForm}>
-                      <form onSubmit={registerForm.handleSubmit(data => registerMutation.mutate(data))} className="space-y-4">
-                        <FormField
-                          control={registerForm.control}
-                          name="username"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Choose a Username</FormLabel>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <FormControl>
-                                    <Input placeholder="Pick a unique username" {...field} />
-                                  </FormControl>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>This will be your identity in the community</p>
-                                </TooltipContent>
-                              </Tooltip>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={registerForm.control}
-                          name="email"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Email Address</FormLabel>
-                              <FormControl>
-                                <Input type="email" placeholder="Enter your email" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={registerForm.control}
-                          name="password"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Create a Password</FormLabel>
-                              <FormControl>
-                                <Input type="password" placeholder="Choose a secure password" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                              <Alert>
-                                <AlertDescription>
-                                  <ul className="list-disc pl-4 text-sm text-muted-foreground">
-                                    {passwordRequirements.map((req, index) => (
-                                      <li key={index}>{req}</li>
-                                    ))}
-                                  </ul>
-                                </AlertDescription>
-                              </Alert>
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={registerForm.control}
-                          name="beltRank"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Current Belt Rank</FormLabel>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <FormControl>
-                                    <Input {...field} placeholder="e.g., White, Blue, Purple" />
-                                  </FormControl>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>This helps us personalize your experience</p>
-                                </TooltipContent>
-                              </Tooltip>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <Button type="submit" className="w-full" disabled={registerMutation.isPending}>
-                          {registerMutation.isPending ? "Creating your account..." : "Start Training"}
-                        </Button>
-                      </form>
-                    </Form>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="forgot">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Reset Your Password</CardTitle>
-                    <CardDescription>
-                      Enter your email to receive a password reset link
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Form {...forgotPasswordForm}>
-                      <form onSubmit={forgotPasswordForm.handleSubmit(data => forgotPasswordMutation.mutate(data))} className="space-y-4">
-                        <FormField
-                          control={forgotPasswordForm.control}
-                          name="email"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Email Address</FormLabel>
-                              <FormControl>
-                                <Input type="email" placeholder="Enter your registered email" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <Button type="submit" className="w-full" disabled={forgotPasswordMutation.isPending}>
-                          {forgotPasswordMutation.isPending ? "Sending reset link..." : "Send Reset Link"}
-                        </Button>
-                      </form>
-                    </Form>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
-          </TooltipProvider>
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList>
+              <TabsTrigger value="login">Login</TabsTrigger>
+              <TabsTrigger value="register">Register</TabsTrigger>
+              {location.includes("forgot-password") && (
+                <TabsTrigger value="forgot">Forgot Password</TabsTrigger>
+              )}
+              {location.includes("reset-password") && (
+                <TabsTrigger value="reset">Reset Password</TabsTrigger>
+              )}
+            </TabsList>
+            <TabsContent value="login">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Login</CardTitle>
+                  <CardDescription>Sign in to your account</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Form {...loginForm}>
+                    <form onSubmit={loginForm.handleSubmit((data) => loginMutation.mutate(data))}>
+                      <FormField
+                        control={loginForm.control}
+                        name="username"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Username</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Username" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={loginForm.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Password</FormLabel>
+                            <FormControl>
+                              <Input type="password" placeholder="Password" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <Button type="submit">Sign in</Button>
+                    </form>
+                    {loginMutation.isError && (
+                      <Alert>
+                        <AlertDescription>
+                          {loginMutation.error?.message}
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                  </Form>
+                </CardContent>
+              </Card>
+              <p className="mt-4 text-center text-sm text-muted-foreground">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>Forgot your password?</TooltipTrigger>
+                    <TooltipContent>
+                      <a href="/auth/forgot-password" className="underline">
+                        Reset Password
+                      </a>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </p>
+            </TabsContent>
+            <TabsContent value="register">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Register</CardTitle>
+                  <CardDescription>Create your account</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Form {...registerForm}>
+                    <form onSubmit={registerForm.handleSubmit((data) => registerMutation.mutate(data))}>
+                      <FormField
+                        control={registerForm.control}
+                        name="username"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Username</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Username" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={registerForm.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email</FormLabel>
+                            <FormControl>
+                              <Input type="email" placeholder="Email" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={registerForm.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Password</FormLabel>
+                            <FormControl>
+                              <Input type="password" placeholder="Password" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <Button type="submit">Register</Button>
+                    </form>
+                    {registerMutation.isError && (
+                      <Alert>
+                        <AlertDescription>
+                          {registerMutation.error?.message}
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                  </Form>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            <TabsContent value="forgot">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Forgot Password</CardTitle>
+                  <CardDescription>Reset your password</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Form {...forgotPasswordForm}>
+                    <form onSubmit={forgotPasswordForm.handleSubmit((data) => forgotPasswordMutation.mutate(data))}>
+                      <FormField
+                        control={forgotPasswordForm.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email</FormLabel>
+                            <FormControl>
+                              <Input type="email" placeholder="Email" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <Button type="submit">Reset Password</Button>
+                    </form>
+                    {forgotPasswordMutation.isError && (
+                      <Alert>
+                        <AlertDescription>
+                          {forgotPasswordMutation.error?.message}
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                  </Form>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            <TabsContent value="reset">
+              {/* Reset Password Form */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Reset Password</CardTitle>
+                  <CardDescription>Choose a new password</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Form {...resetPasswordForm}>
+                    <form onSubmit={resetPasswordForm.handleSubmit((data) => {})} >
+                      <FormField
+                        control={resetPasswordForm.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>New Password</FormLabel>
+                            <FormControl>
+                              <Input type="password" placeholder="New Password" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={resetPasswordForm.control}
+                        name="confirmPassword"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Confirm Password</FormLabel>
+                            <FormControl>
+                              <Input type="password" placeholder="Confirm Password" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <Button type="submit">Reset Password</Button>
+                    </form>
+                  </Form>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </div>
-
-        <div className="hidden md:flex flex-col justify-center items-center p-8 bg-gradient-to-br from-primary/5 to-purple-500/5 rounded-lg">
-          <div className="max-w-md text-center space-y-8">
-            <h2 className="text-3xl font-bold">Transform Your BJJ Journey</h2>
-            <ul className="space-y-6 text-lg text-muted-foreground">
-              <li className="flex items-center gap-4">
-                <span className="bg-primary/10 p-3 rounded-full">📊</span>
-                <span>Track your progress and achievements</span>
-              </li>
-              <li className="flex items-center gap-4">
-                <span className="bg-primary/10 p-3 rounded-full">🤼</span>
-                <span>Connect with training partners</span>
-              </li>
-              <li className="flex items-center gap-4">
-                <span className="bg-primary/10 p-3 rounded-full">📚</span>
-                <span>Access technique library and guides</span>
-              </li>
-              <li className="flex items-center gap-4">
-                <span className="bg-primary/10 p-3 rounded-full">🏆</span>
-                <span>Earn achievements as you progress</span>
-              </li>
-            </ul>
-          </div>
+        <div className="hidden md:flex items-center justify-center">
+          {/* Image or other content for the second column */}
         </div>
       </div>
     </div>

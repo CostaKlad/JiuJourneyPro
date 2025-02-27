@@ -56,33 +56,33 @@ function Layout({ children }: { children: React.ReactNode }) {
   const handleNavigate = () => setIsOpen(false);
 
   const menuItems = [
-    { 
-      href: "/", 
-      icon: Home, 
+    {
+      href: "/",
+      icon: Home,
       label: "Dashboard",
       description: "Overview of your training journey"
     },
-    { 
-      href: "/techniques", 
-      icon: BookOpen, 
+    {
+      href: "/techniques",
+      icon: BookOpen,
       label: "Techniques",
       description: "Learn and track BJJ techniques"
     },
-    { 
-      href: "/community", 
-      icon: Users, 
+    {
+      href: "/community",
+      icon: Users,
       label: "Community",
       description: "Connect with fellow practitioners"
     },
-    { 
-      href: "/achievements", 
-      icon: Trophy, 
+    {
+      href: "/achievements",
+      icon: Trophy,
       label: "Achievements",
       description: "Track your progress and milestones"
     },
-    { 
-      href: "/training-wizard", 
-      icon: Brain, 
+    {
+      href: "/training-wizard",
+      icon: Brain,
       label: "Training Wizard",
       description: "Get personalized training plans"
     }
@@ -95,7 +95,7 @@ function Layout({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-4">
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="lg:hidden btn">
+                <Button variant="ghost" size="icon" className="lg:hidden">
                   <Menu className="h-5 w-5" />
                   <span className="sr-only">Menu</span>
                 </Button>
@@ -119,8 +119,8 @@ function Layout({ children }: { children: React.ReactNode }) {
                         <a
                           onClick={handleNavigate}
                           className={`flex items-start gap-3 rounded-lg p-3 transition-colors ${
-                            location === item.href 
-                              ? "bg-primary/10 text-primary" 
+                            location === item.href
+                              ? "bg-primary/10 text-primary"
                               : "hover:bg-muted"
                           }`}
                         >
@@ -137,52 +137,54 @@ function Layout({ children }: { children: React.ReactNode }) {
                   </div>
                 </div>
 
-                <div className="border-t p-4">
-                  <div className="mb-4 flex items-center gap-4">
-                    <Avatar>
-                      {user?.avatarUrl ? (
-                        <AvatarImage src={user.avatarUrl} alt={user.username || ''} />
-                      ) : (
-                        <AvatarFallback>{user?.username?.slice(0, 2).toUpperCase()}</AvatarFallback>
-                      )}
-                    </Avatar>
-                    <div>
-                      <div className="font-medium">{user?.username}</div>
-                      <div className="text-sm text-muted-foreground capitalize">
-                        {user?.beltRank} Belt
+                {user && (
+                  <div className="border-t p-4">
+                    <div className="mb-4">
+                      <div className="flex items-center gap-4">
+                        <Avatar className="h-10 w-10">
+                          {user.avatarUrl ? (
+                            <AvatarImage src={user.avatarUrl} alt={user.username} />
+                          ) : (
+                            <AvatarFallback className="bg-primary/10">
+                              {user.username?.slice(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                          )}
+                        </Avatar>
+                        <div>
+                          <div className="font-medium">{user.username}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {user.beltRank} Belt
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Link href="/settings">
-                      <a
-                        onClick={handleNavigate}
-                        className="flex w-full items-center gap-2 rounded-lg bg-muted px-3 py-2 text-sm"
+                    <div className="space-y-2">
+                      <Link href="/settings">
+                        <a className="flex w-full items-center gap-2 rounded-lg bg-muted px-3 py-2 text-sm">
+                          <Settings className="h-4 w-4" />
+                          Settings
+                        </a>
+                      </Link>
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start gap-2 text-red-500 hover:text-red-600 hover:bg-red-100/20"
+                        onClick={() => {
+                          logoutMutation.mutate();
+                          window.location.href = "/auth";
+                        }}
                       >
-                        <Settings className="h-4 w-4" />
-                        Settings
-                      </a>
-                    </Link>
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start gap-2 text-red-500 hover:text-red-600 hover:bg-red-100/20"
-                      onClick={() => {
-                        handleNavigate();
-                        logoutMutation.mutate();
-                        window.location.href = "/auth";
-                      }}
-                    >
-                      <LogOut className="h-4 w-4" />
-                      Logout
-                    </Button>
+                        <LogOut className="h-4 w-4" />
+                        Logout
+                      </Button>
+                    </div>
                   </div>
-                </div>
+                )}
               </SheetContent>
             </Sheet>
 
             <Link href="/">
-              <a className="flex items-center gap-2 nav-link">
-                <img src="/logo.webp" alt="OssRyu" className="h-8 w-8 transition-transform duration-200 hover:scale-110" />
+              <a className="flex items-center gap-2">
+                <img src="/logo.webp" alt="OssRyu" className="h-8 w-8" />
                 <span className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text font-bold text-transparent">
                   OssRyu
                 </span>
@@ -190,16 +192,35 @@ function Layout({ children }: { children: React.ReactNode }) {
             </Link>
           </div>
 
-          <div className="ml-auto flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="hidden sm:flex btn"
-              onClick={() => window.location.href = '/training-wizard'}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Log Training
-            </Button>
+          <div className="ml-auto flex items-center gap-4">
+            {user && (
+              <>
+                <div className="hidden md:flex items-center gap-3">
+                  <div className="text-right">
+                    <div className="font-medium">{user.username}</div>
+                    <div className="text-sm text-muted-foreground">{user.beltRank} Belt</div>
+                  </div>
+                  <Avatar className="h-8 w-8">
+                    {user.avatarUrl ? (
+                      <AvatarImage src={user.avatarUrl} alt={user.username} />
+                    ) : (
+                      <AvatarFallback className="bg-primary/10">
+                        {user.username?.slice(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    )}
+                  </Avatar>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="hidden sm:flex"
+                  onClick={() => window.location.href = '/training-wizard'}
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Log Training
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </header>
