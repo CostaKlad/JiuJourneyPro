@@ -12,7 +12,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Redirect, useLocation } from "wouter";
 import { useState } from "react";
-import { apiRequest } from "@/lib/queryClient";
 
 export default function AuthPage() {
   const { user, loginMutation, registerMutation, forgotPasswordMutation } = useAuth();
@@ -26,12 +25,21 @@ export default function AuthPage() {
   const { data: userCount, isLoading: isCountLoading, error: countError } = useQuery({
     queryKey: ["/api/users/count"],
     queryFn: async () => {
-      console.log("Fetching user count...");
-      const response = await fetch("/api/users/count");
-      const data = await response.json();
-      console.log("User count data:", data);
-      return data;
+      try {
+        console.log("Fetching user count...");
+        const response = await fetch("/api/users/count");
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        console.log("User count data:", data);
+        return data;
+      } catch (error) {
+        console.error("Error fetching user count:", error);
+        throw error;
+      }
     },
+    retry: 3,
     meta: {
       requiresAuth: false
     }
@@ -96,7 +104,7 @@ export default function AuthPage() {
             {isCountLoading ? (
               <div className="mt-4 text-muted-foreground">Loading community stats...</div>
             ) : countError ? (
-              <div className="mt-4 text-red-500">Error loading community stats</div>
+              <div className="mt-4 text-red-500">Error loading community stats: {countError.message}</div>
             ) : userCount ? (
               <div className="mt-4 bg-gradient-to-r from-blue-600/90 to-purple-600/90 p-4 rounded-lg text-white">
                 <div className="text-3xl font-bold">

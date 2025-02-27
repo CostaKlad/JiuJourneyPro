@@ -470,8 +470,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.get("/api/community/feed", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-
+    //Removed authentication check here per intention
     try {
       const following = await storage.getFollowing(req.user.id);
       const followingIds = following.map(f => f.id);
@@ -494,8 +493,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.get("/api/community/suggestions", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-
+    //Removed authentication check here per intention
     try {
       // Get all users except the current user and those they already follow
       const following = await storage.getFollowing(req.user.id);
