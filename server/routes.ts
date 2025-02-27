@@ -515,11 +515,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/users/count", async (req, res) => {
     try {
+      // Count only users with training logs
       const users = await storage.getAllUsers();
-      res.json({ total: users.length });
+      const activeUsers = await Promise.all(
+        users.map(async (user) => {
+          const logs = await storage.getTrainingLogs(user.id);
+          return logs.length > 0;
+        })
+      );
+      const activeCount = activeUsers.filter(Boolean).length;
+
+      res.json({ 
+        total: activeCount,
+        message: "Active practitioners"
+      });
     } catch (error) {
-      console.error("Error getting user count:", error);
-      res.status(500).json({ error: "Failed to get user count" });
+      console.error("Error getting active user count:", error);
+      res.status(500).json({ error: "Failed to get active user count" });
     }
   });
 

@@ -87,9 +87,14 @@ export default function AuthPage() {
               Your digital companion for mastering Brazilian Jiu-Jitsu. Track progress, learn techniques, and connect with the community.
             </p>
             {userCount && (
-              <p className="text-sm text-muted-foreground mt-4">
-                Join our growing community of {userCount.total} BJJ practitioners
-              </p>
+              <div className="mt-6 p-4 bg-muted/50 rounded-lg">
+                <p className="text-lg font-semibold">
+                  Join {userCount.total.toLocaleString()} Active BJJ Practitioners
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Training, tracking progress, and growing together
+                </p>
+              </div>
             )}
           </div>
 
