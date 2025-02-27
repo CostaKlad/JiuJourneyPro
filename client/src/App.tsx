@@ -164,14 +164,15 @@ function Layout({ children }: { children: React.ReactNode }) {
                       </a>
                     </Link>
                     <Button
-                      variant="destructive"
-                      className="w-full justify-start"
+                      variant="ghost"
+                      className="w-full justify-start gap-2 text-red-500 hover:text-red-600 hover:bg-red-100/20"
                       onClick={() => {
                         handleNavigate();
                         logoutMutation.mutate();
+                        window.location.href = "/auth";
                       }}
                     >
-                      <LogOut className="mr-2 h-4 w-4" />
+                      <LogOut className="h-4 w-4" />
                       Logout
                     </Button>
                   </div>
