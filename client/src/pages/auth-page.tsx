@@ -89,7 +89,7 @@ export default function AuthPage() {
 
             {/* User Count Display */}
             {userCount && (
-              <div className="bg-primary/10 p-4 rounded-lg mb-8 mt-2">
+              <div className="bg-primary/10 p-4 rounded-lg mb-8 mt-8 absolute top-4 right-4 shadow-md">
                 <h2 className="text-2xl font-bold text-primary">
                   {userCount.total.toLocaleString()}
                 </h2>
