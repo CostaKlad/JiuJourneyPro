@@ -245,6 +245,17 @@ function Layout({ children }: { children: React.ReactNode }) {
                     Settings
                   </a>
                 </Link>
+                <Button
+                  variant="ghost"
+                  className="w-full mt-2 justify-start gap-2 text-red-500 hover:text-red-600 hover:bg-red-100/20"
+                  onClick={() => {
+                    logoutMutation.mutate();
+                    window.location.href = "/auth";
+                  }}
+                >
+                  <LogOut className="h-6 w-6 shrink-0" />
+                  Logout
+                </Button>
               </li>
             </ul>
           </nav>
